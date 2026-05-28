@@ -21,20 +21,72 @@ DSR-1 compatibility must be tied to actual circuit revisions, board observations
 
 ---
 
-## 2. Current Compatibility Position
+## 2. Compatibility Position and Production Run Scope
 
-**Current primary target:** Sony WM-D6C / TC-D6C Ver. 1.1 service-manual servo circuit.
+DSR-1 is designed for the **full WM-D6C / TC-D6C production run (1984–2002)**,
+not for a single serial range or service revision. Every unit in the production
+run is a potential installation target. Compatibility is earned per board revision
+through measurement and validation, not assumed from the model name.
 
-| Machine / board | Current status |
+### 2.1 WM-D6C Circuit Families
+
+Two distinct servo circuit families exist across the production run:
+
+| Family | Servo IC | Motor drive | Approx. years | Governing reference |
+|---|---|---|---|---|
+| **Ver. 1.0** | CX20084 | Single Q601 (2SB1013 PNP) | 1984 – mid 2001 | `fb4872.pdf` |
+| **Ver. 1.1** | CX-069A | Q601–Q605 (five transistors + JFET) | mid 2001 – 2002 | `sony_wm-d6c_tc-d6c_ver-1.1.pdf` |
+
+The change is documented in the Ver. 1.1 service manual revision history as
+"Change of servo circuit" under ECN-WMA00831, dated 2001.05.
+
+Both families share: X701 34.7 kHz crystal, IC701 MSM58141RS divider, M901 motor,
+FG901 optical sensor, RV601/602/603 speed pots, S601 switch, and CP304 DC-DC.
+
+**To identify family before installation:** open the machine and read the IC at
+position IC601. CX20084 = Ver. 1.0. CX-069A = Ver. 1.1.
+
+### 2.2 Ver. 1.0 PCB Construction Sub-generations
+
+Within Ver. 1.0, two PCB construction generations exist:
+
+| Sub-generation | Approx. years | Construction |
+|---|---|---|
+| Early through-hole | 1984 – ~1994 | Through-hole PCB |
+| Later SMD | ~1994 – 2001 | SMD main board |
+
+Both sub-generations have the same CX20084-based servo circuit and the same DSR-1
+electrical interface. The difference is mechanical: harness routing, test-point
+location, and connector placement differ between boards. The DSR-1 module PCB
+does not change — installation harness documentation covers both.
+
+The 1994 service manual Supplement-2 documents the SMD board transition. Earlier
+supplements (1985, 1994) do not change the servo circuit.
+
+### 2.3 Current DSR-1 Status by Circuit Family
+
+| Circuit family | DSR-1 status |
 |---|---|
-| WM-D6C / TC-D6C Ver. 1.1 new servo circuit | Primary reference target |
-| Earlier WM-D6C servo-circuit revisions | Not assumed compatible |
-| Other WM-D6C regional/suffix variants | Not assumed compatible until checked |
+| Ver. 1.0 CX20084 boards (1984 – mid 2001) | **Primary Rev A target** |
+| Ver. 1.1 CX-069A boards (mid 2001 – 2002) | **In scope — planned variant, post Rev A** |
 | WM-D6 | Future variant candidate |
 | WM-D3 / WM-D3C | Future variant candidate |
 | TC-D5M and related Sony professional machines | Future variant candidate |
 
-The project may eventually support multiple variants, but Rev A should target one known reference circuit first.
+### 2.4 Known Serial Range Landmarks (WM-D6C)
+
+Collected from community data. Uncertainty in exact transition serial numbers is
+normal — these are observed data points, not guaranteed changeover boundaries.
+
+| Serial range | Event |
+|---|---|
+| Before ~71236 | "Pointy" early amorphous head |
+| ~71236 – ~72263 | Head change: pointy → rounded amorphous 35711 |
+| After ~72263 | Rounded amorphous 35711 head (HRP901 part 35711) |
+| ~114374 – ~117947 | Dolby sticker color change (spring 1988) |
+| ~124264 | Documented purchase date: April 1988 |
+| ~post-1994 | SMD board revision (Supplement-2) |
+| ~post-2001 | CX-069A servo circuit (Ver. 1.1) |
 
 ---
 
@@ -42,16 +94,28 @@ The project may eventually support multiple variants, but Rev A should target on
 
 Compatibility work is governed by:
 
-1. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06**
-   - Primary reference for the currently targeted servo circuit, board layout, service notes, and documented servo-circuit change.
+1. **Sony WM-D6C / TC-D6C Service Manual, original edition (`fb4872.pdf`)**
+   - Governing reference for Ver. 1.0 boards (1984 – mid 2001, CX20084 servo circuit).
+   - Contains the original through-hole board layout, CX20084 schematic, and tape speed adjustment procedure.
 
-2. **Physical-unit inspection**
+2. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06 (`sony_wm-d6c_tc-d6c_ver-1.1.pdf`)**
+   - Documents the servo circuit change (ECN-WMA00831) to CX-069A.
+   - Governing reference for Ver. 1.1 boards (mid 2001 – 2002).
+   - Higher-quality schematic diagrams and complete SMD parts list useful as reference even for Ver. 1.0 servicing.
+
+3. **Physical-unit inspection**
    - Required for board revision, component presence/absence, trace routing, prior repairs, and installed circuit differences.
 
-3. **Bench measurements**
+4. **Bench measurements**
    - Required for actual FG behavior, motor-control behavior, speed-control behavior, and power-path behavior.
 
 The service manual is the reference starting point. The actual unit on the bench is the final authority.
+
+If governing references conflict, the order of authority is:
+1. Bench measurement on the actual target unit
+2. Appropriate service manual for the confirmed board revision
+3. STM32G0B1 datasheet
+4. DSR-1 design assumptions
 
 ---
 
@@ -66,16 +130,26 @@ Each known test unit should be listed here.
 | Model | Sony WM-D6C |
 | Serial number | 72795 |
 | Serial-number evidence | Battery-compartment label photo |
-| Exterior condition | Pending full documentation |
-| Board revision | Pending internal inspection |
-| Servo circuit revision | Pending schematic comparison |
+| Estimated manufacture date | Late 1986 – early 1987 (most likely 1987) |
+| Head type | Rounded amorphous, part number 35711 (HRP901) |
+| Board construction era | Early through-hole (pre-1994 SMD revision) |
+| Servo IC | **CX20084 confirmed** (Ver. 1.0 board) |
+| Motor drive transistor | **Q601 = 2SB1013 PNP** (single transistor, Ver. 1.0) |
+| Crystal reference | X701 34.7 kHz + IC701 MSM58141RS (present, Ver. 1.0) |
+| Board revision | Pending internal inspection and photo |
 | Power path condition | Pending inspection |
 | CN301 condition | Pending inspection |
 | CP304 condition | Pending inspection |
 | Prior repairs/modifications | Unknown |
-| Current DSR-1 role | Primary candidate for measurement and Rev A validation |
+| Current DSR-1 role | Primary Rev A reference unit |
+| Governing service manual | `fb4872.pdf` (Ver. 1.0, original edition) |
 
-The serial number identifies the machine, but it does not establish board revision. Internal photographs and circuit comparison are required.
+**Dating basis for serial 72795:**
+Serial 72795 falls approximately 500 units above the documented head change from
+"pointy" to rounded amorphous (transition between ~71236 and ~72263). It is well
+below the spring 1988 sticker-color change at ~114374–117947. A known WM-D6C with
+serial 124264 was purchased April 1988, placing 72795 significantly earlier.
+The rounded amorphous 35711 head (HRP901) has been physically confirmed on this unit.
 
 ---
 
@@ -189,19 +263,20 @@ Record whether the following are present and visually original:
 
 | Reference | Present? | Notes |
 |---|---:|---|
-| IC601 / CX20084 | Pending | |
-| IC701 | Pending | |
-| X701 | Pending | |
-| CP304 | Pending | |
-| CN301 | Pending | |
-| M901 | Pending | |
-| FG901 | Pending | |
-| Q601 | Pending | |
-| Q603–Q605 | Pending | |
-| RV601 | Pending | |
-| RV602 | Pending | |
-| RV603 | Pending | |
-| S601 | Pending | |
+| IC601 | Pending photo | CX20084 (Ver. 1.0) or CX-069A (Ver. 1.1) — read IC markings |
+| IC602 | Pending photo | Present on Ver. 1.1 only (NJM2904V); should be absent on Ver. 1.0 |
+| IC701 | Pending | MSM58141RS divider — present on both versions |
+| X701 | Pending | 34.7 kHz crystal — present on both versions |
+| CP304 | Pending | DC-DC boost module |
+| CN301 | Pending | External DC jack — centre-negative polarity |
+| M901 | Pending | Capstan motor |
+| FG901 | Pending | Optical interrupter (GP2S22AB) |
+| Q601 | Pending photo | 2SB1013 PNP on Ver. 1.0; 2SC1623 NPN on Ver. 1.1 — read markings |
+| Q602–Q605 | Pending photo | Present on Ver. 1.1 only; should be absent on Ver. 1.0 |
+| RV601 | Pending | 47kΩ cermet trimmer, rear panel |
+| RV602 | Pending | 20kΩ carbon slider, front panel Speed Tune |
+| RV603 | Pending | 47kΩ cermet trimmer |
+| S601 | Pending | Speed Tune slide switch |
 
 ---
 
@@ -238,12 +313,13 @@ Required:
 - Safe inactive state identified.
 - Original components to remove/retain documented.
 
-Questions:
+**Known for Ver. 1.0 boards:** Q601 is a 2SB1013 PNP transistor with emitter at
+B+3 (10.8V). The base operating range is well above 3.3V. DSR-1 uses a PWM +
+RC filter + NPN level-shift output stage. Direct DAC drive is not used.
 
-- Can DSR-1 use DAC output?
-- Is PWM/level shift required?
-- Does the motor-control node exceed MCU voltage range?
-- Does this revision change motor-drive polarity or operating point?
+**Known for Ver. 1.1 boards:** Q601 is a 2SC1623 NPN small-signal transistor
+driving a five-transistor network (Q601–Q605). Interface point and output stage
+design require separate characterization before Ver. 1.1 support can be added.
 
 ### 9.3 Speed Controls
 
@@ -441,19 +517,25 @@ Anything less is a candidate, not a supported variant.
 
 ## 14. Current Open Questions for Unit 72795
 
-1. Which main board revision is installed?
-2. Does the unit match the Ver. 1.1 new servo circuit?
-3. Is IC601 original, replaced, failed, or missing?
-4. Is CP304 original and functional?
-5. Is CN301 original, damaged, or modified?
-6. What is the FG901 waveform?
-7. What is the Q601/motor-control operating voltage?
-8. Are RV601/RV602/RV603 ADC-safe?
-9. What is S601 logic polarity?
-10. Where can USB-C physically exit the case?
-11. Can USB-C be installed without weakening the shell or interfering with controls?
-12. Does USB ground affect audio/servo behavior?
-13. Can this unit serve as the Rev A reference build?
+**Confirmed:**
+- IC601 = CX20084 (Ver. 1.0 board) ✓
+- Q601 = 2SB1013 PNP, motor drive NPN level-shift required ✓
+- Manufacture date: ~late 1986 – early 1987 ✓
+- Head: rounded amorphous 35711 (HRP901) ✓
+- Early through-hole board construction ✓
+- Governing manual: `fb4872.pdf` ✓
+
+**Still pending:**
+1. Internal board photographs — confirm board layout vs service manual
+2. IC601, Q601 physical confirmation by reading markings (expected to match above)
+3. CP304 condition — original and functional?
+4. CN301 condition — original, damaged, or modified?
+5. FG901 waveform at correct tape speed
+6. Q601 base voltage during playback (needed for R9 sizing confirmation)
+7. RV601/RV602/RV603 wiper voltage ranges (needed for ADC conditioning decision)
+8. S601 logic polarity
+9. USB-C mechanical exit point
+10. Ground noise behavior with USB connected
 
 ---
 
@@ -461,20 +543,21 @@ Anything less is a candidate, not a supported variant.
 
 As compatibility work proceeds, update this table.
 
-| Unit | Serial | Board revision | Servo revision | Power path | USB-C mechanical status | DSR-1 status |
-|---|---:|---|---|---|---|---|
-| Unit 001 | 72795 | Pending | Pending | Pending | Pending | Candidate |
+| Unit | Serial | Board revision | Servo IC | Motor drive | Power path | USB-C status | DSR-1 status |
+|---|---:|---|---|---|---|---|---|
+| Unit 001 | 72795 | Early through-hole (~1987) | CX20084 ✓ | 2SB1013 PNP ✓ | Pending measurement | Pending mechanical | Candidate |
 
 ---
 
 ## 16. Design Rule
 
-Do not write “compatible with all WM-D6C units.”
+Do not write “compatible with all WM-D6C units” without qualification.
 
 Use one of these phrases instead:
 
-- “Primary target: WM-D6C / TC-D6C Ver. 1.1 new servo circuit.”
-- “Compatibility with earlier board revisions is pending inspection and measurement.”
+- “Primary Rev A target: WM-D6C / TC-D6C Ver. 1.0 CX20084 boards (1984–mid 2001).”
+- “Ver. 1.1 CX-069A boards (mid 2001–2002) are a planned variant, pending separate characterization.”
+- “Full production run (1984–2002) is the design scope; each board revision requires individual measurement and validation.”
 - “Variant support requires schematic comparison, harness mapping, bench measurements, and physical validation.”
 
-Compatibility is earned per board/revision, not assumed from the model name.
+Compatibility is earned per board revision, not assumed from the model name.

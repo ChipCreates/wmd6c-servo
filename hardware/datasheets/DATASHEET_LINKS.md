@@ -61,7 +61,8 @@ sources are provided for reference and download.
 | Sony CX20084 Servo IC | Proprietary Sony ASIC — no public datasheet available |
 | Sharp GP2S22AB (FG901) | Search: "GP2S22AB datasheet" on Sharp's component portal at https://www.sharpsma.com |
 | 2SB733 PNP Transistor | Search: "2SB733 datasheet" — multiple sources available |
-| Sony WM-D6C Service Manual | Copyright Sony Corporation — not redistributable. Search online for reference copies |
+| Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1 (2001.06) | `sony_wm-d6c_tc-d6c_ver-1.1.pdf` — present in repo (not committed per .gitignore). Governing reference for Rev A design. Documents the servo circuit change included in Ver. 1.1. |
+| Sony WM-D6C Service Manual, earlier edition | `fb4872.pdf` — present in repo. Pre-dates the Ver. 1.1 servo circuit change. Use alongside Ver. 1.1 to identify exactly what changed in the servo circuit and to determine which revision serial 72795 contains. |
 
 ---
 

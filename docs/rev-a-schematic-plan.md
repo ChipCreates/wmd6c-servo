@@ -370,15 +370,14 @@ Responsibilities:
 - provide safe reset/default state,
 - support DAC or PWM/level-shift options if needed.
 
-Possible output architectures:
+**Committed output architecture for Ver. 1.0 CX20084 boards:**
 
-| Architecture | Use if |
-|---|---|
-| Direct DAC + protection | Measured motor node is DAC-safe |
-| DAC + buffer | Node is voltage-driven but needs isolation |
-| PWM + filter | DAC unavailable or PWM preferred |
-| PWM + level shift | Node exceeds 3.3 V range |
-| External analog driver | Node needs controlled impedance/current |
+PWM + RC filter + NPN level-shift (TIM3_CH1 PA6 → R7/C8 → Q_LS MMBT3904 →
+R9 pullup to B+1 → Q601 base). Q601 (2SB1013 PNP) emitter is at B+3 (10.8V);
+direct DAC drive cannot reach the required base voltage range.
+
+Ver. 1.1 CX-069A board motor output architecture is not yet characterized and
+is out of scope for Rev A.
 
 Required input:
 
@@ -585,7 +584,7 @@ Possible DNP options:
 
 | Option | Purpose |
 |---|---|
-| DAC output vs PWM output | Select motor-drive architecture after measurement |
+| Variant A (USB-C PD) vs Variant B (barrel jack) | Power input selection |
 | External oscillator footprint | Preserve timebase option |
 | Native UCPD vs external PD controller | Evaluate PD architecture |
 | Rail-sense dividers | Populate as needed |
@@ -635,13 +634,13 @@ The Rev A schematic is accepted when:
 3. Does USB-C replace CN301 or coexist with it?
 4. Does DSR-1 support battery-only operation?
 5. Does DSR-1 generate motor/support rails or only interface with Sony rails?
-6. Is direct DAC motor output safe?
-7. Is PWM/level-shift required?
-8. What FG conditioning is required?
-9. Is an external/reference-derived timebase required?
-10. Where is USB-C mechanically mounted?
-11. What connector/harness strategy is safest for Sony-facing signals?
-12. Which optional footprints are worth carrying on Rev A?
+6. ~~Is direct DAC motor output safe?~~ **Resolved: DAC is not used. PWM + NPN level-shift is the committed motor output for Ver. 1.0 boards.**
+7. What FG conditioning is required? (Pending FG waveform measurement)
+8. Is an external/reference-derived timebase required?
+9. Where is USB-C mechanically mounted?
+10. What connector/harness strategy is safest for Sony-facing signals?
+11. Which optional footprints are worth carrying on Rev A?
+12. What is the exact Q601 base voltage during playback? (Needed to confirm R9 sizing)
 
 ---
 

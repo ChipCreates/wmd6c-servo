@@ -8,6 +8,8 @@ hardware/kicad/_autosave-*
 hardware/kicad/*.lock
 **/.history/
 
+# keep reference manuals and datasheets locally, but don't commit them.
+hardware/datasheets/*.pdf
 
 # OS
 .DS_Store

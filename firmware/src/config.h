@@ -13,6 +13,12 @@
  *   Q16 = (int32_t)(float_value * 65536)
  *   float = Q16_value / 65536.0
  *
+ * Motor output stage: PWM + RC filter + NPN level-shift via PA6 (TIM3_CH1).
+ * Q601 on WM-D6C serial 72795 is a 2SB1013 PNP transistor with emitter at
+ * B+3 (10.8V). The base operating range is well above 3.3V, ruling out direct
+ * DAC drive. The NPN level-shift stage (Q_LS MMBT3904, R7-R9) is the sole
+ * motor output topology for this build.
+ *
  * See fixed-point-arithmetic.md for full derivation and overflow analysis.
  * See digital-pll-servo.md for servo algorithm context.
  * See tools/calibration/fg-period-calculator.py for conversion helpers.
@@ -24,23 +30,7 @@
 #include <stdint.h>
 
 /* =========================================================================
- * SECTION 1 — HARDWARE VARIANT SELECTION
- *
- * Uncomment exactly one output stage option based on bench measurement of
- * Q601 base voltage range. See wmd6c_servo_context_summary.md §Motor Output.
- *
- * Option A (default): DAC direct drive via PA4.
- *   Use when Q601 base operates at or below 3.3V.
- *
- * Option B: PWM + RC filter + NPN level-shift via PA6.
- *   Use when Q601 base voltage exceeds 3.3V.
- *   Uncomment SERVO_OPTION_B and populate Q_LS (MMBT3904) and R7–R9 on PCB.
- * ========================================================================= */
-
-/* #define SERVO_OPTION_B */   /* Uncomment for Option B output stage */
-
-/* =========================================================================
- * SECTION 2 — SYSTEM CLOCK
+ * SECTION 1 — SYSTEM CLOCK
  *
  * Do not change unless you have modified clock_init() in main.c.
  * All timing constants below are derived from this value.
@@ -49,7 +39,7 @@
 #define SYSCLK_HZ           64000000UL   /* HSI16 × PLL → 64 MHz            */
 
 /* =========================================================================
- * SECTION 3 — FG TARGET SPEED
+ * SECTION 2 — FG TARGET SPEED
  *
  * TARGET_PERIOD_DEFAULT is the FG pulse period in 64 MHz clock ticks that
  * corresponds to correct tape transport speed (4.75 cm/s).
@@ -78,7 +68,7 @@
 #define ADJUSTED_TARGET_MAX     (TARGET_PERIOD_DEFAULT * 2)   /* 51,200 ticks */
 
 /* =========================================================================
- * SECTION 4 — PI GAIN CONSTANTS
+ * SECTION 3 — PI GAIN CONSTANTS
  *
  * Stored in Q16 fixed-point format (value × 65536).
  * Starting values are engineering estimates — tune on bench with test tape.
@@ -109,7 +99,7 @@
 #define KI_Q16_MAX              6554    /* Ki = 0.1 — well above any practical value  */
 
 /* =========================================================================
- * SECTION 5 — INTEGRAL ANTI-WINDUP
+ * SECTION 4 — INTEGRAL ANTI-WINDUP
  *
  * INTEGRAL_LIMIT bounds the integral accumulator to prevent windup during
  * motor spin-up and large speed transients.
@@ -121,30 +111,32 @@
  *   INTEGRAL_LIMIT < 4,098,250
  *
  *   Recommended value = TARGET_PERIOD × 50 = 1,280,000
- *   This limits maximum integral DAC contribution to:
+ *   This limits maximum integral PWM contribution to:
  *     (524 × 1,280,000) >> 16 ≈ 10,224 counts
- *   Which saturates the DAC (0–4095) but unwinds within ~2–3 FG periods
+ *   Which saturates the output (0–4095) but unwinds within ~2–3 FG periods
  *   after lock — clean, non-oscillating capture.
  * ========================================================================= */
 
 #define INTEGRAL_LIMIT          1280000L   /* TARGET_PERIOD_DEFAULT × 50 */
 
 /* =========================================================================
- * SECTION 6 — DAC / PWM OUTPUT RANGE
+ * SECTION 5 — PWM OUTPUT RANGE
  *
- * 12-bit DAC and TIM3 PWM both use 0–4095 range.
- * DAC_CENTER is the quiescent operating point (mid-scale = ~1.65V).
+ * TIM3 PWM uses a 12-bit range (0–4095) on PA6 (TIM3_CH1).
+ * DAC_CENTER is the quiescent operating point (mid-scale duty cycle).
  * DAC_MIN/MAX are the servo output clamps — not hard rail limits.
  * Leaving headroom above MIN and below MAX avoids driving Q601 fully off
  * or fully on during large transients, which would cause audible clicks.
+ *
+ * Naming retained as DAC_* for compatibility with servo.c arithmetic.
  * ========================================================================= */
 
-#define DAC_CENTER              2048    /* Mid-scale, ~1.65V on PA4          */
-#define DAC_MIN                 100     /* ~0.08V — motor at near-full drive  */
-#define DAC_MAX                 3995    /* ~3.22V — motor nearly off          */
+#define DAC_CENTER              2048    /* Mid-scale PWM duty cycle           */
+#define DAC_MIN                 100     /* Near-full motor drive              */
+#define DAC_MAX                 3995    /* Motor nearly off                   */
 
 /* =========================================================================
- * SECTION 7 — FG INPUT NOISE REJECTION
+ * SECTION 6 — FG INPUT NOISE REJECTION
  *
  * MIN_PERIOD_TICKS rejects implausibly short FG periods at start-up and
  * on power-on before the capstan reaches speed. Any captured period shorter
@@ -158,7 +150,7 @@
 #define MIN_PERIOD_TICKS        6400UL  /* Reject periods shorter than 6400 ticks */
 
 /* =========================================================================
- * SECTION 8 — SPEED TUNE POTENTIOMETER SCALING
+ * SECTION 7 — SPEED TUNE POTENTIOMETER SCALING
  *
  * RV601: base speed trim — fine calibration offset applied to TARGET_PERIOD.
  * RV602: user Speed Tune slider — user-accessible speed control.
@@ -176,7 +168,7 @@
 #define SPEED_RANGE_MAX         768     /* RV603 max range: ±768 ticks ≈ ±3% */
 
 /* =========================================================================
- * SECTION 9 — FLASH SETTINGS STORAGE
+ * SECTION 8 — FLASH SETTINGS STORAGE
  *
  * Settings are stored in the last 4 KB sector of the 128 KB flash.
  * This sector is preserved across firmware updates (DFU does not erase it).
@@ -193,7 +185,7 @@
 #define SETTINGS_MAGIC          0x44535231UL   /* ASCII "DSR1" */
 
 /* =========================================================================
- * SECTION 10 — USB CDC TELEMETRY
+ * SECTION 9 — USB CDC TELEMETRY
  *
  * TELEMETRY_INTERVAL_MS: minimum interval between telemetry lines in
  * continuous mode ('T' command). Prevents USB from being overwhelmed at
@@ -203,7 +195,7 @@
 #define TELEMETRY_INTERVAL_MS   20
 
 /* =========================================================================
- * SECTION 11 — BUILD ASSERTIONS
+ * SECTION 10 — BUILD ASSERTIONS
  *
  * Compile-time checks that catch configuration errors before they become
  * runtime bugs. The compiler emits an error if any condition is violated.
@@ -215,7 +207,7 @@ _Static_assert(
     "INTEGRAL_LIMIT too large: KI_Q16 * INTEGRAL_LIMIT overflows int32_t"
 );
 
-/* DAC range sanity */
+/* PWM output range sanity */
 _Static_assert(DAC_MIN >= 0,    "DAC_MIN must be >= 0");
 _Static_assert(DAC_MAX <= 4095, "DAC_MAX must be <= 4095");
 _Static_assert(DAC_MIN < DAC_CENTER && DAC_CENTER < DAC_MAX,

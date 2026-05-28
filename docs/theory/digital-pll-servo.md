@@ -278,29 +278,17 @@ identical to the original machine.
 
 ## 6. The Motor Drive Output
 
-### 6.1 Option A — Direct DAC Drive
+Q601 (2SB1013 PNP) on WM-D6C serial 72795 has its emitter at B+3 (10.8V). The
+base operating range is well above the STM32's 3.3V output capability. DSR-1 uses
+a PWM + RC filter + NPN level-shift stage exclusively.
 
-When Q601's base voltage operates within the STM32's 3.3V output range:
+### 6.1 PWM with RC Filter and NPN Level Shift
 
-The 12-bit DAC on PA4 produces an analog output voltage from 0V to 3.3V in 4096
-steps. The DAC output drives the base of Q601 through a 10kΩ series resistor R5.
-At the operating point (DAC_CENTER = 2048, approximately 1.65V output), Q601
-conducts at the level needed to maintain correct motor speed. Corrections above and
-below this operating point apply more or less base drive respectively.
-
-A 100kΩ pullup resistor R6 from the base to VDD (3.3V) ensures that at power-on,
-before the DAC is initialised, the Q601 base is held high — which holds the PNP
-transistor off and prevents the motor from running uncontrolled during boot.
-
-### 6.2 Option B — PWM with RC Filter and NPN Level Shift
-
-When Q601's base must operate above 3.3V:
-
-TIM3 channel 1 on PA6 produces a PWM signal at approximately 25 kHz. An RC low-pass
-filter (R7 1kΩ, C8 100nF, corner frequency ~1.6 kHz) converts this to a smooth
-analog voltage. This voltage drives the base of Q_LS (MMBT3904 NPN), whose collector
-drives Q601's base through R8 10kΩ. The NPN level shift allows a 3.3V control signal
-to drive a base that operates at a voltage beyond the STM32's direct output range.
+TIM3 channel 1 on PA6 produces a PWM signal at approximately 15.6 kHz. An RC
+low-pass filter (R7 1kΩ, C8 100nF, corner frequency ~1.6 kHz) converts this to a
+smooth analog voltage. This voltage drives the base of Q_LS (MMBT3904 NPN), whose
+collector drives Q601's base through R8 10kΩ. The NPN level shift allows a 3.3V
+control signal to drive a base that operates well above the STM32's output range.
 
 ---
 

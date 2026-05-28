@@ -62,8 +62,7 @@ The STM32G0B1 family includes multiple packages and variants. The datasheet indi
 | Function | Required? | Notes |
 |---|---:|---|
 | FG input capture | Yes | Timer input-capture capable pin required |
-| Motor-control DAC output | Preferred candidate | If voltage range supports DAC |
-| Motor-control PWM output | Alternate / possible required | If DAC is unavailable or level shifting is needed |
+| Motor-control PWM output | Required | TIM3_CH1 on PA6, NPN level-shift stage |
 | RV601 ADC input | Yes | Base speed calibration |
 | RV602 ADC input | Yes | User Speed Tune |
 | RV603 ADC input | Yes | Speed Tune range |
@@ -116,8 +115,7 @@ This table records candidate assignments. It does **not** prove alternate-functi
 | RV601 ADC | `RV601_WIPER` | `PA1` | ADC input | Candidate / verify ADC channel |
 | RV602 ADC | `RV602_WIPER` | `PA2` | ADC input | Candidate / verify ADC channel |
 | RV603 ADC | `RV603_WIPER` | `PA3` | ADC input | Candidate / verify ADC channel |
-| Motor DAC | `MOTOR_DAC_OUT` | `PA4` | DAC output | Candidate / verify exact package |
-| Motor PWM | `MOTOR_PWM` | `PA6` | Timer PWM output | Candidate / verify AF |
+| Motor PWM | `MOTOR_PWM` | `PA6` | TIM3_CH1 PWM output | Candidate / verify AF |
 | Speed Tune switch | `S601_SPEED_TUNE` | `PA7` | GPIO / EXTI optional | Candidate |
 | USB D− | `USB_DM` | `PA11` or package-defined USB DM | USB FS | Candidate / verify |
 | USB D+ | `USB_DP` | `PA12` or package-defined USB DP | USB FS | Candidate / verify |
@@ -162,16 +160,7 @@ Questions:
 
 The motor output may be DAC or PWM.
 
-#### DAC Candidate
-
-Requirements:
-
-- true DAC output pin,
-- safe reset behavior through external circuit,
-- voltage range compatible with measured Sony motor-control node,
-- no conflict with ADC, USB, or clock functions.
-
-#### PWM Candidate
+#### PWM (committed output topology)
 
 Requirements:
 
@@ -182,9 +171,7 @@ Requirements:
 - no audible or servo noise coupling,
 - safe reset state.
 
-Decision rule:
-
-> Do not finalize DAC vs PWM pin allocation until motor-drive characterization is complete.
+PA6 (TIM3_CH1) is the committed motor PWM output pin.
 
 ### 5.3 Speed-Control ADC Inputs
 
@@ -346,7 +333,7 @@ If pin budget is tight, prefer fault-status GPIOs and one or two critical ADC se
 |---|---|---|
 | USB D+/D− vs alternate package pins | USB unavailable or awkward routing | Verify exact package early |
 | UCPD CC pins vs servo pins | Native PD may be impossible on 32-pin package | External PD controller or larger package |
-| DAC output vs motor-output requirement | DAC may be unavailable or unsafe | PWM/filter/driver option |
+| PA6 TIM3_CH1 availability | Verify AF1 on exact package | Required for motor PWM |
 | ADC count vs rail sensing | Not enough analog inputs | Reduce rail sense or use external mux/ADC |
 | SWD/BOOT vs user functions | Loss of debug/recovery | Reserve SWD/BOOT permanently |
 | HSE pins vs other I/O | External timebase may be blocked | Reserve clock option until timebase decision closes |
@@ -403,8 +390,7 @@ The MCU/package is accepted only when these are complete.
 | Native UCPD pins verified, if used | Pending |
 | SWD/BOOT access verified | Pending |
 | FG timer input verified | Pending |
-| DAC pin verified, if DAC used | Pending |
-| PWM pin verified, if PWM used | Pending |
+| PA6 TIM3_CH1 PWM pin verified | Pending |
 | Three ADC pins verified | Pending |
 | S601 GPIO verified | Pending |
 | VBUS/power sense pins assigned | Pending |

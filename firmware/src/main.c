@@ -10,7 +10,7 @@
  *   t = ~0.3ms   clock_init(): HSI16 → PLL → 64 MHz system clock
  *   t = ~0.3ms   flash_load(): load saved settings from flash (or use defaults)
  *   t = ~0.5ms   adc_init(): GPIO + DMA + ADC1 continuous scan starts
- *   t = ~0.5ms   servo_init(): TIM2 input capture + DAC + NVIC configured
+ *   t = ~0.5ms   servo_init(): TIM2 input capture + TIM3 PWM + NVIC configured
  *   t = ~0.5ms   usb_cdc_init(): HSI48 + CRS + USB peripheral, DP pull-up asserted
  *   t = ~0.5ms   __enable_irq(): all interrupts unmasked
  *   t = ~2ms     First FG edge arrives, TIM2_IRQHandler fires, servo loop running
@@ -29,9 +29,9 @@
  *   Priority 2 (lowest):  SysTick (if used — currently unused)
  *
  * Motor safety at all times:
- *   PA4 DAC is pre-loaded to DAC_CENTER before any interrupt fires.
- *   R6 (100kΩ pullup to VDD) holds Q601 base at 3.3V during reset/boot,
- *   which reverse-biases Q601 (emitter at 10.8V), keeping motor off.
+ *   TIM3 PWM defaults to 0% duty at reset — Q_LS (MMBT3904) is off.
+ *   R9 (100kΩ to B+1) holds Q601 (2SB1013 PNP) base toward B+1 (6V),
+ *   reverse-biasing Q601 (emitter at 10.8V) and keeping the motor off.
  *   The motor cannot run uncontrolled at any point in the boot sequence.
  */
 
@@ -125,8 +125,8 @@ int main(void)
     adc_init();
 
     /* ---- 4. Servo init ----
-     * Configures TIM2 input capture, DAC output (pre-loaded to DAC_CENTER),
-     * and registers TIM2 in NVIC at priority 0.
+     * Configures TIM2 input capture, TIM3 PWM output (pre-loaded to
+     * DAC_CENTER), and registers TIM2 in NVIC at priority 0.
      * The TIM2 ISR will not fire until __enable_irq() below. */
     servo_init();
 

@@ -2,7 +2,7 @@
 
 **Open-source / open-hardware servo, power, and USB-C service module for the Sony Walkman WM-D6C / TC-D6C**
 
-DSR-1 is an in-development replacement and modernization module for the Sony WM-D6C / TC-D6C. Its purpose is to preserve the machine by replacing the fragile CX20084-based capstan-servo path, modernizing the external power interface, and adding USB-C data/service access for tuning, telemetry, firmware update, and diagnostics.
+DSR-1 is an in-development replacement and modernization module for the Sony WM-D6C / TC-D6C, targeting the **full production run (1984–2002)**. Its purpose is to preserve machines across the entire collector and restorer community by replacing the fragile capstan-servo IC (CX20084 on pre-2001 boards; CX-069A on 2001–2002 boards), modernizing the external power interface, and adding USB-C data/service access for tuning, telemetry, firmware update, and diagnostics.
 
 This project is not yet a finished drop-in repair module. It is currently in **source-grounded design and firmware-prototype development**. The firmware architecture exists, the KiCad project structure exists, and the design is being revised against the Sony WM-D6C/TC-D6C service manual and the STM32G0B1 datasheet. PCB layout, hardware validation, installation documentation, and performance testing remain pending.
 
@@ -47,15 +47,31 @@ Until the electrical interface is measured on a real WM-D6C and a Rev A board is
 
 ---
 
+## Compatibility Scope
+
+DSR-1 targets the **full WM-D6C / TC-D6C production run (1984–2002)**. Two servo circuit families exist:
+
+| Circuit family | Years | Servo IC | Rev A status |
+|---|---|---|---|
+| Ver. 1.0 | 1984 – mid 2001 | CX20084 | **Primary Rev A target** |
+| Ver. 1.1 | mid 2001 – 2002 | CX-069A | Planned post-Rev A variant |
+
+Rev A targets CX20084 boards — the large majority of surviving units. CX-069A board support is planned as a separate variant once Rev A is validated. See `docs/hardware/wmd6c-revision-compatibility.md` for detailed production timeline and identification guidance.
+
+---
+
 ## Governing References
 
 Rev A is being grounded against these primary references:
 
-1. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06**
-   - Primary reference for the WM-D6C/TC-D6C service procedures, schematic, board layout, adjustments, parts identification, and the documented new-servo-circuit revision.
+1. **Sony WM-D6C / TC-D6C Service Manual, original edition (`fb4872.pdf`)**
+   - Governing reference for Ver. 1.0 CX20084 servo circuit, component values, board layout, and tape speed calibration procedure.
 
-2. **STMicroelectronics STM32G0B1xB/xC/xE Datasheet, DS13560 Rev 6, February 2026**
-   - Primary reference for MCU capabilities, electrical limits, package constraints, ADC/DAC/timer/USB/UCPD features, oscillator characteristics, flash, and operating conditions.
+2. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06 (`sony_wm-d6c_tc-d6c_ver-1.1.pdf`)**
+   - Documents the 2001 servo circuit change to CX-069A. Reference for Ver. 1.1 variant design (post Rev A).
+
+3. **STMicroelectronics STM32G0B1xB/xC/xE Datasheet, DS13560 Rev 6, February 2026**
+   - Primary reference for MCU capabilities, electrical limits, package constraints, ADC/timer/USB/UCPD features, and operating conditions.
 
 The repository documentation should distinguish clearly between:
 

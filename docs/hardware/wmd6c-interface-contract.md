@@ -34,21 +34,30 @@ This document is not a tutorial and not a theory document. It is a design-contro
 
 ## 2. Governing References
 
-The Rev A interface is governed by:
+### 2.1 For Ver. 1.0 Boards (CX20084, 1984 – mid 2001) — Rev A Primary Target
 
-1. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06**
-   - Used for schematic references, board/component references, adjustment procedures, service cautions, and the documented servo-circuit revision.
+1. **Sony WM-D6C / TC-D6C Service Manual, original edition (`fb4872.pdf`)**
+   - Used for the CX20084 servo circuit schematic, component values, board layout, adjustment procedures, and tape speed calibration procedure.
+   - This is the governing servo-circuit reference for all CX20084 boards, including the primary test unit (serial 72795, ~1987).
 
 2. **STMicroelectronics STM32G0B1xB/xC/xE Datasheet, DS13560 Rev 6, February 2026**
-   - Used for MCU electrical limits, ADC/DAC constraints, timer capability, package limitations, oscillator limitations, flash behavior, USB capability, UCPD capability, and operating conditions.
+   - Used for MCU electrical limits, ADC constraints, timer capability, PWM output, USB, UCPD, package limitations, and operating conditions.
 
 3. **Bench measurements from physical WM-D6C units**
-   - Required for final signal voltage ranges, waveform shape, noise behavior, source impedance, motor-control behavior, power-rail behavior, USB grounding behavior, and safe interface design.
+   - Required for final signal voltage ranges, waveform shape, noise behavior, source impedance, motor-control behavior, power-rail behavior, and safe interface design.
 
-If these sources conflict, the order of authority is:
+### 2.2 For Ver. 1.1 Boards (CX-069A, mid 2001 – 2002) — Planned Variant
+
+4. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06 (`sony_wm-d6c_tc-d6c_ver-1.1.pdf`)**
+   - Documents the servo circuit change (ECN-WMA00831) to CX-069A + five-transistor motor drive.
+   - Governing reference for Ver. 1.1 board variant design (post Rev A).
+
+### 2.3 Authority Order
+
+If sources conflict:
 
 1. Bench measurement on the actual target unit.
-2. Sony service manual.
+2. Service manual appropriate to the confirmed board revision.
 3. STM32G0B1 datasheet.
 4. DSR-1 design assumptions.
 
@@ -72,26 +81,33 @@ The servo remains performance-critical, but power and USB-C are not optional doc
 
 ## 4. Compatibility Scope
 
-### 4.1 Primary Target
+DSR-1 targets the **full WM-D6C / TC-D6C production run (1984–2002)**.
 
-The first DSR-1 hardware revision targets:
+### 4.1 Rev A Primary Target
 
 | Target | Status |
 |---|---|
-| Sony WM-D6C / TC-D6C Ver. 1.1 servo circuit | Primary reference target |
+| WM-D6C / TC-D6C Ver. 1.0 CX20084 boards (1984 – mid 2001) | **Rev A primary target** |
 
-The Sony service manual identifies a servo-circuit change in the Ver. 1.1 documentation set. Because of that, older or alternate WM-D6C board revisions must not be assumed compatible until mapped.
+Rev A targets CX20084 boards. This covers the majority of surviving and
+collector-held units across the full production run prior to the 2001 servo
+circuit change.
 
-### 4.2 Out of Scope Until Separately Mapped
+Primary test unit: serial 72795, ~1987, early through-hole construction,
+CX20084 confirmed, rounded amorphous 35711 head confirmed.
+
+### 4.2 Planned Variants
 
 | Machine / revision | Status |
 |---|---|
-| Earlier WM-D6C servo revisions | Not assumed compatible |
+| WM-D6C / TC-D6C Ver. 1.1 CX-069A boards (mid 2001 – 2002) | **In scope — planned post-Rev A variant** |
 | WM-D6 | Future variant candidate |
 | WM-D3 / WM-D3C | Future variant candidate |
 | TC-D5M and related Sony professional machines | Future variant candidate |
 
-A future variant requires its own schematic comparison, harness map, measured FG target, motor-drive characterization, power-interface characterization, USB/service constraints, and physical-unit validation.
+A planned variant requires its own schematic comparison, harness map, motor-drive
+characterization, power-interface characterization, USB/service constraints, and
+physical-unit validation before it may be called supported.
 
 ---
 
@@ -256,14 +272,14 @@ The original servo controls motor speed by applying a correction signal into the
 
 ### 9.4 DSR-1 Design Intent
 
-Two possible output strategies are under consideration:
+DSR-1 uses a PWM + RC filter + NPN level-shift output stage (TIM3 CH1 on PA6).
 
-| Option | Description | Use only if |
-|---|---|---|
-| Direct DAC | STM32 DAC drives the motor-control node through protection / isolation | Required voltage range is safely within DAC capability |
-| PWM + filter + level shift | STM32 PWM is filtered and level-shifted into the Sony control range | Motor-control node exceeds DAC range or needs isolation |
+Q601 on WM-D6C serial 72795 is a 2SB1013 PNP transistor with its emitter at B+3
+(10.8V). The base operating range is well above 3.3V, ruling out direct DAC drive.
+The NPN level-shift topology (Q_LS MMBT3904, R7–R9) is the committed output design.
 
-The output strategy must be chosen from bench measurements, not assumptions.
+Bench measurement of the Q601 base voltage during playback is still required to
+confirm R9 sizing and the PWM duty-cycle-to-speed mapping.
 
 ### 9.5 Required Bench Measurements
 
