@@ -242,3 +242,57 @@ void servo_reset_integral(void)
     integral = 0;
     NVIC_EnableIRQ(TIM2_IRQn);
 }
+
+/* -------------------------------------------------------------------------
+ * servo_freeze()
+ *
+ * Prepares the servo for a flash write blackout window:
+ *   1. Disables TIM2 capture interrupt — no more ISR executions.
+ *   2. Latches the DAC/PWM at its current output value — motor keeps
+ *      running at constant drive during the erase/write.
+ *   3. Resets the integral accumulator — cleared here so that on
+ *      servo_unfreeze() the loop starts from a known-clean state
+ *      rather than inheriting stale accumulated error from the blackout.
+ *
+ * Must be called from main loop only, immediately before flash_unlock().
+ * Pair with servo_unfreeze() after flash_lock().
+ *
+ * The DAC/PWM output is NOT touched here — it retains whatever value
+ * the ISR last wrote, which is the correct operating point.
+ * ------------------------------------------------------------------------- */
+void servo_freeze(void)
+{
+    /* Disable TIM2 capture interrupt — ISR will not fire during flash op.
+     * The DAC/PWM output is NOT changed — it stays at the last ISR-written
+     * value, which is the correct steady-state drive for the motor. */
+    NVIC_DisableIRQ(TIM2_IRQn);
+
+    /* Clear integral before the blackout. Any error accumulated during
+     * normal operation before the save is intentionally discarded — the
+     * loop will re-acquire lock within 1–2 FG periods after unfreeze. */
+    integral = 0;
+}
+
+/* -------------------------------------------------------------------------
+ * servo_unfreeze()
+ *
+ * Restores servo operation after a flash write blackout:
+ *   1. Anchors last_capture to the current TIM2 counter value so the
+ *      first post-freeze ISR edge produces a valid period measurement
+ *      rather than a huge delta spanning the entire blackout gap.
+ *   2. Re-enables the TIM2 capture interrupt.
+ *
+ * Must be called immediately after flash_lock(), from main loop only.
+ * ------------------------------------------------------------------------- */
+void servo_unfreeze(void)
+{
+    /* Seed last_capture with the current free-running counter value.
+     * last_capture is file-scope so this is a direct write.
+     * The first FG edge after re-enable computes:
+     *   period = CCR1_at_edge - last_capture
+     * which will be a valid sub-400µs delta at normal tape speed. */
+    last_capture = TIM2->CNT;
+
+    /* Re-enable TIM2 capture interrupt */
+    NVIC_EnableIRQ(TIM2_IRQn);
+}

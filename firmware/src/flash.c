@@ -199,13 +199,22 @@ static void flash_write_dword(uint32_t addr, uint32_t lo, uint32_t hi)
  *   6. Verify readback
  *
  * Safe to call from main loop only — not from ISR context.
- * The servo ISR continues running during the flash write; the STM32G0B1
- * supports read-while-write (RWW) between different flash banks, but this
- * device is single-bank. The flash controller stalls instruction fetch
- * during programming. At 2500 Hz servo rate, a 2ms erase cycle may cause
- * 4–5 missed FG edges. The servo will recover within 1–2 FG periods
- * after the write completes. Acceptable for a settings save initiated by
- * the user ('s' command) — not an audio-critical path.
+ *
+ * Missed FG edge mitigation (Option 2):
+ *   The STM32G0B1 is a single-bank device. The flash controller stalls
+ *   instruction fetch during erase (~2ms) and each double-word program
+ *   (~85µs). During this window the TIM2 ISR cannot execute, so FG edges
+ *   are missed and the integral accumulates stale error.
+ *
+ *   Before erasing, servo_freeze() is called to:
+ *     1. Disable the TIM2 capture interrupt (no more ISR executions)
+ *     2. Latch the current DAC output at its last known-good value
+ *   The motor continues running at constant drive during the write.
+ *   After flash_lock(), servo_unfreeze() re-enables the TIM2 interrupt
+ *   and resets the integral to zero, giving the loop a clean start.
+ *
+ *   Motor speed change during a ~2ms blackout is negligible — the WM-D6C
+ *   flywheel time constant is ~200ms. Speed deviation is unmeasurable.
  *
  * Returns: FLASH_OK on success, FLASH_ERR_VERIFY on readback mismatch.
  * ------------------------------------------------------------------------- */
@@ -213,7 +222,7 @@ FlashResult flash_save(void)
 {
     SettingsBlock blk;
 
-    /* Build block in SRAM */
+    /* Build block in SRAM before touching flash */
     blk.magic         = SETTINGS_MAGIC;
     blk.kp_q16        = g_kp_q16;
     blk.ki_q16        = g_ki_q16;
@@ -224,6 +233,9 @@ FlashResult flash_save(void)
 
     /* CRC covers magic + kp + ki + target (16 bytes = first 4 fields) */
     blk.crc32 = crc32_compute((const uint8_t *)&blk, offsetof(SettingsBlock, crc32));
+
+    /* Freeze servo: latch DAC, disable TIM2 ISR before flash stall window */
+    servo_freeze();
 
     flash_unlock();
     flash_erase_page(SETTINGS_PAGE);
@@ -238,6 +250,9 @@ FlashResult flash_save(void)
     }
 
     flash_lock();
+
+    /* Unfreeze servo: reset integral, re-enable TIM2 ISR */
+    servo_unfreeze();
 
     /* Verify readback */
     const SettingsBlock *stored = (const SettingsBlock *)FLASH_SETTINGS_ADDR;

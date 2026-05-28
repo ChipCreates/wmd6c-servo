@@ -58,4 +58,21 @@ void servo_set_target_period(uint32_t ticks);
  */
 void servo_reset_integral(void);
 
+/**
+ * servo_freeze() — suspend servo ISR and latch motor drive output.
+ * Call from main loop immediately before a flash erase/write operation.
+ * Disables TIM2 interrupt and clears the integral so the loop restarts
+ * cleanly after the blackout. DAC/PWM output is left at its current value.
+ * Pair with servo_unfreeze() after flash_lock().
+ */
+void servo_freeze(void);
+
+/**
+ * servo_unfreeze() — resume servo ISR after a flash write.
+ * Seeds last_capture from TIM2->CNT to prevent a spurious huge-period
+ * measurement on the first post-freeze FG edge, then re-enables TIM2.
+ * Call immediately after flash_lock(), from main loop only.
+ */
+void servo_unfreeze(void);
+
 #endif /* SERVO_H */
