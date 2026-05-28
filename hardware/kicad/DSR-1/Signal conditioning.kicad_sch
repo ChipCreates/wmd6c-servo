@@ -2,7 +2,73 @@
 	(version 20260306)
 	(generator "eeschema")
 	(generator_version "10.0")
-	(uuid "3ec12526-9309-4a95-9f8d-de3ded697cbd")
+	(uuid "cfa37d79-0e12-43e3-a701-f8c25be84334")
 	(paper "A4")
 	(lib_symbols)
+	(hierarchical_label "B+3"
+		(shape input)
+		(at 24.13 25.4 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "2cb81e00-57d1-41ee-96fc-0424a658020b")
+	)
+	(hierarchical_label "FG_IN"
+		(shape output)
+		(at 264.16 21.59 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "3f071bf9-5e44-47ea-a260-2d383b256594")
+	)
+	(hierarchical_label "RV601_WIPER"
+		(shape output)
+		(at 264.16 26.67 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "a25a730c-0b33-4c75-9c0d-9e648746d951")
+	)
+	(hierarchical_label "MOTOR_DAC_OUT"
+		(shape input)
+		(at 24.13 21.59 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d886a062-fbae-4d7e-bd98-806c754a259c")
+	)
+	(hierarchical_label "RV602_WIPER"
+		(shape output)
+		(at 264.16 31.75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "dd60d5b6-35e6-4614-affc-a80fe8abf32f")
+	)
+	(hierarchical_label "RV603_WIPER"
+		(shape output)
+		(at 264.16 36.83 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f44ac3de-a4e0-4dd4-baba-566b568341a9")
+	)
 )

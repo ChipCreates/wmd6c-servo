@@ -2,7 +2,161 @@
 	(version 20260306)
 	(generator "eeschema")
 	(generator_version "10.0")
-	(uuid "90bbddef-d09d-4f72-9097-f905a5a0baf4")
+	(uuid "1a99a2ab-1836-4779-800d-6c62a7698d60")
 	(paper "A4")
 	(lib_symbols)
+	(hierarchical_label "MOTOR_DAC_OUT"
+		(shape output)
+		(at 245.11 20.32 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "042e7222-7f45-4b8f-afcf-bc21c103c4e0")
+	)
+	(hierarchical_label "RV603_WIPER"
+		(shape input)
+		(at 29.21 44.45 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "0886cd21-5db9-4366-a64c-58f935d53b7a")
+	)
+	(hierarchical_label "SWDCLK"
+		(shape input)
+		(at 29.21 59.69 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "3bed245d-ceb4-4e60-b406-624daa10002b")
+	)
+	(hierarchical_label "+3V3"
+		(shape input)
+		(at 29.21 24.13 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "55771067-831d-4889-b70b-db2bc3ac905b")
+	)
+	(hierarchical_label "RV602_WIPER"
+		(shape input)
+		(at 29.21 39.37 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "75e2a7fb-d7aa-4a98-b0cc-143321720eb6")
+	)
+	(hierarchical_label "USB_DP"
+		(shape bidirectional)
+		(at 29.21 72.39 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7751a7d2-2609-45f7-a3df-5c44f96bbb42")
+	)
+	(hierarchical_label "RV601_WIPER"
+		(shape input)
+		(at 29.21 34.29 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "9494aa16-4991-45dc-b9d2-a1aa71cd087b")
+	)
+	(hierarchical_label "CC1"
+		(shape bidirectional)
+		(at 29.21 80.01 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b70e678b-e5ac-4299-8a39-983b9cf15b3a")
+	)
+	(hierarchical_label "CC2"
+		(shape bidirectional)
+		(at 29.21 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "c4d7cfbe-5143-4678-9670-4fc7f14773b3")
+	)
+	(hierarchical_label "FG_IN"
+		(shape input)
+		(at 29.21 29.21 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d79f48a2-8104-4754-94e2-96073e57b1fb")
+	)
+	(hierarchical_label "MOTOR_PWM"
+		(shape output)
+		(at 245.11 25.4 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f2ca6028-455a-4425-83da-66200197a637")
+	)
+	(hierarchical_label "USB_DM"
+		(shape bidirectional)
+		(at 29.21 76.2 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f4cbf8a7-48bb-406b-ba42-35f7a7f06007")
+	)
+	(hierarchical_label "MOTOR_EN_MON"
+		(shape input)
+		(at 29.21 49.53 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f77311d7-b9ea-4776-a80b-573aea0f364a")
+	)
+	(hierarchical_label "SWDIO"
+		(shape input)
+		(at 29.21 54.61 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "fcfdfe92-7274-44ae-9b33-b8c7d2a15868")
+	)
 )

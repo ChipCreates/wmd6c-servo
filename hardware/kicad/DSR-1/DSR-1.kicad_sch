@@ -11,8 +11,8 @@
 	)
 	(lib_symbols)
 	(sheet
-		(at 205.74 137.16)
-		(size 102.87 60.96)
+		(at 86.36 118.11)
+		(size 97.79 48.26)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -27,7 +27,7 @@
 		)
 		(uuid "53f50e7e-9963-4bad-995f-b42afad9bde5")
 		(property "Sheetname" "Signal conditioning"
-			(at 205.74 136.4484 0)
+			(at 86.36 117.3984 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -38,7 +38,7 @@
 			)
 		)
 		(property "Sheetfile" "Signal conditioning.kicad_sch"
-			(at 205.74 198.7046 0)
+			(at 86.36 166.9546 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -57,8 +57,8 @@
 		)
 	)
 	(sheet
-		(at 46.99 44.45)
-		(size 104.14 53.34)
+		(at 53.34 34.29)
+		(size 83.82 43.18)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -73,7 +73,7 @@
 		)
 		(uuid "5c6496e7-aeed-4b9a-bf5d-abff2a5461fe")
 		(property "Sheetname" "Power input zone"
-			(at 46.99 43.7384 0)
+			(at 53.34 33.5784 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -84,7 +84,7 @@
 			)
 		)
 		(property "Sheetfile" "Power input zone.kicad_sch"
-			(at 46.99 98.3746 0)
+			(at 53.34 78.0546 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -103,8 +103,8 @@
 		)
 	)
 	(sheet
-		(at 50.8 133.35)
-		(size 119.38 76.2)
+		(at 283.21 35.56)
+		(size 92.71 45.72)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -119,7 +119,7 @@
 		)
 		(uuid "64d68e7a-6d67-471a-a3f8-01d59b1484af")
 		(property "Sheetname" "STM32G0B1 and decoupling"
-			(at 50.8 132.6384 0)
+			(at 283.21 34.8484 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -130,7 +130,7 @@
 			)
 		)
 		(property "Sheetfile" "STM32G0B1 and decoupling.kicad_sch"
-			(at 50.8 210.1346 0)
+			(at 283.21 81.8646 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -149,8 +149,8 @@
 		)
 	)
 	(sheet
-		(at 323.85 49.53)
-		(size 81.28 58.42)
+		(at 246.38 113.03)
+		(size 91.44 46.99)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -165,7 +165,7 @@
 		)
 		(uuid "ad7c0fd1-19a4-4b18-b3e4-6f9d6857a54c")
 		(property "Sheetname" "Connectors"
-			(at 323.85 48.8184 0)
+			(at 246.38 112.3184 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -176,7 +176,7 @@
 			)
 		)
 		(property "Sheetfile" "Connectors.kicad_sch"
-			(at 323.85 108.5346 0)
+			(at 246.38 160.6046 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -195,8 +195,8 @@
 		)
 	)
 	(sheet
-		(at 207.01 43.18)
-		(size 96.52 62.23)
+		(at 163.83 34.29)
+		(size 87.63 44.45)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -211,7 +211,7 @@
 		)
 		(uuid "b9401642-f798-4d7e-9f45-669a8c8766e3")
 		(property "Sheetname" "Power management"
-			(at 207.01 42.4684 0)
+			(at 163.83 33.5784 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects
@@ -222,7 +222,7 @@
 			)
 		)
 		(property "Sheetfile" "Power management.kicad_sch"
-			(at 207.01 105.9946 0)
+			(at 163.83 79.3246 0)
 			(show_name yes)
 			(do_not_autoplace no)
 			(effects

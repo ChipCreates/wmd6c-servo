@@ -2,7 +2,29 @@
 	(version 20260306)
 	(generator "eeschema")
 	(generator_version "10.0")
-	(uuid "76d6590b-0f6d-46aa-a0b6-7b3d33ce0904")
+	(uuid "a714de3a-8c3f-4c5a-9f49-f80ad10a97f5")
 	(paper "A4")
 	(lib_symbols)
+	(hierarchical_label "SWDCLK"
+		(shape output)
+		(at 265.43 25.4 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "3aea67b1-0ea9-4e72-b5d7-5b714bfcd65d")
+	)
+	(hierarchical_label "SWDIO"
+		(shape output)
+		(at 265.43 20.32 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d4c2e474-ada4-4b88-bb26-eeaf0ca2d755")
+	)
 )
