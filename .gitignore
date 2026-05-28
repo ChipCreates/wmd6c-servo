@@ -6,6 +6,8 @@ hardware/kicad/*_autosave.*
 hardware/kicad/fp-info-cache
 hardware/kicad/_autosave-*
 hardware/kicad/*.lock
+hardware/kicad/.history
+
 
 # OS
 .DS_Store
