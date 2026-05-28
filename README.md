@@ -129,7 +129,7 @@ device. Flash `firmware/releases/wmd6c-servo-vX.X.bin` using STM32CubeProgrammer
 - [x] Repository structure established
 - [ ] KiCad schematics
 - [ ] PCB layout
-- [ ] Bench verification (unit arrives Monday 2 June 2025)
+- [ ] Bench verification
 - [ ] Firmware
 - [ ] Installation guide with photographs
 - [ ] First hardware revision
