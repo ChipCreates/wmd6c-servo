@@ -2,9 +2,244 @@
 	(version 20260306)
 	(generator "eeschema")
 	(generator_version "10.0")
-	(uuid c0f3f4ab-99e0-4b30-98cc-a10c83648838)
-	(paper "A4")
+	(uuid "c0f3f4ab-99e0-4b30-98cc-a10c83648838")
+	(paper "B")
+	(title_block
+		(title "DSR-1 Capstan Servo Module")
+		(date "2026-05-28")
+		(rev "0.1")
+	)
 	(lib_symbols)
+	(sheet
+		(at 205.74 137.16)
+		(size 102.87 60.96)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "53f50e7e-9963-4bad-995f-b42afad9bde5")
+		(property "Sheetname" "Signal conditioning"
+			(at 205.74 136.4484 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Signal conditioning.kicad_sch"
+			(at 205.74 198.7046 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "DSR-1"
+				(path "/c0f3f4ab-99e0-4b30-98cc-a10c83648838"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 46.99 44.45)
+		(size 104.14 53.34)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "5c6496e7-aeed-4b9a-bf5d-abff2a5461fe")
+		(property "Sheetname" "Power input zone"
+			(at 46.99 43.7384 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Power input zone.kicad_sch"
+			(at 46.99 98.3746 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "DSR-1"
+				(path "/c0f3f4ab-99e0-4b30-98cc-a10c83648838"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 50.8 133.35)
+		(size 119.38 76.2)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "64d68e7a-6d67-471a-a3f8-01d59b1484af")
+		(property "Sheetname" "STM32G0B1 and decoupling"
+			(at 50.8 132.6384 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "STM32G0B1 and decoupling.kicad_sch"
+			(at 50.8 210.1346 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "DSR-1"
+				(path "/c0f3f4ab-99e0-4b30-98cc-a10c83648838"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 323.85 49.53)
+		(size 81.28 58.42)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "ad7c0fd1-19a4-4b18-b3e4-6f9d6857a54c")
+		(property "Sheetname" "Connectors"
+			(at 323.85 48.8184 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Connectors.kicad_sch"
+			(at 323.85 108.5346 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "DSR-1"
+				(path "/c0f3f4ab-99e0-4b30-98cc-a10c83648838"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 207.01 43.18)
+		(size 96.52 62.23)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "b9401642-f798-4d7e-9f45-669a8c8766e3")
+		(property "Sheetname" "Power management"
+			(at 207.01 42.4684 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "Power management.kicad_sch"
+			(at 207.01 105.9946 0)
+			(show_name yes)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "DSR-1"
+				(path "/c0f3f4ab-99e0-4b30-98cc-a10c83648838"
+					(page "3")
+				)
+			)
+		)
+	)
 	(sheet_instances
 		(path "/"
 			(page "1")
