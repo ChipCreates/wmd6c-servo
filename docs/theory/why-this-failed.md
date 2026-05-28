@@ -241,10 +241,10 @@ Complete these checks before installing the module:
    with white vinegar on a cotton swab, then clean with isopropyl alcohol. Check
    that leakage has not tracked onto the main board.
 
-2. **Test Q601**: The 2SB733 PNP motor drive transistor (IC601 pin 15 driver) may
+2. **Test Q601**: The 2SB1013 PNP motor drive transistor (IC601 pin 15 driver) may
    have been damaged in the same reverse polarity event. Test in diode mode:
    base-to-emitter and base-to-collector should both read 0.6-0.7V. A zero reading
-   or short indicates failure — replace with 2SA1015, BC327-40, or MMBT3906.
+   or short indicates failure — replace with a PNP transistor of equivalent rating.
 
 3. **Replace the capstan belt**: At this age the belt needs replacement regardless
    of the electronic fault. Do it now while the machine is open.

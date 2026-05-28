@@ -319,11 +319,11 @@ Safe.
 ```
 STM32 servo output (PA4 DAC or PA6 PWM)
     │
-    [R5/R6 (Option A) or R7/C8/Q_LS/R8/R9 (Option B)]
+    [R7/C8/Q_LS/R8/R9 (PWM + NPN level-shift stage)]
     │
 J1 Pin 2 → Q601 base (on WM-D6C main board)
     │
-    [Q601 2SB733 PNP — base-emitter forward biased when base < emitter]
+    [Q601 2SB1013 PNP — base-emitter forward biased when base < emitter]
     │
 Q601 collector → M901 capstan motor (one terminal)
     │
@@ -1303,9 +1303,9 @@ value toward TARGET_PERIOD.
 **t = ~300ms**: Motor reaches operating speed. FG period settles to TARGET_PERIOD ±
 servo error. Speed lock is achieved.
 
-The motor is never uncontrolled at any point in this sequence. Either R6 (Option A)
-or R9 (Option B) hold Q601 off until the firmware explicitly enables motor drive
-through the DAC or PWM.
+The motor is never uncontrolled at any point in this sequence. R9 holds Q601's
+base toward B+1, keeping Q601 off until the firmware explicitly enables motor
+drive through TIM3 PWM.
 
 ### 14.2 Power-Off Sequence
 
@@ -1321,8 +1321,7 @@ reached for approximately 2ms. During this window, the servo loop continues runn
 and the motor is still being driven.
 
 **t = ~2ms**: BOR threshold reached. STM32 enters reset. All GPIO outputs go to
-high-impedance. R6 (Option A) or R9 (Option B) pull Q601 base toward its safe
-state — motor drive is removed.
+high-impedance. R9 pulls Q601 base toward B+1 — motor drive is removed.
 
 **Motor coasting**: M901 continues to rotate due to flywheel inertia for
 approximately 1-2 seconds after motor drive is removed. This is normal and harmless.

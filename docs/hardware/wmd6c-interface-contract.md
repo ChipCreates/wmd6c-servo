@@ -715,7 +715,7 @@ The DSR-1 Rev A interface is not accepted until all items below are complete.
 1. Which exact servo-circuit revision is present in serial-numbered unit 72795?
 2. What is the actual FG901 waveform at correct tape speed?
 3. What is the actual Q601 / motor-control operating voltage?
-4. Can the STM32 DAC safely drive the motor-control point, or is a level-shift stage required?
+4. ~~Can the STM32 DAC safely drive the motor-control point?~~ **Resolved: No. Q601 (2SB1013) emitter is at B+3 (10.8V). PWM + NPN level-shift is required for all Ver. 1.0 boards.**
 5. Are RV601/RV602/RV603 wipers safe for direct ADC input?
 6. What is the actual logic behavior of S601?
 7. What power rails must DSR-1 generate versus merely sense?

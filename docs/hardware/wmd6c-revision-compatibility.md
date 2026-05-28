@@ -313,13 +313,16 @@ Required:
 - Safe inactive state identified.
 - Original components to remove/retain documented.
 
-**Known for Ver. 1.0 boards:** Q601 is a 2SB1013 PNP transistor with emitter at
-B+3 (10.8V). The base operating range is well above 3.3V. DSR-1 uses a PWM +
-RC filter + NPN level-shift output stage. Direct DAC drive is not used.
+**Ver. 1.0 boards (CX20084) — settled:** Q601 is a 2SB1013 PNP transistor with
+emitter at B+3 (10.8V). Base operating range is well above 3.3V. DSR-1 uses
+PWM + RC filter + NPN level-shift (TIM3_CH1 PA6 → Q_LS MMBT3904). Direct DAC
+drive is not used. Q601 base voltage during playback still requires bench
+measurement to confirm R9 sizing.
 
-**Known for Ver. 1.1 boards:** Q601 is a 2SC1623 NPN small-signal transistor
-driving a five-transistor network (Q601–Q605). Interface point and output stage
-design require separate characterization before Ver. 1.1 support can be added.
+**Ver. 1.1 boards (CX-069A) — not yet characterized:** Q601 is a 2SC1623 NPN
+small-signal transistor driving a five-transistor network (Q601–Q605 including
+a JFET Q603). Interface point and output stage design require separate
+characterization before Ver. 1.1 variant support can be added.
 
 ### 9.3 Speed Controls
 

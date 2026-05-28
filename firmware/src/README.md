@@ -9,7 +9,7 @@ Bare-metal C firmware for the WM-D6C Servo Replacement Module. Runs on the STM32
 | File | Responsibility |
 |------|---------------|
 | `config.h` | All tunable constants — edit here and rebuild |
-| `servo.c` / `servo.h` | TIM2 input capture ISR, PI control law, DAC/PWM output |
+| `servo.c` / `servo.h` | TIM2 input capture ISR, PI control law, TIM3 PWM output |
 | `adc.c` / `adc.h` | ADC DMA scan for RV601/RV602/RV603 pot wipers |
 | `flash.c` / `flash.h` | Settings save/restore with CRC-32 validation |
 | `usb_cdc.c` / `usb_cdc.h` | USB CDC virtual COM port, command parser, telemetry |
@@ -97,12 +97,14 @@ This constant must be measured on the bench — the placeholder value will not b
 
 Alternatively, use the `f+` / `f-` USB CDC commands to tune in real time without rebuilding, then `s` to save.
 
-### Output Stage Selection
+### Motor Output Stage
 
-Before building, confirm which output stage to use based on bench measurement of the Q601 base voltage:
+DSR-1 uses the **PWM + RC filter + NPN level-shift** output stage exclusively.
+Q601 (2SB1013 PNP) on WM-D6C Ver. 1.0 boards has its emitter at B+3 (10.8V);
+the base operating range exceeds the STM32's 3.3V output capability.
 
-- **Q601 base ≤ 3.3 V** — leave `SERVO_OPTION_B` undefined (default). DAC drives PA4 directly.
-- **Q601 base > 3.3 V** — uncomment `#define SERVO_OPTION_B` in `config.h`. PWM + NPN level-shift on PA6.
+TIM3 channel 1 on PA6 produces the PWM signal. There is no `SERVO_OPTION_B`
+define — the firmware is committed to this single output topology.
 
 ---
 
@@ -126,7 +128,7 @@ On first connection the firmware sends a banner confirming whether saved flash s
 ### Telemetry format
 
 ```
-FG:25612 Hz:2499 Tgt:25600 Err:+12 Int:-847 DAC:2034 Kp:9830(0.150) Ki:524(0.008) RV1:2048 RV2:1923 RV3:2100
+FG:25612 Hz:2499 Tgt:25600 Err:+12 Int:-847 PWM:2034 Kp:9830(0.150) Ki:524(0.008) RV1:2048 RV2:1923 RV3:2100
 ```
 
 ---

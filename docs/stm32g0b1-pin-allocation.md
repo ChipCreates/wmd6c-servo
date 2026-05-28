@@ -50,7 +50,7 @@ The STM32G0B1 family includes multiple packages and variants. The datasheet indi
 | Current candidate MCU | STM32G0B1KBU6 |
 | Package class | UFQFPN32 candidate |
 | Status | Not yet accepted for Rev A |
-| Main risk | Pin pressure from servo + ADC + DAC/PWM + USB + UCPD + SWD + BOOT0 + timebase |
+| Main risk | Pin pressure from servo + ADC + PWM + USB + UCPD + SWD + BOOT0 + timebase |
 | Rev A rule | Package is accepted only after exact pin and alternate-function audit |
 
 ---
@@ -158,7 +158,7 @@ Questions:
 
 ### 5.2 Motor Output
 
-The motor output may be DAC or PWM.
+The motor output is TIM3_CH1 PWM on PA6 (committed — NPN level-shift stage).
 
 #### PWM (committed output topology)
 
@@ -423,7 +423,7 @@ Final table format:
 | Pin # | STM32 pin | DSR-1 signal | Function | AF/channel | Direction | Reset state | Notes |
 |---:|---|---|---|---|---|---|---|
 | TBD | TBD | `FG_IN` | Timer capture | TBD | Input | Safe | Pending |
-| TBD | TBD | `MOTOR_CTRL` | DAC/PWM | TBD | Output | Safe inactive | Pending |
+| TBD | PA6 | `MOTOR_PWM` | TIM3_CH1 PWM | AF1 | Output | 0% duty (motor off) | Pending package verify |
 | TBD | TBD | `USB_DP` | USB FS | TBD | I/O | Hi-Z/USB | Pending |
 
 ---
@@ -434,12 +434,12 @@ Final table format:
 2. Does the exact KBU6 package expose all USB FS pins required for USB-C data?
 3. Does it expose UCPD CC pins suitable for native USB-C PD?
 4. Is the N-suffix alternate pinout required?
-5. Can DAC and USB/UCPD coexist with the required servo pins?
+5. ~~Can DAC and USB/UCPD coexist?~~ Resolved: DAC is not used. PWM on PA6 is committed.
 6. Is an external PD controller the safer way to preserve pin budget?
 7. Is an external timebase required?
 8. If yes, are HSE pins available and not conflicting?
 9. How many rail-sense inputs are worth the pin cost?
-10. Should Rev A include solder-jumper options to choose DAC vs PWM output?
+10. ~~Should Rev A include solder-jumper options to choose DAC vs PWM output?~~ Resolved: PWM only.
 
 ---
 

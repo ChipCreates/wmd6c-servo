@@ -106,7 +106,7 @@ Top-level net groups:
 | Net group | Examples |
 |---|---|
 | Sony interface | `FG_IN_RAW`, `MOTOR_CTRL_OUT`, `RV601_WIPER`, `RAW_POWER`, `GND` |
-| MCU local | `FG_IN`, `MOTOR_DAC_OUT`, `USB_DP`, `USB_DM`, `SWDIO`, `SWDCLK` |
+| MCU local | `FG_IN`, `MOTOR_PWM`, `USB_DP`, `USB_DM`, `SWDIO`, `SWDCLK` |
 | Power | `VBUS`, `RAW_POWER`, `+3V3`, `B_PLUS`, `MOTOR_SUPPLY` |
 | USB-C | `USB_DP`, `USB_DM`, `CC1`, `CC2`, `USB_SHIELD` |
 | Debug/test | `BOOT0`, `NRST`, `TP_*` |
@@ -294,7 +294,7 @@ Required blocks:
 | USB pins | Required |
 | UCPD pins, if native PD | Conditional |
 | ADC inputs | Required |
-| DAC/PWM output | Required |
+| TIM3 PWM output (PA6) | Required |
 | FG input | Required |
 | Timebase option | Pending decision |
 
@@ -368,7 +368,7 @@ Responsibilities:
 - protect Sony motor-control node,
 - protect STM32,
 - provide safe reset/default state,
-- support DAC or PWM/level-shift options if needed.
+- implement PWM + RC filter + NPN level-shift output stage.
 
 **Committed output architecture for Ver. 1.0 CX20084 boards:**
 

@@ -2,8 +2,8 @@
 
 **Project:** DSR-1 / wmd6c-servo  
 **File:** `docs/verification/03-motor-drive-characterization.md`  
-**Status:** Draft / pre-Rev A  
-**Scope:** Procedure for measuring the Sony WM-D6C motor-control network before selecting the DSR-1 DAC/PWM output stage.
+**Status:** Draft / pre-Rev A
+**Scope:** Procedure for measuring the Sony WM-D6C motor-control network to confirm DSR-1 output stage sizing and characterize servo tuning parameters.
 
 ---
 
@@ -13,18 +13,18 @@ This document defines the required procedure for characterizing the WM-D6C capst
 
 The DSR-1 servo loop can only control tape speed safely if its output stage matches the electrical behavior expected by the original Sony circuit.
 
-This document answers:
+For **Ver. 1.0 CX20084 boards**, the output stage is already committed:
+PWM + RC filter + NPN level-shift (TIM3_CH1 PA6 → Q_LS MMBT3904 → Q601 base).
+Q601 (2SB1013 PNP) has emitter at B+3 (10.8V); direct DAC drive is not possible.
 
-- What node should DSR-1 drive?
-- What voltage range does that node use?
-- What is the safe inactive state?
-- Does the node expect voltage drive, current drive, or high impedance?
-- Can the STM32 DAC drive it directly?
-- Is PWM plus filtering and level shifting required?
-- What happens during Stop, Play startup, steady Play, Speed Tune movement, and power faults?
-- How much current does the motor path require?
+This procedure now answers:
 
-No Rev A motor-control output stage should be finalized until this procedure is completed.
+- What is Q601's actual base voltage range during playback? (Needed for R9 sizing)
+- What is the motor-control node impedance?
+- What happens during Stop, Play startup, steady Play, and Speed Tune movement?
+- How much current does the motor path require? (Needed for power protection sizing)
+- What is the servo loop sign? (Confirm firmware PI convention)
+- What clamp values are appropriate for DAC_MIN and DAC_MAX?
 
 ---
 
@@ -271,52 +271,28 @@ Notes:
 
 ---
 
-## 9. Output-Stage Selection Criteria
+## 9. Output Stage — Confirmed Design
 
-### 9.1 Direct DAC Candidate
+The motor output stage for Ver. 1.0 CX20084 boards is committed:
 
-Direct DAC output may be considered only if:
+**TIM3_CH1 PWM (PA6) → R7/C8 RC filter → Q_LS (MMBT3904 NPN) → R9 pullup to B+1 → Q601 base**
 
-- required voltage range is within STM32 DAC capability,
-- required current is very low,
-- node does not exceed MCU limits,
-- reset state can be made safe,
-- node does not backfeed DSR-1 when unpowered,
-- noise performance is acceptable,
-- and failure behavior is safe.
+This measurement procedure does not choose the output stage — that decision is made.
+The measurements in this procedure are used to:
 
-Even then, use series resistance and protection.
+1. **Confirm R9 sizing.** R9 (100kΩ pullup to B+1, currently planned) sets the
+   Q601 base voltage when Q_LS is off. Verify the measured inactive-state base
+   voltage matches the expected safe-off condition (base at or near B+1, Q601
+   firmly off). Adjust R9 if needed.
 
-### 9.2 PWM + Filter Candidate
+2. **Confirm DAC_MIN and DAC_MAX.** The clamp values in `config.h` must keep
+   the motor within safe operating range. Measure the base voltage corresponding
+   to maximum safe drive and minimum safe drive, then back-calculate the required
+   PWM clamp values.
 
-PWM plus RC filtering may be considered if:
-
-- DAC pin is unavailable,
-- output range can be generated safely,
-- ripple can be reduced below servo/audible concern,
-- PWM noise does not disturb audio or FG,
-- firmware can keep PWM stable,
-- and reset state is safe.
-
-### 9.3 Level-Shift / Buffer Candidate
-
-A level-shift or buffer stage is required if:
-
-- motor-control node exceeds DAC voltage range,
-- node requires current drive,
-- node must be isolated,
-- the Sony circuit operates above 3.3 V,
-- or unpowered backfeed is possible.
-
-### 9.4 External Analog Driver Candidate
-
-Use a dedicated analog output stage if:
-
-- motor-control behavior is sensitive,
-- DAC/PWM cannot safely reproduce the range,
-- the node needs buffering,
-- loop stability requires controlled output impedance,
-- or output must fail safe independent of MCU.
+3. **Confirm PI sign convention.** Verify that increasing PWM duty cycle increases
+   motor speed (expected: higher duty → Q_LS conducts more → Q601 base pulled
+   lower → more collector current → faster motor).
 
 ---
 
@@ -402,8 +378,9 @@ Motor-drive characterization is accepted when:
 | Speed correction direction identified | Pending |
 | Output voltage range defined | Pending |
 | Safe inactive state defined | Pending |
-| Direct DAC suitability decided | Pending |
-| PWM/level-shift need decided | Pending |
+| R9 sizing confirmed from measured base voltage | Pending |
+| DAC_MIN / DAC_MAX clamp values derived | Pending |
+| PI sign convention confirmed | Pending |
 | Dummy-load output test plan written | Pending |
 | Firmware implications documented | Pending |
 

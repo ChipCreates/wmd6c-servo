@@ -123,7 +123,7 @@ The project boundary is larger than the CX20084 alone. The intended Rev A design
 |---|---|
 | CX20084 / IC601 capstan-servo function | STM32G0B1 digital PI servo loop using timer input capture |
 | FG feedback path from motor / FG901 | Protected, conditioned MCU timer-capture input |
-| Motor correction output to Sony drive network | DAC or PWM/level-shift output, selected after bench measurement |
+| Motor correction output to Sony drive network | PWM + RC filter + NPN level-shift to Q601 (2SB1013 PNP) base |
 | RV601 base speed adjustment | Retained as measured analog input |
 | RV602 Speed Tune control | Retained as measured analog input |
 | RV603 Speed Tune range control | Retained as measured analog input |
@@ -145,7 +145,7 @@ Planned/implemented firmware architecture:
 
 - **FG measurement:** TIM2 input capture measures the period between FG pulses.
 - **Servo loop:** PI control calculates motor correction from measured period error.
-- **Output stage:** 12-bit DAC or PWM/filtered level-shift output drives the motor-control point, depending on measured Sony circuit requirements.
+- **Output stage:** TIM3 PWM filtered through an RC network and NPN level-shift transistor (Q_LS MMBT3904) drives Q601's base on the WM-D6C main board.
 - **Speed controls:** RV601/RV602/RV603 and S601 are retained and read by the MCU after voltage-safety verification.
 - **USB data/service:** USB CDC is intended to expose live tuning, telemetry, command/status reporting, and diagnostics.
 - **Firmware update:** USB DFU or other update path is intended to avoid requiring permanent SWD access after installation.
@@ -228,7 +228,7 @@ The firmware is written in C for the STM32G0B1 family, using CMSIS device header
 Current firmware areas:
 
 - `main.c` — clock setup, peripheral initialization order, main loop
-- `servo.c` / `servo.h` — TIM2 capture ISR, PI loop, DAC/PWM output path
+- `servo.c` / `servo.h` — TIM2 capture ISR, PI loop, TIM3 PWM output path
 - `adc.c` / `adc.h` — speed-control potentiometer scan and target adjustment support
 - `flash.c` / `flash.h` — persistent settings storage
 - `usb_cdc.c` / `usb_cdc.h` — USB CDC command and telemetry path
