@@ -1,0 +1,17 @@
+# KiCad auto-generated — never commit
+hardware/kicad/*-backups/
+hardware/kicad/*.000
+hardware/kicad/*.bak
+hardware/kicad/*_autosave.*
+hardware/kicad/fp-info-cache
+hardware/kicad/_autosave-*
+hardware/kicad/*.lock
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python scripts (if any)
+__pycache__/
+*.pyc
