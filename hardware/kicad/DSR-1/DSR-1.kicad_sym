@@ -8,25 +8,27 @@
 			(hide yes)
 		)
 		(pin_names
+			(offset 0)
 			(hide yes)
 		)
 		(exclude_from_sim no)
-		(in_bom no)
-		(on_board no)
+		(in_bom yes)
+		(on_board yes)
 		(in_pos_files yes)
 		(duplicate_pin_numbers_are_jumpers no)
 		(property "Reference" "#PWR"
-			(at 0 0 0)
+			(at 0 -3.81 0)
 			(show_name no)
 			(do_not_autoplace no)
+			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" ""
-			(at 0 0 0)
+		(property "Value" "B+1"
+			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -57,7 +59,18 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+1V0\""
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "global power"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -71,7 +84,7 @@
 		(symbol "B+1_0_1"
 			(polyline
 				(pts
-					(xy -1.27 5.08) (xy 1.27 5.08)
+					(xy -0.762 1.27) (xy 0 2.54)
 				)
 				(stroke
 					(width 0)
@@ -83,7 +96,19 @@
 			)
 			(polyline
 				(pts
-					(xy 0 0) (xy 0 5.08)
+					(xy 0 2.54) (xy 0.762 1.27)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0 0) (xy 0 2.54)
 				)
 				(stroke
 					(width 0)
@@ -95,19 +120,10 @@
 			)
 		)
 		(symbol "B+1_1_1"
-			(text "B+1"
-				(at 4.318 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
 			(pin power_in line
-				(at 0 6.35 0)
+				(at 0 0 90)
 				(length 0)
-				(hide yes)
-				(name "B+1"
+				(name ""
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -131,17 +147,19 @@
 			(hide yes)
 		)
 		(pin_names
+			(offset 0)
 			(hide yes)
 		)
 		(exclude_from_sim no)
-		(in_bom no)
-		(on_board no)
+		(in_bom yes)
+		(on_board yes)
 		(in_pos_files yes)
 		(duplicate_pin_numbers_are_jumpers no)
 		(property "Reference" "#PWR"
-			(at 0 0 0)
+			(at 0 -3.81 0)
 			(show_name no)
 			(do_not_autoplace no)
+			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -149,7 +167,7 @@
 			)
 		)
 		(property "Value" "B+3"
-			(at 0 0 0)
+			(at 0 3.556 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -180,7 +198,18 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+1V0\""
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "global power"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -194,7 +223,7 @@
 		(symbol "B+3_0_1"
 			(polyline
 				(pts
-					(xy -1.27 5.08) (xy 1.27 5.08)
+					(xy -0.762 1.27) (xy 0 2.54)
 				)
 				(stroke
 					(width 0)
@@ -206,7 +235,19 @@
 			)
 			(polyline
 				(pts
-					(xy 0 0) (xy 0 5.08)
+					(xy 0 2.54) (xy 0.762 1.27)
+				)
+				(stroke
+					(width 0)
+					(type default)
+				)
+				(fill
+					(type none)
+				)
+			)
+			(polyline
+				(pts
+					(xy 0 0) (xy 0 2.54)
 				)
 				(stroke
 					(width 0)
@@ -218,19 +259,10 @@
 			)
 		)
 		(symbol "B+3_1_1"
-			(text "B+3"
-				(at 4.318 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
 			(pin power_in line
-				(at 0 8.89 0)
+				(at 0 0 90)
 				(length 0)
-				(hide yes)
-				(name "B+3"
+				(name ""
 					(effects
 						(font
 							(size 1.27 1.27)
