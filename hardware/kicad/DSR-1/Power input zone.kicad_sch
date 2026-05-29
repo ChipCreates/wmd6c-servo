@@ -124,6 +124,12 @@
 		)
 		(symbol "DSR-1:B+3"
 			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
 			(exclude_from_sim no)
 			(in_bom no)
 			(on_board no)
@@ -494,6 +500,39 @@
 			(embedded_fonts no)
 		)
 	)
+	(hierarchical_label "USB_DM"
+		(shape bidirectional)
+		(at 257.81 33.02 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "2e933df6-2841-4bda-9c0b-b653726ce78e")
+	)
+	(hierarchical_label "CC2"
+		(shape bidirectional)
+		(at 260.35 44.45 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "3297fc00-ca84-417c-aa05-8e35c8ceeb46")
+	)
+	(hierarchical_label "USB_DP"
+		(shape bidirectional)
+		(at 256.54 26.67 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "38268a11-817f-4763-8d61-fdd42392fb98")
+	)
 	(hierarchical_label "9V_PD"
 		(shape output)
 		(at 31.75 36.83 0)
@@ -504,6 +543,17 @@
 			(justify left)
 		)
 		(uuid "74d9671f-7bb8-48ac-a6ef-76a050e892f6")
+	)
+	(hierarchical_label "CC1"
+		(shape bidirectional)
+		(at 260.35 38.1 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "7dddf914-e89e-4ea0-b08f-906c64b3b4e1")
 	)
 	(hierarchical_label "B+1_RAW"
 		(shape output)
@@ -530,6 +580,7 @@
 		(uuid "1c3657a3-874e-4bcc-874b-1e25d2a45067")
 		(property "Reference" "#PWR03"
 			(at 121.9726 16.51 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -538,8 +589,9 @@
 				)
 			)
 		)
-		(property "Value" ""
+		(property "Value" "B+1"
 			(at 119.38 25.4 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -763,6 +815,7 @@
 		(uuid "ce6c67f9-9e29-4b6a-9689-4fee6554e546")
 		(property "Reference" "#PWR04"
 			(at 147.3726 15.24 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -773,6 +826,7 @@
 		)
 		(property "Value" "B+3"
 			(at 147.3726 17.78 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

@@ -5,17 +5,6 @@
 	(uuid "d6c9bb5a-dc23-42bb-88ab-21f17f2b8ff6")
 	(paper "A4")
 	(lib_symbols)
-	(hierarchical_label "+3V3"
-		(shape output)
-		(at 255.27 24.13 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "436a46a1-0849-462d-9e70-9a137947b9b9")
-	)
 	(hierarchical_label "9V_PD"
 		(shape input)
 		(at 29.21 29.21 0)
@@ -37,16 +26,5 @@
 			(justify left)
 		)
 		(uuid "c0f0c198-c29e-4660-bf34-fb230f11ba23")
-	)
-	(hierarchical_label "B+1"
-		(shape output)
-		(at 256.54 30.48 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "c21a7b1c-4757-44f7-a089-d6f6f2fb9dbf")
 	)
 )

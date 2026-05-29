@@ -5,17 +5,6 @@
 	(uuid "1a99a2ab-1836-4779-800d-6c62a7698d60")
 	(paper "A4")
 	(lib_symbols)
-	(hierarchical_label "MOTOR_DAC_OUT"
-		(shape output)
-		(at 245.11 20.32 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "042e7222-7f45-4b8f-afcf-bc21c103c4e0")
-	)
 	(hierarchical_label "RV603_WIPER"
 		(shape input)
 		(at 29.21 44.45 0)
@@ -37,17 +26,6 @@
 			(justify left)
 		)
 		(uuid "3bed245d-ceb4-4e60-b406-624daa10002b")
-	)
-	(hierarchical_label "+3V3"
-		(shape input)
-		(at 29.21 24.13 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "55771067-831d-4889-b70b-db2bc3ac905b")
 	)
 	(hierarchical_label "RV602_WIPER"
 		(shape input)
@@ -92,6 +70,17 @@
 			(justify left)
 		)
 		(uuid "b70e678b-e5ac-4299-8a39-983b9cf15b3a")
+	)
+	(hierarchical_label "SPEED_TUNE_SW"
+		(shape input)
+		(at 245.11 31.75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "c08f51b5-9a46-4029-88a6-e07b8dfa144b")
 	)
 	(hierarchical_label "CC2"
 		(shape bidirectional)
