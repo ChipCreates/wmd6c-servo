@@ -16,17 +16,10 @@ $name?="DSR-1"
 mach create $name
 machine LoadPlatformDescription @firmware/simulation/platform/stm32g0b1kbu6.repl
 
-# Set ADC pot inputs to mid-scale (1.65 V = 50% of 3.3 V reference ≈ 2048 counts).
-# Mid-scale on all three pots = zero trim + zero speed offset.
-#   Channel 1 = PA1 / ADC_IN1 = RV601 (base speed trim)
-#   Channel 2 = PA2 / ADC_IN2 = RV602 (Speed Tune slider)
-#   Channel 3 = PA3 / ADC_IN3 = RV603 (Speed Tune range scalar)
-sysbus.adc SetVoltage 1 1.65
-sysbus.adc SetVoltage 2 1.65
-sysbus.adc SetVoltage 3 1.65
-
-# Open a UART analyzer window so debug output is visible if any is added later.
-showAnalyzer sysbus.usart1
+# ADC pot inputs (RV601/PA1, RV602/PA2, RV603/PA3) are not set here.
+# The trim path (adc_get_adjusted_target) has no caller in the current firmware
+# (findings §3.3) so ADC values do not affect the servo loop.
+# Restore when the trim path is wired: sysbus.adc SetVoltage <ch> <voltage>
 
 # Open GDB server on port 3333 so VS Code (launch.json) can attach.
 machine StartGdbServer 3333

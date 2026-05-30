@@ -24,6 +24,10 @@
 #   0x10  SR     — CC1IF is bit 1 (0x00000002); ISR clears it at exit
 #   0x34  CCR1   — capture/compare register 1 (read by ISR as 'now')
 #
+# IRQ injection: sysbus.nvic TriggerInterrupt does not exist in Renode 1.16.1.
+# Instead we write directly to the Cortex-M NVIC Set-Pending register:
+#   NVIC_ISPR0 = 0xE000E200, bit 15 = IRQ 15 (TIM2) → value 0x00008000
+#
 # Monitor TIM3->CCR1 (motor drive PWM) to observe servo response:
 #   (monitor) sysbus ReadDoubleWord 0xE0001008   -- reads DWT CYCCNT (simulation time)
 #   (monitor) sysbus ReadDoubleWord 0x40000434   -- reads TIM3->CCR1
@@ -41,11 +45,11 @@ macro fg_one
 """
     sysbus WriteDoubleWord 0x40000034 25600
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 51200
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
 """
 
@@ -55,43 +59,43 @@ macro fg_lock
 """
     sysbus WriteDoubleWord 0x40000034 25600
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 51200
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 76800
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 102400
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 128000
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 153600
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 179200
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 204800
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 230400
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
     sysbus WriteDoubleWord 0x40000034 256000
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
 """
 
@@ -101,7 +105,7 @@ macro fg_slow
 """
     sysbus WriteDoubleWord 0x40000034 28160
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000448"
 """
 
@@ -111,7 +115,7 @@ macro fg_fast
 """
     sysbus WriteDoubleWord 0x40000034 23040
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000360"
 """
 
@@ -120,6 +124,6 @@ macro fg_nominal
 """
     sysbus WriteDoubleWord 0x40000034 25600
     sysbus WriteDoubleWord 0x40000010 0x00000002
-    sysbus.nvic TriggerInterrupt 15
+    sysbus WriteDoubleWord 0xE000E200 0x00008000
     emulation RunFor "0.000400"
 """

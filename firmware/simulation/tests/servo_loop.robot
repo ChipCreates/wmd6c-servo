@@ -26,9 +26,6 @@ ${CC1IF}          ${2}         # TIM_SR_CC1IF = bit 1
 Setup DSR-1 Simulation
     Execute Command             mach create "DSR-1-Test"
     Execute Command             machine LoadPlatformDescription @${PLATFORM}
-    Execute Command             sysbus.adc SetVoltage 1 1.65
-    Execute Command             sysbus.adc SetVoltage 2 1.65
-    Execute Command             sysbus.adc SetVoltage 3 1.65
     Execute Command             sysbus LoadELF @${ELF}
     Execute Command             start
 
@@ -36,7 +33,7 @@ Inject FG Pulse
     [Arguments]                 ${ccr1_value}
     Execute Command             sysbus WriteDoubleWord ${TIM2_CCR1} ${ccr1_value}
     Execute Command             sysbus WriteDoubleWord ${TIM2_SR} ${CC1IF}
-    Execute Command             sysbus.nvic TriggerInterrupt 15
+    Execute Command             sysbus WriteDoubleWord 0xE000E200 0x00008000
     Execute Command             emulation RunFor "0.000400"
 
 Read TIM3 CCR1

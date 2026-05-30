@@ -156,15 +156,12 @@ i2c2: I2C.STM32F7_I2C @ sysbus 0x40005800
     EventInterrupt -> exti@22
 
 spi1: SPI.STM32SPI @ sysbus 0x40013000
-    series: STM32Series.G0
     IRQ -> nvic@25
 
 spi2: SPI.STM32SPI @ sysbus 0x40003800
-    series: STM32Series.G0
     IRQ -> nvic@26
 
 spi3: SPI.STM32SPI @ sysbus 0x40003C00
-    series: STM32Series.G0
     IRQ -> nvic@26
 
 // TIM2: free-running 32-bit counter, CH1 input capture on PA0 (FG901)

@@ -35,13 +35,11 @@ renode firmware/simulation/scripts/dsr1.resc
 
 The Renode monitor (console) opens. The firmware is loaded and halted.
 
-```
-(monitor) start
-```
+> **Do not call `start`.** The FG macros use `emulation RunFor` internally to
+> advance simulation time in controlled steps. Calling `start` puts the emulation
+> into free-run mode, which conflicts with `RunFor` inside a macro.
 
-Firmware executes: `clock_init` → `flash_load` → `adc_init` → `servo_init` → `main loop`.
-
-Inject the FG helper macros, then drive the servo loop:
+Load the FG helper and inject pulses — the macros start the CPU themselves:
 
 ```
 (monitor) i @firmware/simulation/scripts/fg-gen.resc
@@ -49,6 +47,8 @@ Inject the FG helper macros, then drive the servo loop:
 (monitor) sysbus ReadDoubleWord 0x40000434   # read TIM3->CCR1 (motor PWM)
 ```
 
+Each `runMacro $fg_lock` call steps the firmware through 10 FG edges, running
+`clock_init` → `flash_load` → `adc_init` → `servo_init` → servo ISR on the way.
 Expected TIM3->CCR1 ≈ 2048 (DAC_CENTER) when FG rate matches target exactly.
 
 ## Automated tests (Robot Framework)
@@ -82,7 +82,7 @@ Renode monitor:
 # Write a captured timestamp into CCR1 and fire the TIM2 IRQ
 sysbus WriteDoubleWord 0x40000034 <CCR1_VALUE>   # TIM2->CCR1
 sysbus WriteDoubleWord 0x40000010 0x00000002      # TIM2->SR: set CC1IF
-sysbus.nvic TriggerInterrupt 15                   # TIM2 NVIC position
+sysbus WriteDoubleWord 0xE000E200 0x00008000      # NVIC_ISPR0: set IRQ 15 pending
 ```
 
 Key values (see `firmware/src/config.h`):
@@ -102,15 +102,18 @@ sysbus ReadDoubleWord 0x40000434    # TIM3->CCR1
 
 ## Pot trim simulation
 
-RV601/RV602/RV603 voltages can be changed at any time:
-```
-sysbus.adc SetVoltage 1 <voltage>   # RV601 — base speed trim (PA1/ADC_IN1)
-sysbus.adc SetVoltage 2 <voltage>   # RV602 — Speed Tune slider (PA2/ADC_IN2)
-sysbus.adc SetVoltage 3 <voltage>   # RV603 — Speed Tune range (PA3/ADC_IN3)
-```
+> **Note:** `SetVoltage` is not available on all Renode versions. Check with
+> `help sysbus.adc` in the monitor. If present, set voltages with:
+> ```
+> sysbus.adc SetVoltage 1 <voltage>   # RV601 — base speed trim (PA1/ADC_IN1)
+> sysbus.adc SetVoltage 2 <voltage>   # RV602 — Speed Tune slider (PA2/ADC_IN2)
+> sysbus.adc SetVoltage 3 <voltage>   # RV603 — Speed Tune range (PA3/ADC_IN3)
+> ```
+> Mid-scale (1.65 V) = no offset. Full deflection (3.3 V or 0 V) = ±1% (RV601)
+> or ±3% (RV602 at full range) speed trim.
 
-Mid-scale (1.65 V) = no offset. Full deflection (3.3 V or 0 V) = ±1% (RV601)
-or ±3% (RV602 at full range) speed trim.
+This is moot until finding §3.3 is resolved — `adc_get_adjusted_target()` has no
+caller, so ADC values have no effect on the servo loop in the current firmware.
 
 To simulate the S601 Speed Tune enable switch being pressed (PA7 HIGH):
 ```
