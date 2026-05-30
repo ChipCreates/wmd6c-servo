@@ -30,6 +30,7 @@
  * See fixed-point-arithmetic.md and digital-pll-servo.md for full derivation.
  */
 
+#include "stm32g0xx.h"
 #include <stdint.h>
 #include "config.h"
 #include "servo.h"

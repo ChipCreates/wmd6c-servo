@@ -41,6 +41,7 @@
  * factory DFU bootloader handles firmware update — no DFU code here.
  */
 
+#include "stm32g0xx.h"
 #include <stdint.h>
 #include <string.h>
 #include "config.h"

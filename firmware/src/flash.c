@@ -41,6 +41,7 @@
  *   and keeps flash.c self-contained.
  */
 
+#include "stm32g0xx.h"
 #include <stdint.h>
 #include <stddef.h>
 #include "config.h"

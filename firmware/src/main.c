@@ -35,6 +35,7 @@
  *   The motor cannot run uncontrolled at any point in the boot sequence.
  */
 
+#include "stm32g0xx.h"
 #include <stdint.h>
 #include "config.h"
 #include "servo.h"
@@ -45,6 +46,10 @@
 /* Boot status flags — set during init, reported via USB CDC on first connection.
  * Passed explicitly to usb_cdc_set_boot_status() after USB init so the CDC
  * layer can report it as a banner when the host first connects. */
+
+/* Called by startup_stm32g0b1xx.s before main(). Clock setup is handled
+ * entirely by clock_init() below, so this can be a no-op. */
+void SystemInit(void) {}
 
 /* =========================================================================
  * clock_init()

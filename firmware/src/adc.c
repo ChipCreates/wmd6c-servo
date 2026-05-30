@@ -31,6 +31,7 @@
  * See signal-chain-analysis.md §4.2.
  */
 
+#include "stm32g0xx.h"
 #include <stdint.h>
 #include "config.h"
 #include "adc.h"
