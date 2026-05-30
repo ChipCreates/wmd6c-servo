@@ -51,6 +51,10 @@
  * entirely by clock_init() below, so this can be a no-op. */
 void SystemInit(void) {}
 
+/* Called by newlib's __libc_init_array (invoked from startup) to run C++
+ * static constructors. No C++ is used; stub satisfies the linker. */
+void _init(void) {}
+
 /* =========================================================================
  * clock_init()
  *

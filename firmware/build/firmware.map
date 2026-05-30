@@ -1,0 +1,580 @@
+Archive member included to satisfy reference by file (symbol)
+
+C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a(libc_a-init.o)
+                              D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o (__libc_init_array)
+C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+                              D:/Projects/wmd6c-servo/firmware/build/obj/adc.o (__aeabi_idiv)
+C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_dvmd_tls.o)
+                              C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o) (__aeabi_idiv0)
+
+Discarded input sections
+
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .text          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .data          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .bss           0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .text.adc_get_adjusted_target
+                0x00000000       0x78 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .text          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .data          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .bss           0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .text.flash_save
+                0x00000000      0x150 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .text.flash_reset_defaults
+                0x00000000       0x28 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000      0xaae D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x2e D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x28 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x56 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x51 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000      0x103 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x6a D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000      0x1df D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x1c D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0xd1 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000      0x4da D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000      0x11f D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000     0xf46a D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x66 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00000000       0x9d D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .text          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .data          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .bss           0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000      0xaae D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x2e D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x28 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x56 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x51 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000      0x103 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x6a D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000      0x1df D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x1c D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0xd1 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000      0x4da D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000      0x11f D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000     0xf46a D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x66 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00000000       0x9d D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .text          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .data          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .bss           0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .text.servo_set_target_period
+                0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .text.servo_reset_integral
+                0x00000000       0x24 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .text.servo_freeze
+                0x00000000       0x24 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .text.servo_unfreeze
+                0x00000000       0x1c D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000      0xaae D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x2e D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x28 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x56 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x51 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000      0x103 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x6a D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000      0x1df D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x1c D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0xd1 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000      0x4da D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000      0x11f D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000     0xf46a D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x66 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x00000000       0x9d D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .group         0x00000000        0xc D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .text          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .data          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .bss           0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000      0xaae D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x2e D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x28 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x56 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x51 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000      0x103 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x6a D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000      0x1df D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x1c D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0xd1 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000      0x4da D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000      0x11f D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000     0xf46a D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x66 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000      0x190 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x9d D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00000000       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .text          0x00000000       0x14 D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+ .data          0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+ .bss           0x00000000        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+ .text          0x00000000        0x0 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a(libc_a-init.o)
+ .data          0x00000000        0x0 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a(libc_a-init.o)
+ .bss           0x00000000        0x0 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a(libc_a-init.o)
+ .debug_frame   0x00000000       0x2c C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a(libc_a-init.o)
+ .ARM.attributes
+                0x00000000       0x2c C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a(libc_a-init.o)
+ .text          0x00000000      0x1d4 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+ .data          0x00000000        0x0 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+ .bss           0x00000000        0x0 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+ .debug_frame   0x00000000       0x20 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+ .debug_line_str
+                0x00000000       0xc9 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x00000000       0x1e C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+ .text          0x00000000        0x4 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_dvmd_tls.o)
+ .data          0x00000000        0x0 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_dvmd_tls.o)
+ .bss           0x00000000        0x0 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_dvmd_tls.o)
+ .debug_line_str
+                0x00000000       0xc9 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_dvmd_tls.o)
+ .ARM.attributes
+                0x00000000       0x1e C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a(_dvmd_tls.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x0001f800         xr
+RAM              0x20000000         0x00024000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+LOAD D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+LOAD D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+LOAD D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+LOAD D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+LOAD D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+                0x00000800                        _Min_Stack_Size = 0x800
+                0x00000000                        _Min_Heap_Size = 0x0
+
+.isr_vector     0x08000000       0xbc
+                0x08000000                        . = ALIGN (0x4)
+ *(.isr_vector)
+ .isr_vector    0x08000000       0xbc D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+                0x08000000                g_pfnVectors
+                0x080000bc                        . = ALIGN (0x4)
+
+.text           0x080000bc      0x45c
+                0x080000bc                        . = ALIGN (0x4)
+ *(.text)
+ *(.text*)
+ .text.adc_init
+                0x080000bc       0xf0 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+                0x080000bc                adc_init
+ .text.flash_load
+                0x080001ac       0x98 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+                0x080001ac                flash_load
+ .text.SystemInit
+                0x08000244        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+                0x08000244                SystemInit
+ .text._init    0x08000248        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+                0x08000248                _init
+ .text.startup.main
+                0x0800024c       0xb4 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+                0x0800024c                main
+ .text.servo_init
+                0x08000300       0xac D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+                0x08000300                servo_init
+ .text.TIM2_IRQHandler
+                0x080003ac       0xbc D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+                0x080003ac                TIM2_IRQHandler
+ .text.usb_cdc_init
+                0x08000468        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+                0x08000468                usb_cdc_init
+ .text.usb_cdc_set_boot_status
+                0x0800046c        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+                0x0800046c                usb_cdc_set_boot_status
+ .text.usb_cdc_idle
+                0x08000470        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+                0x08000470                usb_cdc_idle
+ .text.usb_cdc_poll
+                0x08000474        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+                0x08000474                usb_cdc_poll
+ .text.USB_UCPD1_2_IRQHandler
+                0x08000478        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+                0x08000478                USB_UCPD1_2_IRQHandler
+ .text.Reset_Handler
+                0x0800047c       0x50 D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+                0x0800047c                Reset_Handler
+ .text.Default_Handler
+                0x080004cc        0x2 D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+                0x080004cc                I2C2_3_IRQHandler
+                0x080004cc                USART3_4_5_6_LPUART1_IRQHandler
+                0x080004cc                TIM1_CC_IRQHandler
+                0x080004cc                HardFault_Handler
+                0x080004cc                ADC1_COMP_IRQHandler
+                0x080004cc                SysTick_Handler
+                0x080004cc                PendSV_Handler
+                0x080004cc                NMI_Handler
+                0x080004cc                I2C1_IRQHandler
+                0x080004cc                TIM7_LPTIM2_IRQHandler
+                0x080004cc                TIM17_FDCAN_IT1_IRQHandler
+                0x080004cc                DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQHandler
+                0x080004cc                RCC_CRS_IRQHandler
+                0x080004cc                RTC_TAMP_IRQHandler
+                0x080004cc                SPI1_IRQHandler
+                0x080004cc                EXTI2_3_IRQHandler
+                0x080004cc                USART2_LPUART2_IRQHandler
+                0x080004cc                PVD_VDDIO2_IRQHandler
+                0x080004cc                EXTI4_15_IRQHandler
+                0x080004cc                DMA1_Channel1_IRQHandler
+                0x080004cc                Default_Handler
+                0x080004cc                CEC_IRQHandler
+                0x080004cc                TIM14_IRQHandler
+                0x080004cc                TIM15_IRQHandler
+                0x080004cc                TIM3_TIM4_IRQHandler
+                0x080004cc                EXTI0_1_IRQHandler
+                0x080004cc                SPI2_3_IRQHandler
+                0x080004cc                SVC_Handler
+                0x080004cc                TIM6_DAC_LPTIM1_IRQHandler
+                0x080004cc                WWDG_IRQHandler
+                0x080004cc                DMA1_Channel2_3_IRQHandler
+                0x080004cc                FLASH_IRQHandler
+                0x080004cc                USART1_IRQHandler
+                0x080004cc                TIM16_FDCAN_IT0_IRQHandler
+                0x080004cc                TIM1_BRK_UP_TRG_COM_IRQHandler
+ *fill*         0x080004ce        0x2 
+ .text.__libc_init_array
+                0x080004d0       0x48 C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a(libc_a-init.o)
+                0x080004d0                __libc_init_array
+ *(.rodata)
+ *(.rodata*)
+ *(.eh_frame)
+                0x08000518                        . = ALIGN (0x4)
+                0x08000518                        _etext = .
+
+.glue_7         0x08000518        0x0
+ .glue_7        0x08000518        0x0 linker stubs
+
+.glue_7t        0x08000518        0x0
+ .glue_7t       0x08000518        0x0 linker stubs
+
+.vfp11_veneer   0x08000518        0x0
+ .vfp11_veneer  0x08000518        0x0 linker stubs
+
+.v4_bx          0x08000518        0x0
+ .v4_bx         0x08000518        0x0 linker stubs
+
+.iplt           0x08000518        0x0
+ .iplt          0x08000518        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+
+.rel.dyn        0x08000518        0x0
+ .rel.iplt      0x08000518        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+
+.ARM.extab
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+
+.ARM            0x08000518        0x0
+                0x08000518                        __exidx_start = .
+ *(.ARM.exidx*)
+                0x08000518                        __exidx_end = .
+
+.preinit_array  0x08000518        0x0
+                0x08000518                        PROVIDE (__preinit_array_start = .)
+ *(.preinit_array*)
+                0x08000518                        PROVIDE (__preinit_array_end = .)
+
+.init_array     0x08000518        0x0
+                0x08000518                        PROVIDE (__init_array_start = .)
+ *(SORT_BY_NAME(.init_array.*))
+ *(.init_array*)
+                0x08000518                        PROVIDE (__init_array_end = .)
+
+.fini_array     0x08000518        0x0
+                [!provide]                        PROVIDE (__fini_array_start = .)
+ *(SORT_BY_NAME(.fini_array.*))
+ *(.fini_array*)
+                [!provide]                        PROVIDE (__fini_array_end = .)
+                0x08000518                        _sidata = LOADADDR (.data)
+
+.data           0x20000000        0xc load address 0x08000518
+                0x20000000                        . = ALIGN (0x4)
+                0x20000000                        _sdata = .
+ *(.data)
+ *(.data*)
+ .data.g_target_period
+                0x20000000        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+                0x20000000                g_target_period
+ .data.g_ki_q16
+                0x20000004        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+                0x20000004                g_ki_q16
+ .data.g_kp_q16
+                0x20000008        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+                0x20000008                g_kp_q16
+                0x2000000c                        . = ALIGN (0x4)
+                0x2000000c                        _edata = .
+
+.igot.plt       0x2000000c        0x0 load address 0x08000524
+ .igot.plt      0x2000000c        0x0 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+
+.bss            0x2000000c       0x24 load address 0x08000524
+                0x2000000c                        . = ALIGN (0x4)
+                0x2000000c                        _sbss = .
+ *(.bss)
+ *(.bss*)
+ .bss.g_adc_raw
+                0x2000000c        0x6 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+                0x2000000c                g_adc_raw
+ *fill*         0x20000012        0x2 
+ .bss.g_telemetry
+                0x20000014       0x14 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+                0x20000014                g_telemetry
+ .bss.integral  0x20000028        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .bss.last_capture
+                0x2000002c        0x4 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ *(COMMON)
+                0x20000030                        . = ALIGN (0x4)
+                0x20000030                        _ebss = .
+
+._user_heap_stack
+                0x20000030      0x800 load address 0x08000524
+                0x20000030                        . = ALIGN (0x8)
+                [!provide]                        PROVIDE (end = .)
+                0x20000030                        . = (. + _Min_Heap_Size)
+                0x20000830                        . = (. + _Min_Stack_Size)
+ *fill*         0x20000030      0x800 
+                0x20000830                        . = ALIGN (0x8)
+                0x20024000                        _estack = (ORIGIN (RAM) + LENGTH (RAM))
+
+/DISCARD/
+ libc.a(*)
+ libm.a(*)
+ libgcc.a(*)
+                0x00000001                        ASSERT (((LOADADDR (.data) + SIZEOF (.data)) <= 0x801f000), ERROR: Firmware image exceeds 126 KB and overlaps the settings sector. \
+     Reduce firmware size or move the settings sector.)
+OUTPUT(D:/Projects/wmd6c-servo/firmware/build/firmware.elf elf32-littlearm)
+LOAD linker stubs
+LOAD C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libc.a
+LOAD C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libm.a
+LOAD C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v6-m/nofp\libgcc.a
+
+.debug_info     0x00000000     0x1de8
+ .debug_info    0x00000000      0x5db D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_info    0x000005db      0x681 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_info    0x00000c5c      0x4e2 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_info    0x0000113e      0xb96 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_info    0x00001cd4      0x114 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.debug_abbrev   0x00000000      0x90c
+ .debug_abbrev  0x00000000      0x168 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_abbrev  0x00000168      0x2cc D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_abbrev  0x00000434      0x1ba D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_abbrev  0x000005ee      0x249 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_abbrev  0x00000837       0xd5 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.debug_loc      0x00000000      0x58c
+ .debug_loc     0x00000000      0x114 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_loc     0x00000114      0x252 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_loc     0x00000366       0x15 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_loc     0x0000037b      0x211 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+
+.debug_aranges  0x00000000      0x110
+ .debug_aranges
+                0x00000000       0x28 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_aranges
+                0x00000028       0x30 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_aranges
+                0x00000058       0x30 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_aranges
+                0x00000088       0x48 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_aranges
+                0x000000d0       0x40 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.debug_ranges   0x00000000      0x2a0
+ .debug_ranges  0x00000000       0x18 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_ranges  0x00000018      0x1d0 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_ranges  0x000001e8       0x38 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_ranges  0x00000220       0x50 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_ranges  0x00000270       0x30 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.debug_macro    0x00000000    0x11a49
+ .debug_macro   0x00000000       0xe5 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x000000e5      0xaae D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000b93       0x2e D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000bc1       0x28 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000be9       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000c0b       0x56 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000c61       0x51 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000cb2      0x103 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000db5       0x6a D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000e1f      0x1df D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00000ffe       0x1c D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x0000101a       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x0000103c       0xd1 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x0000110d      0x4da D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x000015e7      0x11f D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00001706     0xf46a D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00010b70       0x66 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00010bd6       0x9d D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00010c73       0x1c D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_macro   0x00010c8f      0x101 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00010d90      0x190 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_macro   0x00010f20       0xf3 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00011013       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_macro   0x00011035       0xd6 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_macro   0x0001110b      0x19e D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x000112a9       0x7b D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00011324       0x24 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00011348       0x3c D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00011384       0x34 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x000113b8      0x364 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x0001171c       0x16 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00011732       0x4a D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x0001177c       0x34 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x000117b0       0x10 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x000117c0       0x58 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00011818      0x1e5 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x000119fd       0x10 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .debug_macro   0x00011a0d       0x3c D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.debug_line     0x00000000     0x1da5
+ .debug_line    0x00000000      0x59d D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_line    0x0000059d      0x786 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_line    0x00000d23      0x513 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_line    0x00001236      0x713 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_line    0x00001949      0x45c D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.debug_str      0x00000000    0x63075
+ .debug_str     0x00000000    0x63075 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+                              0x5fce8 (size before relaxing)
+ .debug_str     0x00063075    0x6006e D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_str     0x00063075    0x5fcdb D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_str     0x00063075    0x5ffb4 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_str     0x00063075    0x629bf D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.comment        0x00000000       0x45
+ .comment       0x00000000       0x45 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+                                 0x46 (size before relaxing)
+ .comment       0x00000045       0x46 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .comment       0x00000045       0x46 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .comment       0x00000045       0x46 D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .comment       0x00000045       0x46 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+
+.ARM.attributes
+                0x00000000       0x2a
+ .ARM.attributes
+                0x00000000       0x2c D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .ARM.attributes
+                0x0000002c       0x2c D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .ARM.attributes
+                0x00000058       0x2c D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .ARM.attributes
+                0x00000084       0x2c D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .ARM.attributes
+                0x000000b0       0x2c D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o
+ .ARM.attributes
+                0x000000dc       0x22 D:/Projects/wmd6c-servo/firmware/build/obj/startup_stm32g0b1xx.o
+
+.debug_frame    0x00000000      0x1e4
+ .debug_frame   0x00000000       0x48 D:/Projects/wmd6c-servo/firmware/build/obj/adc.o
+ .debug_frame   0x00000048       0x68 D:/Projects/wmd6c-servo/firmware/build/obj/flash.o
+ .debug_frame   0x000000b0       0x48 D:/Projects/wmd6c-servo/firmware/build/obj/main.o
+ .debug_frame   0x000000f8       0x8c D:/Projects/wmd6c-servo/firmware/build/obj/servo.o
+ .debug_frame   0x00000184       0x60 D:/Projects/wmd6c-servo/firmware/build/obj/usb_cdc.o

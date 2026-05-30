@@ -63,7 +63,7 @@ OBJDUMP := arm-none-eabi-objdump
 SIZE    := arm-none-eabi-size
 
 # Verify toolchain is available before doing anything else
-ifeq ($(shell which $(CC) 2>/dev/null),)
+ifeq ($(shell where $(CC) 2>NUL || which $(CC) 2>/dev/null),)
 $(error arm-none-eabi-gcc not found on PATH. \
   Install it with: \
   macOS:  brew install --cask gcc-arm-embedded \
@@ -187,14 +187,14 @@ all: $(BUILD_DIR)$(PROJECT).bin $(BUILD_DIR)$(PROJECT).hex
 	@$(SIZE) $(BUILD_DIR)$(PROJECT).elf
 	@echo ""
 	@echo "Flash usage against 128KB device limit (settings sector reserved):"
-	@python3 -c "\
+	-@python -c "\
 import subprocess, re; \
 out = subprocess.check_output(['$(SIZE)', '$(BUILD_DIR)$(PROJECT).elf']).decode(); \
 m = re.search(r'(\d+)\s+(\d+)\s+(\d+)', out.split('\n')[1]); \
 text,data,bss = int(m.group(1)),int(m.group(2)),int(m.group(3)); \
 flash=text+data; ram=data+bss; \
 print(f'  Flash: {flash} / 126976 bytes ({flash*100//126976}%%) (126KB available, 2KB reserved for settings)'); \
-print(f'  RAM:   {ram} / 147456 bytes ({ram*100//147456}%%)')" 2>/dev/null || true
+print(f'  RAM:   {ram} / 147456 bytes ({ram*100//147456}%%)')" 2>NUL
 
 # ELF — main build product, contains debug symbols
 $(BUILD_DIR)$(PROJECT).elf: $(ALL_OBJS) $(LDSCRIPT)
@@ -223,7 +223,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.s | $(OBJ_DIR)
 
 # Create object directory if it doesn't exist
 $(OBJ_DIR):
-	@mkdir -p $(OBJ_DIR)
+	@if not exist "$(OBJ_DIR)" mkdir "$(OBJ_DIR)"
 
 # -----------------------------------------------------------------------------
 # Flash targets
@@ -258,12 +258,8 @@ disasm: $(BUILD_DIR)$(PROJECT).elf
 
 clean:
 	@echo "  CLEAN"
-	@rm -rf $(OBJ_DIR)
-	@rm -f $(BUILD_DIR)$(PROJECT).elf \
-	       $(BUILD_DIR)$(PROJECT).bin \
-	       $(BUILD_DIR)$(PROJECT).hex \
-	       $(BUILD_DIR)$(PROJECT).map \
-	       $(BUILD_DIR)$(PROJECT).lss
+	-@if exist "$(subst /,\,$(OBJ_DIR))" rmdir /s /q "$(subst /,\,$(OBJ_DIR))"
+	-@del /q /f "$(subst /,\,$(BUILD_DIR)$(PROJECT).elf)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).bin)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).hex)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).map)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).lss)" 2>NUL
 	@echo "  Done"
 
 # Print all variables (useful for debugging the build)

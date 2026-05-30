@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "DSR-1: Debug via Renode",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/firmware/build/firmware.elf",
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            "miDebuggerServerAddress": "localhost:3333",
+            "stopAtConnect": true,
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Select Thumb instruction set",
+                    "text": "set architecture armv6-m",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Load symbols from ELF",
+                    "text": "file firmware/build/firmware.elf",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Disable pagination for automated sessions",
+                    "text": "set pagination off",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "",
+            "svdPath": "",
+            "additionalSOLibSearchPath": "${workspaceFolder}/firmware/build",
+            "logging": {
+                "engineLogging": false,
+                "trace": false
+            }
+        }
+    ]
+}

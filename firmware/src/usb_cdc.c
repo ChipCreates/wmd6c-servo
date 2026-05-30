@@ -51,6 +51,17 @@
 #include "usb_cdc.h"
 
 /* =========================================================================
+ * NOTE: The implementation below was written for the first-generation ST USB
+ * device IP (STM32F1/L0 style: doubled PMA stride, padded buffer descriptors,
+ * USB_EP_CTR_RX/TX naming). The STM32G0 uses the second-generation USB_DRD
+ * IP, which has linear PMA access and different register names. The code does
+ * not compile against the G0 CMSIS headers and will not enumerate correctly
+ * even if forced to compile. Excluded pending the port described in
+ * docs/review/firmware-rev-a-findings.md §3.2.
+ * ========================================================================= */
+#if 0
+
+/* =========================================================================
  * USB PMA (Packet Memory Area) helpers
  *
  * The STM32 USB peripheral uses a dedicated 2KB SRAM for USB packets,
@@ -834,3 +845,20 @@ void usb_cdc_poll(void)
         send_telemetry();
     }
 }
+
+#endif /* USB_G0_PORT_PENDING */
+
+/* =========================================================================
+ * Stub implementations — servo and flash operate normally; USB is silent
+ * until the G0 USB_DRD port is complete.
+ * ========================================================================= */
+
+void usb_cdc_init(void) {}
+
+void usb_cdc_set_boot_status(FlashResult status) { (void)status; }
+
+int  usb_cdc_idle(void)  { return 1; }
+
+void usb_cdc_poll(void)  {}
+
+void USB_UCPD1_2_IRQHandler(void) {}

@@ -137,6 +137,7 @@ SECTIONS
    * startup_stm32g0b1xx.s copies from _sidata to _sdata.._edata.
    * ----------------------------------------------------------------------- */
   _sidata = LOADADDR(.data);   /* Flash address where .data image is stored */
+  /* Computed after .data so ASSERT below can check the true flash end */
 
   .data :
   {
@@ -205,7 +206,9 @@ SECTIONS
    * If the firmware grows beyond 126 KB, this check fails with a clear
    * error message rather than silently corrupting the settings sector.
    * ----------------------------------------------------------------------- */
-  ASSERT(. <= 0x0801F000,
+  /* '.' here is a RAM address — must check flash end instead.
+   * Flash usage ends at the LMA tail of .data (initialised variables stored in flash). */
+  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= 0x0801F000,
     "ERROR: Firmware image exceeds 126 KB and overlaps the settings sector. \
      Reduce firmware size or move the settings sector.")
 }

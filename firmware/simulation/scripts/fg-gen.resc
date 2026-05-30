@@ -1,0 +1,125 @@
+# DSR-1 FG Signal Injector — Renode monitor helper
+#
+# Source this from the Renode monitor after dsr1.resc is running:
+#   (monitor) i @firmware/simulation/scripts/fg-gen.resc
+#
+# Then call macros to inject FG pulses:
+#   (monitor) runMacro $fg_one          -- inject one pulse at current period
+#   (monitor) runMacro $fg_lock         -- inject 30 pulses at TARGET_PERIOD_DEFAULT
+#   (monitor) runMacro $fg_slow         -- one pulse at 110% target (motor too slow)
+#   (monitor) runMacro $fg_fast         -- one pulse at 90% target (motor too fast)
+#   (monitor) runMacro $fg_nominal      -- return period to 100% of target
+#
+# How FG injection works
+# ----------------------
+# TIM2_IRQHandler (servo.c) reads:
+#   now    = TIM2->CCR1       (captured timestamp, 32-bit, 64 MHz ticks)
+#   period = now - last_capture
+# then runs the PI control law and writes the result to TIM3->CCR1.
+#
+# We synthesise captures by writing successive CCR1 values (each 25600 ticks
+# apart for the nominal 2500 Hz FG rate) and triggering NVIC IRQ 15 (TIM2).
+#
+# TIM2 register map (base 0x40000000):
+#   0x10  SR     — CC1IF is bit 1 (0x00000002); ISR clears it at exit
+#   0x34  CCR1   — capture/compare register 1 (read by ISR as 'now')
+#
+# Monitor TIM3->CCR1 (motor drive PWM) to observe servo response:
+#   (monitor) sysbus ReadDoubleWord 0xE0001008   -- reads DWT CYCCNT (simulation time)
+#   (monitor) sysbus ReadDoubleWord 0x40000434   -- reads TIM3->CCR1
+#
+# TARGET_PERIOD_DEFAULT = 25600 ticks (SYSCLK 64 MHz / FG_TARGET_HZ_NOMINAL 2500)
+# MIN_PERIOD_TICKS      = 6400  ticks (filter for implausibly short periods)
+# DAC_CENTER            = 2048  (TIM3->CCR1 quiescent value at locked speed)
+
+# --- Shared state ---
+# Renode .resc variables are global strings; arithmetic is not supported in
+# the scripting language.  We use fixed step macros instead of a counter.
+# Start CCR1 at one full period above 0 so the first pulse is not filtered.
+
+macro fg_one
+"""
+    sysbus WriteDoubleWord 0x40000034 25600
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 51200
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+"""
+
+# Inject 30 pulses at the nominal 2500 Hz target rate.
+# At steady state (motor locked) TIM3->CCR1 should settle near 2048 (DAC_CENTER).
+macro fg_lock
+"""
+    sysbus WriteDoubleWord 0x40000034 25600
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 51200
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 76800
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 102400
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 128000
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 153600
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 179200
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 204800
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 230400
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+    sysbus WriteDoubleWord 0x40000034 256000
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+"""
+
+# One pulse at 110% of target period (28160 ticks) — motor running too slow.
+# Expected: error > 0, PI law reduces TIM3->CCR1 below 2048 (more motor drive).
+macro fg_slow
+"""
+    sysbus WriteDoubleWord 0x40000034 28160
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000448"
+"""
+
+# One pulse at 90% of target period (23040 ticks) — motor running too fast.
+# Expected: error < 0, PI law raises TIM3->CCR1 above 2048 (less motor drive).
+macro fg_fast
+"""
+    sysbus WriteDoubleWord 0x40000034 23040
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000360"
+"""
+
+# Return to nominal after a fast/slow perturbation.
+macro fg_nominal
+"""
+    sysbus WriteDoubleWord 0x40000034 25600
+    sysbus WriteDoubleWord 0x40000010 0x00000002
+    sysbus.nvic TriggerInterrupt 15
+    emulation RunFor "0.000400"
+"""
