@@ -53,6 +53,22 @@ STARTUP      := $(SRC_DIR)/startup_stm32g0b1xx.s
 LDSCRIPT     := $(BUILD_DIR)STM32G0B1KBUx_FLASH.ld
 
 # -----------------------------------------------------------------------------
+# OS detection — sets platform-specific shell commands used in targets below.
+# GNU make sets $(OS)=Windows_NT on all Windows versions; unset on Unix.
+# -----------------------------------------------------------------------------
+ifeq ($(OS),Windows_NT)
+    DEVNULL  := NUL
+    PYTHON   := python
+    WHICH    := where
+    MKDIR_OBJ = if not exist "$(subst /,\,$(OBJ_DIR))" mkdir "$(subst /,\,$(OBJ_DIR))"
+else
+    DEVNULL  := /dev/null
+    PYTHON   := python3
+    WHICH    := which
+    MKDIR_OBJ = mkdir -p $(OBJ_DIR)
+endif
+
+# -----------------------------------------------------------------------------
 # Toolchain
 # -----------------------------------------------------------------------------
 CC      := arm-none-eabi-gcc
@@ -63,12 +79,15 @@ OBJDUMP := arm-none-eabi-objdump
 SIZE    := arm-none-eabi-size
 
 # Verify toolchain is available before doing anything else
-ifeq ($(shell where $(CC) 2>NUL || which $(CC) 2>/dev/null),)
+ifeq ($(shell $(WHICH) $(CC) 2>$(DEVNULL)),)
 $(error arm-none-eabi-gcc not found on PATH. \
   Install it with: \
-  macOS:  brew install --cask gcc-arm-embedded \
-  Ubuntu: sudo apt install gcc-arm-none-eabi \
-  Windows: download from https://developer.arm.com/downloads/-/gnu-rm)
+  macOS:              brew install --cask gcc-arm-embedded \
+  Ubuntu/Debian:      sudo apt install gcc-arm-none-eabi \
+  Fedora:             sudo dnf install arm-none-eabi-gcc arm-none-eabi-newlib \
+  RHEL/CentOS:        sudo dnf install epel-release && sudo dnf install arm-none-eabi-gcc \
+  Windows (winget):   winget install Arm.GnuArmEmbeddedToolchain \
+  All platforms:      https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
 endif
 
 # -----------------------------------------------------------------------------
@@ -187,14 +206,14 @@ all: $(BUILD_DIR)$(PROJECT).bin $(BUILD_DIR)$(PROJECT).hex
 	@$(SIZE) $(BUILD_DIR)$(PROJECT).elf
 	@echo ""
 	@echo "Flash usage against 128KB device limit (settings sector reserved):"
-	-@python -c "\
+	-@$(PYTHON) -c "\
 import subprocess, re; \
 out = subprocess.check_output(['$(SIZE)', '$(BUILD_DIR)$(PROJECT).elf']).decode(); \
 m = re.search(r'(\d+)\s+(\d+)\s+(\d+)', out.split('\n')[1]); \
 text,data,bss = int(m.group(1)),int(m.group(2)),int(m.group(3)); \
 flash=text+data; ram=data+bss; \
 print(f'  Flash: {flash} / 126976 bytes ({flash*100//126976}%%) (126KB available, 2KB reserved for settings)'); \
-print(f'  RAM:   {ram} / 147456 bytes ({ram*100//147456}%%)')" 2>NUL
+print(f'  RAM:   {ram} / 147456 bytes ({ram*100//147456}%%)')" 2>$(DEVNULL)
 
 # ELF — main build product, contains debug symbols
 $(BUILD_DIR)$(PROJECT).elf: $(ALL_OBJS) $(LDSCRIPT)
@@ -223,7 +242,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.s | $(OBJ_DIR)
 
 # Create object directory if it doesn't exist
 $(OBJ_DIR):
-	@if not exist "$(OBJ_DIR)" mkdir "$(OBJ_DIR)"
+	@$(MKDIR_OBJ)
 
 # -----------------------------------------------------------------------------
 # Flash targets
@@ -256,11 +275,28 @@ disasm: $(BUILD_DIR)$(PROJECT).elf
 	@$(OBJDUMP) -h -S $< > $(BUILD_DIR)$(PROJECT).lss
 	@echo "  Written to $(BUILD_DIR)$(PROJECT).lss"
 
+ifeq ($(OS),Windows_NT)
 clean:
 	@echo "  CLEAN"
 	-@if exist "$(subst /,\,$(OBJ_DIR))" rmdir /s /q "$(subst /,\,$(OBJ_DIR))"
-	-@del /q /f "$(subst /,\,$(BUILD_DIR)$(PROJECT).elf)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).bin)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).hex)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).map)" "$(subst /,\,$(BUILD_DIR)$(PROJECT).lss)" 2>NUL
+	-@del /q /f \
+	  "$(subst /,\,$(BUILD_DIR)$(PROJECT).elf)" \
+	  "$(subst /,\,$(BUILD_DIR)$(PROJECT).bin)" \
+	  "$(subst /,\,$(BUILD_DIR)$(PROJECT).hex)" \
+	  "$(subst /,\,$(BUILD_DIR)$(PROJECT).map)" \
+	  "$(subst /,\,$(BUILD_DIR)$(PROJECT).lss)" 2>NUL
 	@echo "  Done"
+else
+clean:
+	@echo "  CLEAN"
+	@rm -rf $(OBJ_DIR)
+	@rm -f  $(BUILD_DIR)$(PROJECT).elf \
+	        $(BUILD_DIR)$(PROJECT).bin \
+	        $(BUILD_DIR)$(PROJECT).hex \
+	        $(BUILD_DIR)$(PROJECT).map \
+	        $(BUILD_DIR)$(PROJECT).lss
+	@echo "  Done"
+endif
 
 # Print all variables (useful for debugging the build)
 print-%:

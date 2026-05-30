@@ -5,12 +5,34 @@ Run from the **workspace root** (`d:/Projects/wmd6c-servo`).
 
 ## Prerequisites
 
-**1. Install Renode** from https://renode.io (Windows installer available).
+**1. Install Renode** from https://renode.io. Packages are available for all
+major platforms:
 
-**2. Install renode-test Python dependencies.** The path contains a space, so
-it must be quoted:
+| Platform | Package |
+|---|---|
+| Windows | `.msi` installer (winget: `Antmicro.Renode`) |
+| macOS | `.pkg` installer |
+| Ubuntu / Debian | `.deb` — `sudo dpkg -i renode_*.deb` |
+| Fedora / RHEL | `.rpm` — `sudo dnf install renode_*.rpm` |
+| Any Linux | AppImage — `chmod +x renode_*.linux-portable` |
+
+**2. Install renode-test Python dependencies.**
+
+*Windows* — the default install path contains a space and must be quoted:
 ```
 pip install -r "C:\Program Files\Renode\tests\requirements.txt"
+```
+
+*macOS / Debian / Ubuntu* — Renode installs to a path without spaces:
+```
+pip3 install -r /opt/renode/tests/requirements.txt
+# macOS: /Applications/Renode.app/Contents/MacOS/tests/requirements.txt
+```
+
+*Fedora / RHEL* — same as Debian/Ubuntu but confirm the install prefix first:
+```
+renode --version          # shows install path
+pip3 install -r /opt/renode/tests/requirements.txt
 ```
 
 **3. Verify tools are on PATH** by opening a new terminal and running:
@@ -19,13 +41,16 @@ renode --version
 renode-test --help
 ```
 
-### VS Code terminal note
+### VS Code terminal note (Windows only)
 
-VS Code's integrated terminal inherits the PATH from when VS Code was launched,
-so tools installed afterward (Renode, arm-none-eabi-gcc, make) will not be
-found until VS Code is restarted. The workspace `.vscode/settings.json` works
-around this by appending the tool paths to every new VS Code terminal — open a
-**new terminal** (`Ctrl+Shift+`\``) rather than reusing an existing one.
+On Windows, VS Code's integrated terminal inherits the PATH from when VS Code
+was launched, so tools installed afterward won't be found until VS Code is
+restarted. The workspace `.vscode/settings.json` works around this for Windows
+by appending the tool paths to every new VS Code terminal — open a **new
+terminal** (`Ctrl+Shift+`\``) rather than reusing an existing one.
+
+On Linux and macOS the system PATH is read fresh by each terminal and this is
+not an issue.
 
 ## Quick start — interactive session
 
