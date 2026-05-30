@@ -81,10 +81,12 @@ the CX20084 on pin 13.
 
 ---
 
-## 4. The Crystal Reference
+## 4. The Crystal Reference and Outer Phase Loop
 
 The CX20084 needs to know what speed is *correct* in order to detect and correct
-deviations from it. It obtains this reference from the **X701 crystal oscillator**.
+deviations from it. It obtains this reference from the **X701 crystal oscillator**,
+and the servo system uses it in two distinct ways — forming an inner speed loop and
+an outer phase loop.
 
 X701 is a 34.7 kHz quartz crystal mounted on the Auto-Off board. Quartz crystals
 oscillate at a frequency determined by their physical dimensions with extraordinary
@@ -93,15 +95,71 @@ range. At 34.7 kHz, this means the oscillation frequency stays within ±1.7 Hz o
 nominal across normal operating temperatures. This stability is the foundation of
 the servo system's accuracy.
 
-The 34.7 kHz signal from X701 is fed to the **IC701 MSM58141RS**, a frequency
-divider IC. IC701 divides the crystal frequency down by a fixed ratio, producing a
-lower-frequency reference signal whose period represents "correct speed." This
-divided signal becomes the servo system's reference clock — the target against which
-the FG pulse train is compared.
+The 34.7 kHz signal from X701 is fed to the **IC701 MSM58141RS**, a combined
+crystal oscillator, frequency divider, and phase comparator IC. IC701 divides the
+crystal frequency down by a fixed ratio of 32, producing a lower-frequency reference
+signal (nominally 34,700 ÷ 32 = **1,084.75 Hz**) whose period represents "correct
+speed." This divided reference enters **IC601 pin 14** and is compared against the
+FG pulse train in the CX20084's internal phase detector. When they match in
+frequency and phase, the servo is locked.
 
-The specific division ratio is chosen so that at exactly 4.75 cm/s tape speed, the
-FG pulse rate and the divided crystal reference are **identical in frequency and in
-phase**. When they match, the servo is locked and no correction is needed.
+### 4.1 The Outer Crystal Phase Loop
+
+IC701 does more than produce a reference for IC601's input. The servo architecture
+is a **two-loop system**:
+
+The CX20084's internal phase detector provides the fast inner loop — correcting
+speed errors on individual FG pulse timescales. But a purely proportional inner
+loop cannot eliminate a sustained DC speed offset: at zero error, its correction
+output is zero, so any systematic bias (bearing drag, tape tension, motor
+characteristic variation) produces a small but persistent steady-state speed error.
+
+The outer loop corrects this. **IC601 pin 9** outputs a divided version of the FG
+pulse stream back to IC701's phase comparator input on the Auto-Off board. IC701
+compares this against the crystal reference and produces a phase error voltage at
+**IC701 pin 5**. This error voltage passes through **R715** (a series resistor on
+the Auto-Off board) and **C605** (a capacitor to ground forming a low-pass
+integrator), and the resulting slowly varying DC correction voltage feeds back to
+**IC601 pin 4** — the phase correction summing input of the CX20084.
+
+The complete two-loop signal path is:
+
+```
+FG901 → IC601 pin 13 → [inner loop] → IC601 pin 15 → Q601 → motor
+                 ↑                                              ↓
+         IC601 pin 4                                    IC601 pin 9
+         (outer correction)                        (FG pulses out)
+                 ↑                                              ↓
+         C605 integrator                              Auto-Off board
+                 ↑                                              ↓
+         R715 ← IC701 pin 5                         IC701 FG input
+               (phase error)        ←────────────────────────────
+                 [IC701 phase comparator vs. X701 crystal reference]
+```
+
+The outer loop's time constant — set by R715 × C605 — is much longer than the
+inner loop's bandwidth, ensuring the two loops do not compete. The outer loop
+trims the operating point; the inner loop corrects fast deviations around it.
+
+The service manual speed calibration procedure requires this outer loop to be
+temporarily disconnected by opening the **PLL bypass solder bridge** on the Main
+Board before setting RV601, then reconnected afterward. This confirms that Sony
+designed the outer loop as independently disengageable.
+
+### 4.2 What the DSR-1 Does With This
+
+When the DSR-1 module replaces IC601, the removal of the CX20084 open-circuits
+the outer loop at both ends simultaneously — IC601 pin 9 (which fed IC701) and
+IC601 pin 4 (which received the correction) both become empty pads. IC701 is
+left with a floating FG input and its correction output driving nothing. There is
+no electrical path from IC701's output to any DSR-1 signal.
+
+The DSR-1's integral term (Ki accumulator in the PI loop) provides the same DC
+error correction that the outer loop provided, more precisely and without any
+hardware connection to IC701.
+
+See [IC701 Outer Loop Analysis](ic701-outer-loop.md) for the complete schematic
+trace and installation analysis.
 
 ---
 
@@ -162,7 +220,7 @@ without modifying the PCB.
 ### 5.3 Voltage-Controlled Motor Drive
 
 The filtered error voltage drives pin 15 of the CX20084, which is the motor drive
-output. This pin controls the base of Q601, a 2SB1013 PNP transistor whose collector
+output. This pin controls the base of Q601, a 2SB733 PNP transistor whose collector
 current drives the capstan motor M901.
 
 Q601 is configured as a common-emitter amplifier. Its emitter is connected to the
@@ -297,5 +355,7 @@ the polarity reversal that destroyed the original.
 ## See Also
 
 - [Digital PLL Servo](digital-pll-servo.md) — how the DSR-1 replacement works
+- [IC701 Outer Loop Analysis](ic701-outer-loop.md) — schematic trace of the outer
+  crystal phase loop; confirms it is open-circuited and harmless when IC601 is absent
 - [Why This Failed](why-this-failed.md) — the reverse polarity failure explained
 - [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete DSR-1 specification
