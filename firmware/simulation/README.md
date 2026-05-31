@@ -145,19 +145,68 @@ To simulate the S601 Speed Tune enable switch being pressed (PA7 HIGH):
 sysbus.gpioPortA SetData 0x0080 0x0080    # set PA7 high
 ```
 
+## What a green run establishes — and what it does not
+
+A passing run genuinely validates: the firmware boots through `clock_init` →
+`flash_load` → `adc_init` → `servo_init` without deadlocking in a polling loop;
+the PI arithmetic produces the right output for a given period delta; `DAC_MIN`
+/ `DAC_MAX` clamp windup at the rails; `MIN_PERIOD_TICKS` discards short
+periods; and the zero-error fixed point sits at `DAC_CENTER`. The control-law
+math and structural plumbing are sound.
+
+**Three things it does not establish:**
+
+**1. Motor sign convention** (highest risk). The too-slow / too-fast direction
+tests assert that a longer period lowers PWM and a shorter period raises it —
+but they check the firmware against its own `config.h` convention with no
+motor, no Q601, and no transistor network. If both the convention and the
+control law were flipped together the tests would still pass; they were written
+to match the code's current intent. Passing them is necessary but not
+sufficient. The runaway risk on real silicon is exactly as open as it was before
+the simulation existed. See `docs/hardware/motor-drive-sign-convention.md` and
+close this only with a bench measurement of Q601 base voltage vs. motor speed.
+
+**2. PA0 alternate function / FG acquisition path**. The simulation injects FG
+by writing `TIM2->CCR1` + `CC1IF` + the NVIC pending bit directly, bypassing
+the GPIO → AF-mux → input-capture path entirely. The wrong AF produces no
+failure in simulation. On hardware, the wrong AF means `TIM2_CH1` is not
+connected to PA0 and FG capture silently never fires. Finding 5.2 (PA0 should
+be AF2, not AF1) has been fixed in `servo.c`, but the simulation cannot verify
+that fix — only the bench can.
+
+**3. Clock frequency correctness**. The RCC Python model releases the polling
+loops by toggling ready bits; `PLLCFGR` writes fall through to the catch-all
+and are never stored. A malformed PLL configuration (wrong multiplier or
+divider) would pass the simulation and fail to lock on hardware. "Clock init
+works" is a control-flow result, not a frequency-correctness one. Similarly,
+the Renode timer model runs at 10 MHz while the firmware treats ticks as 64
+MHz — the period math is internally consistent only because FG is injected as
+absolute deltas; absolute timing is untested.
+
+**Bench work the simulation cannot replace:** motor sign (requires Q601
+measurement) and the FG acquisition front-end (AF wiring, input-capture
+trigger, real FG frequency). These are the least-covered paths and the most
+likely sources of a silent hardware failure.
+
+---
+
 ## Known simulation limits
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Clock init (clock_init) | Works | RCC Python model handles HSI/PLL/SW polling loops |
+| Boot / init sequence | Works | All polling loops exit; clock_init, flash_load, adc_init, servo_init complete |
+| PI control law | Verified | Period delta → PWM output correct; clamps and filter validated |
+| Motor sign convention | **Not validated** | Tests are circular — check firmware against its own convention, not hardware physics; bench measurement required |
+| PA0 AF (TIM2_CH1) | **Not caught by sim** | AF2 fix applied to servo.c (finding 5.2); GPIO→capture path never exercised in sim |
+| Clock frequency (PLL) | Not validated | RCC model is control-flow only; PLLCFGR ignored; wrong multiplier/divider would pass |
+| TIM2 input capture | Manual inject | Renode timer model does not support input capture; fg-gen.resc injects directly |
+| TIM3 PWM output | Observable | Read TIM3->CCR1; absolute duty-cycle timing untested (10 MHz model vs. 64 MHz firmware) |
 | Flash settings load | Works | Returns FLASH_ERR_INVALID (memory = 0x00), uses defaults |
-| ADC calibration loop | Likely works | Depends on STM32G0_ADC Renode model clearing ADCAL |
-| ADC ready loop | Likely works | Depends on STM32G0_ADC model setting ADRDY |
-| TIM2 input capture (FG) | Manual inject | GPIO-to-timer capture path not yet verified in Renode; use fg-gen.resc |
-| TIM3 PWM output | Observable | Read TIM3->CCR1 to see motor drive value |
-| DMA ADC transfer | Partial | DMAMUX1 is tagged; DMA→ADC circular transfer depends on STM32G0DMA model |
-| USB CDC | Stubbed | usb_cdc.c replaced with no-op stubs pending G0 USB_DRD port (finding 3.2) |
-| Flash erase/write | Not tested | flash_save only called from USB CDC command; USB is stubbed |
+| ADC calibration / ready loops | Likely works | Depends on STM32G0_ADC model clearing ADCAL and setting ADRDY |
+| DMA ADC transfer | Partial | DMAMUX1 tagged; DMA→ADC circular transfer depends on STM32G0DMA model |
+| Speed trim path (ADC→servo) | Moot | adc_get_adjusted_target() has no caller (finding 3.3); g_adc_raw[] not populated |
+| USB CDC | Stubbed | Replaced with no-op stubs pending G0 USB_DRD port (finding 3.2) |
+| Flash erase / write | Not tested | flash_save only reachable via USB CDC command; USB is stubbed |
 
 ## Platform file
 

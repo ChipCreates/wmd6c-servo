@@ -18,9 +18,11 @@
  * PI control convention:
  *   Error = measured_period - target_period
  *   Positive error  → motor running too slow (period longer than target)
- *   Q601 is PNP: lower base voltage = more collector current = faster motor
- *   Higher PWM duty → Q_LS conducts more → Q601 base pulled lower → faster
- *   Therefore: positive error → subtract from DAC_CENTER → lower PWM output
+ *   Q601 is PNP with emitter at B+3; R9 (100kΩ to B+1) holds base above
+ *   emitter (motor off) when Q_LS is off. B+1 > B+3 bias confirmed on bench.
+ *   Lower PWM → Q_LS less drive → Q601 base rises toward B+1 → Veb increases
+ *   → more collector current → faster motor. (DAC_MIN = near-full drive.)
+ *   Therefore: positive error → subtract from DAC_CENTER → lower PWM → faster
  *
  * Fixed-point arithmetic:
  *   All gain constants stored in Q16 format (value × 65536).
@@ -34,6 +36,7 @@
 #include <stdint.h>
 #include "config.h"
 #include "servo.h"
+#include "adc.h"
 
 /* -------------------------------------------------------------------------
  * Module-private state
@@ -66,14 +69,14 @@ void servo_init(void)
 {
     /* ---- GPIO ---- */
 
-    /* PA0: TIM2_CH1 input capture (AF1), FG901 signal
-     * PA6: TIM3_CH1 PWM output (AF1), NPN level-shift stage drive */
+    /* PA0: TIM2_CH1 input capture (AF2), FG901 signal   — AF2 per DS §4 Table 12
+     * PA6: TIM3_CH1 PWM output   (AF1), NPN level-shift stage drive */
 
     RCC->IOPENR |= RCC_IOPENR_GPIOAEN;
 
-    /* PA0 — alternate function AF1 (TIM2_CH1) */
+    /* PA0 — alternate function AF2 (TIM2_CH1); was erroneously AF1 (finding 5.2) */
     GPIOA->MODER   = (GPIOA->MODER  & ~(3U << (0*2))) | (2U << (0*2));
-    GPIOA->AFR[0]  = (GPIOA->AFR[0] & ~(0xFU << (0*4))) | (1U << (0*4));
+    GPIOA->AFR[0]  = (GPIOA->AFR[0] & ~(0xFU << (0*4))) | (2U << (0*4));
 
     /* PA6 — alternate function AF1 (TIM3_CH1) */
     GPIOA->MODER   = (GPIOA->MODER  & ~(3U << (6*2))) | (2U << (6*2));
@@ -148,15 +151,14 @@ void TIM2_IRQHandler(void)
 
     int32_t  kp     = g_kp_q16;
     int32_t  ki     = g_ki_q16;
-    uint32_t target = g_target_period;
+    uint32_t target = adc_get_adjusted_target();
 
     /* --- PI control law ---
      *
-     * Error: positive = motor running too slow (period longer than target)
-     * PNP convention: to speed up motor, decrease PWM duty (less Q_LS drive
-     * → Q601 base pulled less toward GND → Q601 emitter-base voltage increases
-     * → more collector current → faster motor).
-     * Therefore both P and I terms are SUBTRACTED from DAC_CENTER.
+     * Error: positive = motor too slow (period longer than target).
+     * Lower PWM → Q_LS less drive → Q601 base rises toward B+1 →
+     * larger Veb → more collector current → faster motor.
+     * Subtract both terms: positive error → lower PWM → faster.
      */
     int32_t error = (int32_t)period - (int32_t)target;
 

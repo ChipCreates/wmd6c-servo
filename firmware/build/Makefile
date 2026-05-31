@@ -126,9 +126,9 @@ ifndef CMSIS_DIR
   CMSIS_DIR := $(firstword $(foreach d,$(CMSIS_SEARCH),$(wildcard $(d))))
 
   ifeq ($(CMSIS_DIR),)
-$(warning CMSIS_DIR not set and headers not found in standard locations.)
-$(warning Set CMSIS_DIR=/path/to/CMSIS or copy headers to $(ROOT_DIR)/cmsis/)
-$(warning See docs/installation/toolchain-setup.md for instructions.)
+$(error CMSIS headers not found. Set CMSIS_DIR=/path/to/CMSIS on the make \
+  command line, or ensure the vendored headers exist at $(ROOT_DIR)/cmsis/ \
+  (a fresh clone should already have them). See docs/installation/toolchain-setup.md.)
   endif
 endif
 
@@ -152,9 +152,7 @@ WFLAGS := \
 # C standard and dialect
 CSTD := -std=c11
 
-# Optimisation: -O2 as specified in datasheet §6.4
-# -ffunction-sections and -fdata-sections enable --gc-sections in linker,
-# which removes unused functions and data — important for keeping binary small.
+# -O2: balanced speed/size; -ffunction/data-sections + --gc-sections removes dead code.
 OPT := -O2 -ffunction-sections -fdata-sections
 
 # Debug info — always include, stripped from .bin by objcopy
@@ -168,8 +166,7 @@ INCLUDES := \
 
 # Preprocessor defines
 DEFINES := \
-  -D$(MCU) \
-  -DUSE_FULL_LL_DRIVER
+  -D$(MCU)
 
 # Combined C flags
 CFLAGS := $(ARCH_FLAGS) $(CSTD) $(OPT) $(DBG) $(WFLAGS) $(INCLUDES) $(DEFINES)
@@ -212,7 +209,7 @@ out = subprocess.check_output(['$(SIZE)', '$(BUILD_DIR)$(PROJECT).elf']).decode(
 m = re.search(r'(\d+)\s+(\d+)\s+(\d+)', out.split('\n')[1]); \
 text,data,bss = int(m.group(1)),int(m.group(2)),int(m.group(3)); \
 flash=text+data; ram=data+bss; \
-print(f'  Flash: {flash} / 126976 bytes ({flash*100//126976}%%) (126KB available, 2KB reserved for settings)'); \
+print(f'  Flash: {flash} / 129024 bytes ({flash*100//129024}%%) (126KB code region, 2KB settings sector reserved at page 63)'); \
 print(f'  RAM:   {ram} / 147456 bytes ({ram*100//147456}%%)')" 2>$(DEVNULL)
 
 # ELF — main build product, contains debug symbols

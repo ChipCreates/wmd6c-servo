@@ -5,8 +5,8 @@
  * Hardware: STM32G0B1KBU6, bare-metal, no HAL, no RTOS
  *
  * Stores PI gain constants (Kp, Ki) and the master target period in the
- * last 4 KB flash sector (0x0801F000–0x0801FFFF). This sector is preserved
- * across DFU firmware updates unless explicitly erased.
+ * last 2 KB flash page (page 63: 0x0801F800–0x0801FFFF). This page lies
+ * outside the linker's code region and is preserved across DFU updates.
  *
  * Layout of the settings block (32 bytes, aligned to 8 bytes for double-word
  * flash writes on STM32G0):

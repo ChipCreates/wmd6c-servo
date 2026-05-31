@@ -153,7 +153,7 @@ dfu-util -d 0483:df11 -a 0 -s 0x08000000:leave -D firmware.bin
 
 Pre-built `.bin` files for each release are in `firmware/releases/`.
 
-> **Settings are preserved across DFU updates.** The settings sector (last 2 KB page at `0x0801F000`) is not erased by the update process.
+> **Settings are preserved across DFU updates.** The settings sector (last 2 KB page at `0x0801F800`) is not erased by the update process.
 
 ---
 
@@ -176,4 +176,4 @@ Pre-built `.bin` files for each release are in `firmware/releases/`.
 
 ## Licence
 
-Firmware: MIT — see `LICENSE_FW.txt`
+Firmware: MIT — see `LICENSE_FIRMWARE.txt`

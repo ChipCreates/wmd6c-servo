@@ -8,16 +8,16 @@
  *
  *   FLASH   0x08000000  128 KB total
  *           0x08000000  126 KB — firmware code and read-only data
- *           0x0801F000    2 KB — settings sector (last page, RESERVED)
+ *           0x0801F800    2 KB — settings sector (page 63, RESERVED)
  *
  *   RAM     0x20000000  144 KB — stack, BSS, and initialised data
  *
  * Settings sector reservation:
- *   The last 2 KB page (0x0801F000–0x0801FFFF) is reserved for the
- *   settings block written by flash.c. This region is excluded from the
- *   FLASH region seen by the linker so the compiler can never place code
- *   or read-only data there. If it did, a flash_save() erase would
- *   destroy that code, causing a hard fault on the next execution.
+ *   Page 63 (0x0801F800–0x0801FFFF) is reserved for the settings block
+ *   written by flash.c. This page lies outside the 126 KB FLASH region
+ *   seen by the linker, so the compiler can never place code or read-only
+ *   data there. A flash_save() erase of page 63 therefore cannot destroy
+ *   any code. The ASSERT below enforces the boundary at link time.
  *
  *   The DFU update process preserves this sector (dfu-util and
  *   STM32CubeProgrammer both stop at the end of the firmware image and
@@ -208,7 +208,7 @@ SECTIONS
    * ----------------------------------------------------------------------- */
   /* '.' here is a RAM address — must check flash end instead.
    * Flash usage ends at the LMA tail of .data (initialised variables stored in flash). */
-  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= 0x0801F000,
+  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= 0x0801F800,
     "ERROR: Firmware image exceeds 126 KB and overlaps the settings sector. \
-     Reduce firmware size or move the settings sector.")
+     Reduce firmware size.")
 }

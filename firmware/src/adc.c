@@ -92,6 +92,10 @@ void adc_init(void)
 
     RCC->APBENR2 |= RCC_APBENR2_ADCEN;
 
+    /* Select ADC clock before calibration: RM0444 requires CKMODE to be set
+     * before ADCAL. PCLK/4 = 64MHz/4 = 16MHz (within the 35MHz ADC spec). */
+    ADC1->CFGR2 = (2U << ADC_CFGR2_CKMODE_Pos);   /* CKMODE = 10: PCLK/4 */
+
     /* ADC voltage regulator startup: must wait ≥20µs after enabling ADVREGEN.
      * At 64MHz a simple spin loop is sufficient. */
     ADC1->CR = ADC_CR_ADVREGEN;
@@ -101,9 +105,6 @@ void adc_init(void)
      * Wait for ADCAL to clear (hardware clears when done). */
     ADC1->CR |= ADC_CR_ADCAL;
     while (ADC1->CR & ADC_CR_ADCAL) { }
-
-    /* Configure ADC clock: use PCLK/4 = 64MHz/4 = 16MHz (within spec) */
-    ADC1->CFGR2 = (2U << ADC_CFGR2_CKMODE_Pos);   /* CKMODE = 10: PCLK/4 */
 
     /* Sampling time: 239.5 cycles for all channels.
      * Required for high-impedance pot sources (up to ~24kΩ source impedance).

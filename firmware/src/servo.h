@@ -12,7 +12,12 @@
 
 /* -------------------------------------------------------------------------
  * Telemetry snapshot — written by TIM2 ISR, read by usb_cdc.c
- * All fields are 32-bit aligned; reads are atomic on Cortex-M0+.
+ * Each 32-bit field read is individually atomic on Cortex-M0+, but reading
+ * the full struct is NOT a single atomic operation: the ISR can fire between
+ * any two field reads, leaving the snapshot with some fields from one ISR
+ * invocation and others from the next. For human-readable telemetry this
+ * is harmless. If a coherent frame is ever required, add a seqlock or
+ * double-buffer scheme.
  * ------------------------------------------------------------------------- */
 typedef struct {
     uint32_t fg_period_ticks;   /* Measured FG period in 64 MHz ticks       */
