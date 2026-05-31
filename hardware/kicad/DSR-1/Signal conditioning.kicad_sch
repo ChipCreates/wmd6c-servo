@@ -4,6 +4,11 @@
 	(generator_version "10.0")
 	(uuid "cfa37d79-0e12-43e3-a701-f8c25be84334")
 	(paper "A4")
+	(title_block
+		(title "Signal Conditioning")
+		(date "2026-05-31")
+		(rev "1")
+	)
 	(lib_symbols
 		(symbol "DSR-1:B+1"
 			(power global)

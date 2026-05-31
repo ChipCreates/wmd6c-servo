@@ -4,6 +4,11 @@
 	(generator_version "10.0")
 	(uuid "798f7f87-4a27-48b8-8d13-5aa9345fc417")
 	(paper "A4")
+	(title_block
+		(title "Power Input Zone")
+		(date "2026-05-31")
+		(rev "1")
+	)
 	(lib_symbols
 		(symbol "AP63203WU-7:AP63203WU-7"
 			(pin_names

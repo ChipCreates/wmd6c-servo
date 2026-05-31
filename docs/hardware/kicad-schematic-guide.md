@@ -86,7 +86,7 @@ the wires connecting their hierarchical pins. Sheets 2–6 contain actual compon
 Sheet 1 — DSR-1.kicad_sch (root)
 ├── Sheet 2 — Power input zone.kicad_sch
 ├── Sheet 3 — Power management.kicad_sch
-├── Sheet 4 — STM32G0B1 and decoupling.kicad_sch
+├── Sheet 4 — STM32G0C1 and decoupling.kicad_sch
 ├── Sheet 5 — Signal conditioning.kicad_sch
 └── Sheet 6 — Connectors.kicad_sch
 ```
@@ -146,7 +146,7 @@ full system understanding.
 |---|---|
 | `Power_Input_Zone` | `Power input zone.kicad_sch` |
 | `Power_Management` | `Power management.kicad_sch` |
-| `Microcontroller` | `STM32G0B1 and decoupling.kicad_sch` |
+| `Microcontroller` | `STM32G0C1 and decoupling.kicad_sch` |
 | `Signal_Conditioning` | `Signal conditioning.kicad_sch` |
 | `Connectors` | `Connectors.kicad_sch` |
 
@@ -385,46 +385,71 @@ VOUT = 0.6 × (1 + 169/10) = 10.74V ✓
 
 ---
 
-## Sheet 4 — Microcontroller (STM32G0B1)
+## Sheet 4 — Microcontroller (STM32G0C1)
 
-**Purpose:** STM32G0B1KCU6 and all support components. Place the STM32 in the
+**Purpose:** STM32G0C1KCU6 and all support components. Place the STM32 in the
 centre and work outward.
 
-### U1 — STM32G0B1KCU6 (UFQFPN32)
+### U1 — STM32G0C1KCU6 (UFQFPN32)
 
-Use the existing KiCad `MCU_ST_STM32G0` library symbol `STM32G0B1KCUx`, copied
-to `DSR-1.kicad_sym` and renamed `STM32G0B1KCU6`. The UFQFPN-32 package has
-**1 VDD and 1 VSS** — this is correct for the 32-pin K package. In this package,
-VDD and VDDA share pin 4, and VSS and VSSA share pin 5. VDDIO2 does not exist
-on the GP variant (STM32G0B1KCU6) — it is only present on the N variant
-(_KxTxN). The only hidden power connection to expose is the exposed thermal pad.
+Use the KiCad `MCU_ST_STM32G0` library symbol `STM32G0C1KCUx`, copied to
+`DSR-1.kicad_sym` and renamed `STM32G0C1KCU6`. The UFQFPN-32 package has
+**1 VDD and 1 VSS** in the 32-pin K package. VDD and VDDA share one pin;
+VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 
-**Power pins:**
-- VDD/VDDA (pin 4, combined) → `+3V3`
-  - Decoupling: 100nF X5R 0402 (power) + 100nF C0G 0402 (analog) both to GND
-- VSS/VSSA (pin 5, combined) → GND
-- Exposed VSS pad (EP) → GND — **unhide this pin in Symbol Editor**
-  - Via array in PCB layout (2×2 or 3×3 grid, 0.3mm drill)
+> **⚠ Verify VDDIO2 against STM32G0C1 datasheet.** The G0B1 GP variant had no
+> separate VDDIO2 pin. The G0C1 may differ — confirm in the STM32G0C1 UFQFPN-32
+> pinout table. If a separate VDDIO2 pin is present, add 100nF X5R 0402 +
+> 4.7µF X5R 0402 decoupling to `+3V3` and update this guide.
 
-**Signal inputs from machine (top side):**
-- PA0 / TIM2_CH1 → `FG_IN`
-- PA1 / ADC_IN1 → `RV601_WIPER`
-- PA2 / ADC_IN2 → `RV602_WIPER`
-- PA3 / ADC_IN3 → `RV603_WIPER`
-- PA5 / GPIO → `MOTOR_EN_MON`
-- PA7 / GPIO → `SPEED_TUNE_SW`
+**UFQFPN-32 GP (_KxU) confirmed pin map — DS13564 Rev 5:**
 
-**Signal outputs to machine (right side):**
-- PA6 / TIM3_CH1 → `MOTOR_PWM`
+| Pin | Name | DSR-1 assignment |
+|-----|------|-----------------|
+| 1 | PB9 | No-connect |
+| 2 | PC14-OSC32_IN | No-connect |
+| 3 | PC15-OSC32_OUT | No-connect |
+| 4 | VDD/VDDA | `+3V3` (combined) |
+| 5 | VSS/VSSA | GND (combined) |
+| 6 | PF2-NRST | Reset — 100nF to GND |
+| 7 | PA0 | `FG_IN` / TIM2_CH1 |
+| 8 | PA1 | `RV601_WIPER` / ADC_IN1 |
+| 9 | PA2 | `RV602_WIPER` / ADC_IN2 |
+| 10 | PA3 | `RV603_WIPER` / ADC_IN3 |
+| 11 | PA4 | No-connect (DAC1_OUT1 — not used, see note) |
+| 12 | PA5 | `MOTOR_EN_MON` / GPIO |
+| 13 | PA6 | `MOTOR_PWM` / TIM3_CH1 |
+| 14 | PA7 | `SPEED_TUNE_SW` / GPIO |
+| 15 | PB0 | No-connect |
+| 16 | PB1 | No-connect |
+| 17 | PB2 | No-connect |
+| 18 | PA8 | `CC1` / UCPD1_CC1, UCPD1_DBCC1 |
+| 19 | PA9 | `CC2` / UCPD1_CC2 |
+| 20 | PC6 | No-connect |
+| 21 | PA10 | No-connect / spare |
+| 22 | PA11 [PA9] | `USB_DM` |
+| 23 | PA12 [PA10] | `USB_DP` |
+| 24 | PA13 | `SWDIO` |
+| 25 | PA14-BOOT0 | `SWDCLK` |
+| 26 | PA15 | No-connect |
+| 27 | PB3 | No-connect |
+| 28 | PB4 | No-connect |
+| 29 | PB5 | No-connect |
+| 30 | PB6 | `DEBUG_TX` / USART1_TX |
+| 31 | PB7 | No-connect |
+| 32 | PB8 | No-connect |
+| EP | VSS | GND — expose this pin in Symbol Editor; via array in layout |
 
-**USB and debug (bottom side):**
-- PA8 / UCPD1_CC1 → `CC1`
-- PB15 / UCPD1_CC2 → `CC2`
-- PA11 / USB_DM → `USB_DM`
-- PA12 / USB_DP → `USB_DP`
-- PA13 / SWDIO → `SWDIO`
-- PA14 / SWDCLK → `SWDCLK`
-- PA9 / USART1_TX → `DEBUG_TX` (test pad)
+> **PB15 does not exist in the GP variant** (_KxU). PB15 is only present in
+> the N variant (_KxUxN). The previous guide entry "PB15 / UCPD1_CC2" was
+> wrong. CC2 → PA9 (pin 19) for UCPD1_CC2.
+>
+> **DEBUG_TX moved from PA9 to PB6.** PA9 is required for UCPD1_CC2 and cannot
+> simultaneously serve USART1_TX. PB6 (pin 30) carries USART1_TX and is
+> available.
+>
+> **VDDIO2 confirmed absent** in GP variant. Pin 20 = PC6. No VDDIO2 decoupling
+> needed. (DS13564 Figure 4, GP version _KxU confirmed.)
 
 > **PA4 (DAC1_OUT1) is not used for motor drive.** Q601 (2SB1013 PNP) on
 > Ver. 1.0 boards has its emitter at B+3 (10.8V); the base operating range
@@ -446,8 +471,9 @@ on the GP variant (STM32G0B1KCU6) — it is only present on the N variant
 All three caps connect between pin 4 and GND. The C0G cap should be placed
 closest to the pin on the PCB as it serves the ADC inputs.
 
-> **No VDDIO2:** The STM32G0B1KCU6 (GP variant) does not have a VDDIO2 pin.
-> VDDIO2 exists only on the N variant (_KxTxN). No VDDIO2 decoupling needed.
+> **VDDIO2:** Verify whether the STM32G0C1KCU6 UFQFPN-32 exposes VDDIO2 as a
+> separate pin. If present, add 100nF X5R 0402 + 4.7µF X5R 0402 between
+> VDDIO2 and GND. If absent (combined with VDD), no additional decoupling needed.
 
 All capacitor GND terminals connect directly to the nearest GND power symbol.
 
@@ -725,8 +751,8 @@ Before running ERC, verify every symbol has:
 
 | Field | Example |
 |---|---|
-| **Value** | `169kΩ`, `STM32G0B1KCU6`, `MMBT3904` |
-| **Footprint** | `DSR-1:STM32G0B1KCU6_UFQFPN32` |
+| **Value** | `169kΩ`, `STM32G0C1KCU6`, `MMBT3904` |
+| **Footprint** | `DSR-1:STM32G0C1KCU6_UFQFPN32` |
 | **Datasheet** | relative path in `hardware/datasheets/` or URL |
 | **LCSC** | JLCPCB part number (custom field) |
 | **DNP** | `Variant A only`, `Variant B only`, or blank for shared |
@@ -758,7 +784,7 @@ git commit -m "Complete DSR-1 Rev A schematic — all 6 sheets, ERC clean, pre-l
 - Sheet 1: top-level hierarchy
 - Sheet 2: power input — Variant A (USB-C/IP2721) and Variant B (barrel/LTC4359)
 - Sheet 3: power management — MT3608 boost (10.8V) and MCP1700 LDO (3.3V)
-- Sheet 4: STM32G0B1KCU6 decoupling, pin assignments; motor PWM on PA6 (TIM3_CH1)
+- Sheet 4: STM32G0C1KCU6 decoupling, pin assignments; motor PWM on PA6 (TIM3_CH1)
 - Sheet 5: signal conditioning — FG divider/clamp, NPN motor drive, ADC inputs
 - Sheet 6: J1 harness, J2 SWD, S601 rewire, test pads
 - Rev A targets Ver. 1.0 CX20084 boards (1984–2001)
