@@ -197,24 +197,38 @@ both live here, differentiated by DNP.
 - GND, Shield → GND power symbol
 - Mark: `DNP Variant B`
 
-**U4 — IP2721 USB PD Trigger (SOT-23-6)**
+**U1 — IP2721 USB PD Trigger (TSSOP-16)**
 
-- Create custom symbol: 6 pins (VIN, CC1, CC2, CFG, PG, GND)
-- CFG → R_CFG to GND (value from IP2721 datasheet for 9V request)
-- VIN → VBUS from J_USB
-- CC1, CC2 → `CC1`, `CC2`
-- Output VBUS after internal switch → `9V_PD`
-- Decoupling: 4.7µF 16V X5R (C_VBUS) between VBUS and GND
+- Custom symbol with pins: VIN, VBUSG, VBUS, CC1, CC2, SEL, GND
+- VIN (P$2) and VBUSG (P$1) → both connect to VBUS from J1 (tie together)
+- VBUS (P$16) → `9V_PD` net label after successful PD negotiation
+- CC1 (P$13), CC2 (P$12) → `CC1`, `CC2` net labels
+- SEL (P$11) → configure per IP2721 datasheet for 9V output request
+- Decoupling: C1 4.7µF 16V X5R between VBUS and GND
 - Mark: `DNP Variant B`
 
-**U5 — Buck Regulator, 9V → 6V**
+> **VBUSG note:** VBUSG is the gate drive for the internal pass element. It must
+> be tied to VIN — leaving it floating prevents 9V_PD from becoming valid after
+> PD negotiation.
 
-- Input: `9V_PD`
-- Output: `B+1` power symbol (global)
-- Set output to 6.0V per regulator datasheet feedback formula
-- Input cap: 10µF 16V X5R; Output cap: 22µF 10V X5R; Inductor: 4.7µH 1A
-- Add PWR_FLAG on `B+1` output net
-- Mark: `DNP Variant B`
+**U3 — AP63203WU-7 Buck Converter (SOT-23-6), 9V → 6V — shared, both variants**
+
+- Input: `9V_PD` net (Variant A via U1) or bridge rectifier output (Variant B via `B+1_RAW` net)
+- Output: `B+1` power symbol (global), 6.0V regulated
+- Vref = 0.8V; R1 = 649kΩ E96, R2 = 100kΩ → Vout = 6.19V ✓
+- Add PWR_FLAG on `B+1` output net (use power symbol "Generate power flag" checkbox)
+- **Not DNP — populated on both Variant A and Variant B boards**
+
+| AP63203WU-7 pin | Connection |
+|---|---|
+| VIN (pin 5) | 9V_PD / bridge output net + C2 (10µF 16V X5R) to GND |
+| GND (pin 2) | GND |
+| EN (pin 3) | Tie to VIN — always-on, internal clamp handles 9V safely |
+| SW (pin 1) | L1 (4.7µH 1.5A) → B+1 output node |
+| FB (pin 4) | R1 (649kΩ) from B+1 output node; R2 (100kΩ) to GND |
+| BST (pin 6) | C3 (100nF 16V X5R) to SW (pin 1) |
+
+Output node connects to: B+1 power symbol, B+1_RAW hierarchical label, R1 top, C4 (22µF 10V X5R) to GND.
 
 **ESD Protection — USBLC6-2SC6Y (SOT-23-6)**
 
@@ -225,50 +239,93 @@ both live here, differentiated by DNP.
 
 ### Variant B — Barrel Jack (DNP for Variant A)
 
-**J_BARREL — 5.5mm barrel jack (CN301 replacement)**
+**Design principle: polarity agnostic**
 
-> CN301 on the original WM-D6C uses non-standard **centre-negative** polarity
-> (sleeve positive). This is the reverse of virtually all modern adapters and
-> is the original failure mode. DSR-1's Variant B explicitly protects against
-> wrong-polarity connection; never assume the adapter polarity is correct.
+> Variant B accepts 9V DC via a 5.5mm/2.1mm barrel jack with **no assumed
+> polarity**. The original WM-D6C CN301 used non-standard centre-negative
+> polarity, which was the primary external-power failure mode. DSR-1 Variant B
+> eliminates this failure mode entirely: a Schottky bridge rectifier ensures
+> correct polarity at the output regardless of which way the adapter is wired.
+> No polarity marking on the connector is required or expected.
 
-- Symbol: `Connector:Barrel_Jack_Switch` or equivalent
-- Tip → `VIN_NEG_RAW`; Sleeve → `VIN_POS_RAW`
+**J2 — 5.5mm/2.1mm barrel jack**
+
+- Symbol: `Connector:Barrel_Jack` or equivalent
+- Pin 1 (tip) and Pin 2 (sleeve) both feed into the bridge — no polarity assignment
 - Mark: `DNP Variant A`
-- Add schematic note: `CN301 polarity: sleeve = positive, tip = negative.
-  Non-standard. Wrong-polarity protection is required and implemented below.`
+- Input spec: **9V DC nominal, 500mA minimum adapter rating**
 
-**U7 — LTC4359 Ideal Diode Controller**
+**Bridge rectifier — D2, D3, D4, D5 (SS14, SOD-123)**
 
-- Input: `VIN_POS_RAW`, `VIN_NEG_RAW`; Output positive: `B+1_UNPROTECTED`
-- Mark: `DNP Variant A`
-
-**Protection stack (series after bridge):**
+Four Schottky diodes in a full-bridge configuration:
 
 ```
-B+1_UNPROTECTED
+         D2               D3
+tip ───►|──┬─── DC+ ───────┬──|◄─── sleeve
+           │               │
+J2      (left AC)       (right AC)
+           │               │
+tip ───|◄──┴───────────────┴──►|─── sleeve
+         D4               D5
+                   │
+                  GND
+```
+
+- DC+ (cathodes of D2 and D3) → F1 → B+1_RAW
+- GND (anodes of D4 and D5) → GND
+- Voltage at DC+ after bridge: ~8.2V (9V − 0.8V Schottky drop at load)
+- Mark all: `DNP Variant A`
+
+**F1 — Polyfuse, 500mA hold / 1.5A trip (0805)**
+
+- In series between bridge DC+ and the B+1_RAW / TVS node
+- Mark: `DNP Variant A`
+
+**D6 — SMBJ12A-13-F TVS (SMA), unidirectional**
+
+- Cathode (pin 2) → B+1_RAW node (after F1)
+- Anode (pin 1) → GND
+- Standoff voltage 12V — safely above 9V nominal; clamp voltage 19.9V max —
+  well below AP63203WU-7 VIN absolute maximum of 32V
+- Mark: `DNP Variant A`
+
+**Protection stack — correct node order:**
+
+```
+Bridge DC+
       │
      [F1] Polyfuse 500mA / 1.5A trip (0805)
       │
-     [D_TVS] SMBJ7.0A (SMA) ── anode/cathode to GND
+      ├──────────────── B+1_RAW ──► AP63203WU-7 VIN (shared U3)
       │
-     [C_BULK] 220µF 10V electrolytic
-     [C_BYPASS] 100nF 10V X5R (in parallel)
-      │
-     B+1 power symbol ─── connects globally
+     [D6] SMBJ12A cathode here, anode → GND
 ```
 
-- Add PWR_FLAG on `B+1` net
-- Mark all: `DNP Variant A`
+Mark all: `DNP Variant A`
 
 ---
 
 ### Hierarchical Labels for Sheet 2
 
-- `9V_PD` — Output (Variant A only)
-- `B+1_RAW` — Output (Variant B; note B+1 feeds Sheet 3 via power symbol)
-- `USB_DP`, `USB_DM` — Output → Sheet 4
+- `9V_PD` — Output (Variant A only) — 9V PD-negotiated rail from IP2721 to AP63203WU-7 VIN
+- `B+1_RAW` — Output (both variants) — connects to AP63203WU-7 VIN and B+1 output node; Variant B bridge feeds this net; Variant A IP2721 output feeds this net via 9V_PD
+- `USB_DP`, `USB_DM` — Output → Sheet 4 (Variant A only; DNP Variant B)
 - `CC1`, `CC2` — Output → Sheet 4
+
+### DNP summary for Sheet 2
+
+| Component | Variant A | Variant B |
+|---|---|---|
+| J1 USB_C_Receptacle | Populate | DNP |
+| U1 IP2721 | Populate | DNP |
+| D1 USBLC6-2SC6Y | Populate | DNP |
+| C1 4.7µF (VBUS decoupling) | Populate | DNP |
+| J2 Barrel_Jack | DNP | Populate |
+| D2–D5 SS14 (bridge) | DNP | Populate |
+| F1 Polyfuse | DNP | Populate |
+| D6 SMBJ12A TVS | DNP | Populate |
+| U3 AP63203WU-7 | Populate | Populate |
+| L1, C2, C3, C4, R1, R2 | Populate | Populate |
 
 ---
 
@@ -330,20 +387,24 @@ VOUT = 0.6 × (1 + 169/10) = 10.74V ✓
 
 ## Sheet 4 — Microcontroller (STM32G0B1)
 
-**Purpose:** STM32G0B1KBU6 and all support components. Place the STM32 in the
+**Purpose:** STM32G0B1KCU6 and all support components. Place the STM32 in the
 centre and work outward.
 
-### U1 — STM32G0B1KBU6 (UFQFPN32)
+### U1 — STM32G0B1KCU6 (UFQFPN32)
 
-Create this symbol in the DSR-1 library. UFQFPN32 has 32 GPIO/peripheral pins
-plus the exposed VSS pad (pin 33). Group pins by function:
+Use the existing KiCad `MCU_ST_STM32G0` library symbol `STM32G0B1KCUx`, copied
+to `DSR-1.kicad_sym` and renamed `STM32G0B1KCU6`. The UFQFPN-32 package has
+**1 VDD and 1 VSS** — this is correct for the 32-pin K package. In this package,
+VDD and VDDA share pin 4, and VSS and VSSA share pin 5. VDDIO2 does not exist
+on the GP variant (STM32G0B1KCU6) — it is only present on the N variant
+(_KxTxN). The only hidden power connection to expose is the exposed thermal pad.
 
 **Power pins:**
-- VDD (pins 1, 32) → both to `+3V3`
-- VSS (pins 16, 17) → both to GND
-- VDDA (pin 5) → `+3V3`
-- VDDIO2 (pin 18) → `+3V3`
-- Exposed VSS pad (pin 33) → GND (thermal pad)
+- VDD/VDDA (pin 4, combined) → `+3V3`
+  - Decoupling: 100nF X5R 0402 (power) + 100nF C0G 0402 (analog) both to GND
+- VSS/VSSA (pin 5, combined) → GND
+- Exposed VSS pad (EP) → GND — **unhide this pin in Symbol Editor**
+  - Via array in PCB layout (2×2 or 3×3 grid, 0.3mm drill)
 
 **Signal inputs from machine (top side):**
 - PA0 / TIM2_CH1 → `FG_IN`
@@ -377,16 +438,16 @@ plus the exposed VSS pad (pin 33). Group pins by function:
 
 ### Decoupling Network
 
-**VDD decoupling (pins 1 and 32):**
-- 4 × 100nF 10V X5R 0402 — one per VDD pin pair
+**VDD/VDDA decoupling (pin 4 — combined supply in 32-pin package):**
+- 100nF 10V X5R 0402 — power supply decoupling
+- 100nF 10V C0G 0402 — analog noise filtering (C0G/NP0, lower noise than X5R)
+- 1µF 10V X5R 0402 — bulk bypass
 
-**VDDA decoupling (pin 5):**
-- 100nF 10V C0G 0402 (C0G/NP0 for analog supply, lower noise than X5R)
-- 1µF 10V X5R 0402
+All three caps connect between pin 4 and GND. The C0G cap should be placed
+closest to the pin on the PCB as it serves the ADC inputs.
 
-**VDDIO2 decoupling (pin 18):**
-- 100nF 10V X5R 0402
-- 4.7µF 10V X5R 0402
+> **No VDDIO2:** The STM32G0B1KCU6 (GP variant) does not have a VDDIO2 pin.
+> VDDIO2 exists only on the N variant (_KxTxN). No VDDIO2 decoupling needed.
 
 All capacitor GND terminals connect directly to the nearest GND power symbol.
 
@@ -664,8 +725,8 @@ Before running ERC, verify every symbol has:
 
 | Field | Example |
 |---|---|
-| **Value** | `169kΩ`, `STM32G0B1KBU6`, `MMBT3904` |
-| **Footprint** | `DSR-1:STM32G0B1KBU6_UFQFPN32` |
+| **Value** | `169kΩ`, `STM32G0B1KCU6`, `MMBT3904` |
+| **Footprint** | `DSR-1:STM32G0B1KCU6_UFQFPN32` |
 | **Datasheet** | relative path in `hardware/datasheets/` or URL |
 | **LCSC** | JLCPCB part number (custom field) |
 | **DNP** | `Variant A only`, `Variant B only`, or blank for shared |
@@ -697,7 +758,7 @@ git commit -m "Complete DSR-1 Rev A schematic — all 6 sheets, ERC clean, pre-l
 - Sheet 1: top-level hierarchy
 - Sheet 2: power input — Variant A (USB-C/IP2721) and Variant B (barrel/LTC4359)
 - Sheet 3: power management — MT3608 boost (10.8V) and MCP1700 LDO (3.3V)
-- Sheet 4: STM32G0B1KBU6 decoupling, pin assignments; motor PWM on PA6 (TIM3_CH1)
+- Sheet 4: STM32G0B1KCU6 decoupling, pin assignments; motor PWM on PA6 (TIM3_CH1)
 - Sheet 5: signal conditioning — FG divider/clamp, NPN motor drive, ADC inputs
 - Sheet 6: J1 harness, J2 SWD, S601 rewire, test pads
 - Rev A targets Ver. 1.0 CX20084 boards (1984–2001)

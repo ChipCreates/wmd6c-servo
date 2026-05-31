@@ -631,16 +631,6 @@
 	)
 	(wire
 		(pts
-			(xy 120.65 39.37) (xy 153.67 39.37)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "16e97d66-1488-421d-8ac9-0604bd552f2b")
-	)
-	(wire
-		(pts
 			(xy 128.27 54.61) (xy 120.65 54.61)
 		)
 		(stroke
@@ -658,36 +648,6 @@
 			(type default)
 		)
 		(uuid "1ac2eaa1-2812-4618-aa1f-c6ed2ed3d154")
-	)
-	(wire
-		(pts
-			(xy 120.65 43.18) (xy 151.13 43.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "243cfa6e-ee86-4fff-a9df-eae11b3d41ec")
-	)
-	(wire
-		(pts
-			(xy 153.67 45.72) (xy 163.83 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2690361d-e577-43c0-96ac-72afb60edb0f")
-	)
-	(wire
-		(pts
-			(xy 151.13 43.18) (xy 151.13 55.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "29e279af-17fa-47b3-96ba-99f0bb957fc1")
 	)
 	(wire
 		(pts
@@ -981,16 +941,6 @@
 	)
 	(wire
 		(pts
-			(xy 151.13 55.88) (xy 163.83 55.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b2f550ea-2360-4f4f-8308-a3c49e1f1a55")
-	)
-	(wire
-		(pts
 			(xy 77.47 138.43) (xy 86.36 138.43)
 		)
 		(stroke
@@ -1078,16 +1028,6 @@
 			(type default)
 		)
 		(uuid "d9a311bf-cc9a-4679-9e0c-f2881eda69e7")
-	)
-	(wire
-		(pts
-			(xy 153.67 39.37) (xy 153.67 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "dc57a199-8578-450b-9e2c-426439ec53c5")
 	)
 	(wire
 		(pts
@@ -1635,26 +1575,6 @@
 				(justify left top)
 			)
 		)
-		(pin "9V_PD" output
-			(at 120.65 39.37 0)
-			(uuid "efde0e02-00f6-418c-a79e-40f57c54de60")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "B+1_RAW" output
-			(at 120.65 43.18 0)
-			(uuid "0a61abba-cf42-4f7a-87ef-c2c49e64934e")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
 		(pin "CC1" bidirectional
 			(at 120.65 50.8 0)
 			(uuid "47689acc-35ef-4ef4-8fd1-a0e629afb662")
@@ -1990,26 +1910,6 @@
 					(size 1.27 1.27)
 				)
 				(justify left top)
-			)
-		)
-		(pin "9V_PD" input
-			(at 163.83 45.72 180)
-			(uuid "316cc205-9cd8-4790-9393-39a28921e724")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "B+1_RAW" input
-			(at 163.83 55.88 180)
-			(uuid "d3856c79-ab2f-42bc-b608-0f7539abd557")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
 			)
 		)
 		(instances
