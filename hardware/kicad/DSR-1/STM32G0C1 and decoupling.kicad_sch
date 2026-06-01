@@ -2092,16 +2092,6 @@
 		)
 		(uuid "fb1b101a-2e76-415a-9f60-9128ca4fe9e7")
 	)
-	(label "DEBUG_TX"
-		(at 91.44 104.14 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right bottom)
-		)
-		(uuid "0015594b-e30c-4dd6-ba0a-11c7f1290e61")
-	)
 	(hierarchical_label "RV603_WIPER"
 		(shape input)
 		(at 156.21 81.28 0)
@@ -2200,6 +2190,17 @@
 			(justify left)
 		)
 		(uuid "d79f48a2-8104-4754-94e2-96073e57b1fb")
+	)
+	(hierarchical_label "DEBUG_TX"
+		(shape input)
+		(at 91.44 104.14 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "edefa1d1-39b6-47ff-ac8c-3f49770044f3")
 	)
 	(hierarchical_label "MOTOR_PWM"
 		(shape output)

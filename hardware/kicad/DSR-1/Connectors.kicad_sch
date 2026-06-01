@@ -543,6 +543,17 @@
 			(embedded_fonts no)
 		)
 	)
+	(hierarchical_label "DEBUG_TX"
+		(shape input)
+		(at 262.89 99.06 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "1449a2db-6d7c-4b2e-9292-2073924425ac")
+	)
 	(hierarchical_label "SPEED_TUNE_SW"
 		(shape output)
 		(at 265.43 33.02 0)
@@ -565,6 +576,50 @@
 		)
 		(uuid "3aea67b1-0ea9-4e72-b5d7-5b714bfcd65d")
 	)
+	(hierarchical_label "MOTOR_EN"
+		(shape input)
+		(at 261.62 74.93 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "57e7a132-a1b2-4bbd-8140-3bd5b0d5cfd3")
+	)
+	(hierarchical_label "RV603"
+		(shape input)
+		(at 260.35 66.04 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "6f7243cd-25b1-4e1a-a39a-f85efe5437d6")
+	)
+	(hierarchical_label "RV601"
+		(shape input)
+		(at 260.35 55.88 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "98600c2f-c1d6-4702-98f1-fca8792813ab")
+	)
+	(hierarchical_label "RV602"
+		(shape input)
+		(at 260.35 60.96 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d08953f5-6b8d-46f6-a7a7-bda0d0030adb")
+	)
 	(hierarchical_label "SWDIO"
 		(shape output)
 		(at 265.43 20.32 0)
@@ -575,6 +630,28 @@
 			(justify left)
 		)
 		(uuid "d4c2e474-ada4-4b88-bb26-eeaf0ca2d755")
+	)
+	(hierarchical_label "Q601_BASE"
+		(shape input)
+		(at 264.16 91.44 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "e121e540-d3d6-4f93-964c-6167c003c123")
+	)
+	(hierarchical_label "FG_RAW"
+		(shape input)
+		(at 260.35 50.8 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "fd4668dd-a178-4412-9a85-f18b4debd918")
 	)
 	(symbol
 		(lib_id "power:+3.3V")

@@ -416,7 +416,7 @@
         "uuid": "c0f3f4ab-99e0-4b30-98cc-a10c83648838"
       }
     ],
-    "used_designators": "C1-14,#PWR28-33,D2-7,L1-2,U2-5,J2,R1-5,F1-2",
+    "used_designators": "C1-16,#PWR7,#PWR18-19,#PWR28-40,D2-11,L1-2,U2-5,J2,R1-15,F1-2,Q1",
     "variants": []
   },
   "sheets": [
@@ -434,7 +434,7 @@
     ],
     [
       "64d68e7a-6d67-471a-a3f8-01d59b1484af",
-      "STM32G0B1 and decoupling"
+      "STM32G0C1 and decoupling"
     ],
     [
       "53f50e7e-9963-4bad-995f-b42afad9bde5",
