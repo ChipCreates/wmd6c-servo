@@ -97,30 +97,51 @@ simultaneously.
 
 ## 2. The DSR-1 Power Architecture Overview
 
-The DSR-1 produces all three supply rails (B+1, B+3, and 3.3V) from a single input
-source, which is either a USB-C PD charger (Variant A) or the original barrel jack
-with polarity correction (Variant B).
+The DSR-1 produces all three supply rails (B+1, B+3, and 3.3V) from a single B+1
+node. The B+1 regulator itself is **one shared part in every build** — a TPS63070
+buck-boost — fed by one of three interchangeable input front ends that all hand off
+to it:
+
+- **Battery-integrated (primary)**: a 1S4P LiFePO4 pack is the runtime source,
+  charged in place over USB-C while the machine runs. The pack sits below 6V, so the
+  TPS63070 runs in *boost* mode here. This is the self-contained configuration and
+  the one the rest of this project assumes (Section 7).
+- **Variant A (wall-only)**: a 9V USB-C PD contract, which the TPS63070 *bucks*
+  down to B+1, with no cells fitted (Section 5).
+- **Variant B (wall-only)**: the original barrel jack with polarity correction,
+  presenting 5–9V that the TPS63070 bucks or boosts to B+1, with no cells fitted
+  (Section 6).
+
+The crucial architectural point is that the B+1 regulator is a **buck-boost that
+crosses through unity automatically** — it bucks the 9V case and boosts the
+battery/5V cases without any reconfiguration — so the same converter, divider, and
+layout serve all three front ends. Everything *downstream* of B+1 is likewise
+identical in every build.
 
 ```
-Power input (Variant A: 9V PD  or  Variant B: 4.5-9V either polarity)
-    │
-    ├──[Variant A: TPS62xx buck] → 6.0V ──┐
-    │                                      │
-    └──[Variant B: LTC4359 bridge] → 6.0V ─┤
-                                           │
-                              B+1 (6.0V regulated) ──→ WM-D6C main board
-                                           │
-                                    ├──[MT3608 boost] ──→ B+3 (10.8V) ──→ Motor
-                                    │
-                                    └──[MCP1700 LDO] ──→ 3.3V ──→ STM32
+Front ends (exactly one fitted):
+  Battery: USB-C 5V ─┬─► CN3058E charger ─► 1S4P LFP pack ─► [protection] ─► load-share ─┐
+                     └─► system path via ideal-diode D1 ──────────────────────────────────┤
+  Variant A: USB-C 9V PD ───────────────────────────────────────────────────────────────┤
+  Variant B: Barrel 5–9V either polarity ─► [LTC4359 bridge] ─────────────────────────────┤
+                                                                                          │
+                                                                  V_RAIL (≈2.8–9V) ────────┘
+                                                                          │
+                                                                  [TPS63070 buck-boost] ◄── single shared B+1 regulator
+                                                                          │
+                                                                  B+1 (6.0V regulated)
+                                                                          │   ──► WM-D6C main board
+                                                                          ├──[MT3608 boost ↑]──► B+3 (10.8V) ──► Motor
+                                                                          └──[MCP1700 LDO]─────► 3.3V ──► STM32
 ```
 
 The elegance of this architecture is that the entire machine — audio circuits,
-servo logic, motor, and the DSR-1 module itself — is powered from a single external
-source through a single, protected, regulated power path. The battery internal
-resistance variation that caused the original servo to work harder at low battery
-charge is eliminated. The B+1 rail is now constant at 6.0V regardless of load or
-source variation.
+servo logic, motor, and the DSR-1 module itself — runs from a single protected,
+regulated B+1 rail no matter which input path produced it. In the battery-integrated
+configuration, the pack's internal-resistance variation (the effect that made the
+original servo work harder as the original AA cells discharged) is hidden behind the
+TPS63070's feedback loop: B+1 is held constant at 6.0V until the pack is nearly
+empty, exactly as the MT3608 holds B+3 constant against B+1 variation.
 
 ---
 
@@ -315,9 +336,9 @@ the initial BOM — the output capacitor should be 47µF 16V X5R, not 22µF.**
 ### 3.6 Input Capacitor Selection
 
 The input capacitor (10µF, 10V) supplies the MT3608's peak switching current demand
-that the input source — whether the buck converter output (Variant A) or the
-polarity bridge output (Variant B) — cannot instantaneously provide due to the
-source's own impedance. Without adequate input capacitance, the input voltage sags
+that its input source — the TPS63070 B+1 regulator, common to every build — cannot
+instantaneously provide due to that regulator's own output impedance. Without
+adequate input capacitance, the input voltage sags
 during the switch-on phase, reducing efficiency and potentially destabilising the
 input supply.
 
@@ -525,82 +546,89 @@ Well within the MCP1700's 125°C junction temperature limit.
 
 ## 5. Variant A Power Input — USB-C Power Delivery
 
-### 5.1 The Input Voltage Decision: Why 9V?
+### 5.1 The Input Voltage Decision
 
-Variant A uses USB-C Power Delivery to negotiate a supply voltage from a USB-C
-charger. The options available in the USB PD specification are 5V, 9V, 15V, and
-20V (standard fixed voltage profiles). Any compliant PD source must offer at least
-5V; 9V and above are optional but supported by virtually all modern USB-C chargers
-including phone chargers, laptop chargers, and power banks.
+Variant A uses USB-C Power Delivery to negotiate a supply voltage. With the TPS63070
+buck-boost now serving as the B+1 regulator (Section 5.2), the input voltage is no
+longer *dictated* by the converter topology — the part holds 6.0V from anything
+between 2V and 16V. This is the central change from the original design, which used
+a fixed step-down regulator that could only buck and therefore *required* an input
+above 6V.
 
-**5V is insufficient**: The MT3608 boost converter needs at least VIN > 2V to
-operate, so 5V could theoretically power the boost. But the B+1 rail needs to be
-6V. With 5V input, the TPS62xx buck would need to step 5V down to 6V — impossible.
-We would need to boost 5V to 6V first (requiring an additional converter), then
-boost again to 10.8V. Two cascaded boost converters, each with its own efficiency
-loss, inductor, and layout constraints. Unworkable.
+9V remains the negotiated target for Variant A, but now for headroom and efficiency
+rather than necessity:
 
-**9V is exactly right**: With 9V input, the TPS62xx can step down to 6.0V
-(conversion ratio 0.667, excellent efficiency). The MT3608 then boosts 6V to 10.8V
-(conversion ratio 0.556 duty cycle, also efficient). Two converters, each operating
-near their optimal point. The 9V PDO is available from essentially every USB-C PD
-charger ever made.
+**Buck mode is the favourable region**: at 9V → 6V the TPS63070 operates as a pure
+synchronous buck, its most efficient mode, with full 2A output headroom. The 9V PDO
+is offered by essentially every USB-C PD charger ever made.
 
-**15V would also work** but requires a higher-voltage-rated buck converter and
-reduces efficiency (the TPS62xx has lower efficiency at higher step-down ratios).
-9V is preferable.
+**Lower input current**: 9V at a given output power draws roughly half the input
+current of 5V, reducing cable drop and connector heating.
 
-### 5.2 The TPS62xx Buck Converter
+The regulator *itself* would also produce 6.0V from a 5V input — by boosting, exactly
+as it does in the battery build (Section 7.4) — so the strict "5V is insufficient,
+two cascaded boosts, unworkable" problem of the old fixed-buck design no longer
+exists. Variant A still gates its output on a successful 9V contract through the
+IP2721 (see the USB PD document), so in this build 9V is the operative target; the
+buck-boost simply removes the topological reason it *had* to be.
 
-The TPS62xx-series synchronous buck converters (Texas Instruments) convert the
-negotiated 9V VBUS to the 6.0V B+1 rail. "Synchronous" means the low-side diode
-of a conventional buck is replaced by an N-channel MOSFET that is actively switched
-— this reduces the forward voltage loss from ~0.4V (Schottky diode) to ~50mV (MOSFET
-on-resistance), improving efficiency, particularly at higher load currents.
+### 5.2 The TPS63070 Buck-Boost Converter
 
-Buck converter operation is the complement of boost: during the on phase, the input
-switch connects VIN to the inductor, which ramps current up into the output. During
-the off phase, the low-side switch connects the inductor to GND, and the current
-ramps down from the output capacitor into the load. The duty cycle for a buck:
+The B+1 regulator is a **TPS63070** (Texas Instruments) — a synchronous buck-boost
+rated 2–16V in, 2.5–9V out, 2A output, with a 3.6A switch current limit and a 0.8V
+feedback reference, in a 15-pin VQFN. It replaces the fixed step-down regulator of
+the original schematic (a part that could neither reach 6V from a 5–6V input nor be
+adjusted) and is the **single B+1 regulator shared by all three front ends**
+(Section 2).
 
+**Why buck-boost and not a plain buck.** A buck can only step down — it requires
+VIN > VOUT at all times. That is acceptable for a guaranteed 9V PD source, but it
+fails the instant the input can reach or fall below 6V, which it does in two of the
+three front ends (the 5V and battery cases). The TPS63070 crosses through unity
+automatically: it bucks when VIN > 6V, boosts when VIN < 6V, and transitions
+seamlessly through the region where the two are close. One part therefore covers the
+entire 2.8V (battery floor) to 9V (PD) input span without reconfiguration.
+
+**Topology note.** Unlike a buck (SW → inductor → VOUT) or a boost (VIN → inductor →
+SW), the buck-boost's single inductor connects *between the device's two switch pins*
+(L1 and L2) — the input stage switches one end, the output stage the other. This
+changes the inductor's placement and routing relative to the original buck layout.
+The EN pin compares against a precise 0.8V rising threshold and must not float; an RC
+network on EN sets a defined soft-start.
+
+**Duty cycle** depends on which side of unity the input sits:
 ```
-D = VOUT / VIN = 6.0 / 9.0 = 0.667
+Buck  (VIN = 9.0V):   D ≈ VOUT / VIN     = 6.0 / 9.0      = 0.667
+Boost (VIN = 3.2V):   D ≈ 1 − VIN / VOUT = 1 − 3.2 / 6.0  = 0.467
 ```
+The device manages the internal buck/boost duty itself; these are the equivalent
+single-stage figures at the two extremes.
 
-**Output voltage setting** follows the same feedback resistor principle as the
-MT3608, with the feedback reference at 600mV (varies slightly by specific TPS62xx
-variant — check the selected device's datasheet):
-
+**Output voltage setting** uses the 0.8V reference:
 ```
-VOUT = 0.6V × (1 + R_upper / R_lower)
-6.0V = 0.6 × (1 + R_upper / R_lower)
-R_upper / R_lower = 9.0
+VOUT = 0.8V × (1 + R_upper / R_lower)
+6.0V = 0.8 × (1 + 649k / 100k) = 0.8 × 7.49 = 5.99V
 ```
+R_upper = 649kΩ, R_lower = 100kΩ (both E96). The FB divider current is
+6.0V / 749kΩ ≈ 8µA — well under the datasheet's 1mA guidance for the feedback node.
+These are the same divider values used in every build.
 
-Choosing R_lower = 10kΩ: R_upper = 90kΩ (use 88.7kΩ E96 or two standard values
-in series).
+**Current capability and the battery-floor case.** The TPS63070 delivers up to 2A
+output in both buck and boost mode, bounded by its 3.6A switch current limit. The
+WM-D6C's total B+1 load is ~400–650mA. In buck mode (Variant A, 9V in) this is
+trivial. Boost mode is the demanding case: at the LFP floor of 2.8V producing 6.0V
+at ~0.65A, the input current is ~1.6A and the peak inductor current approaches ~2A —
+comfortably under the 3.6A limit, with a motor-surge transient briefly higher but
+bounded by the B+1 bulk capacitor. Crucially the LFP discharge curve is flat: the
+pack holds near 3.2V for most of its capacity and only sags toward 2.8V at the very
+end, so the worst-case boost current is a small sliver of total runtime (see
+Section 7.4 for the battery-build budget).
 
-**Current capability**: The WM-D6C's total load on B+1 is approximately 400mA
-(audio circuits ~200mA, motor referred back to B+1 via the MT3608 boost ~150mA
-equivalent, logic ~50mA). The TPS62xx family offers 600mA to 3A variants; the
-600mA variant (TPS62xx with "06" in the part number suffix) provides adequate
-headroom.
-
-**Buck converter efficiency** at 400mA output:
-```
-η ≈ VOUT / VIN = 6.0 / 9.0 = 66.7% (ideal)
-```
-
-Actual synchronous buck efficiency is typically 85-92% at this operating point,
-giving:
-```
-P_loss = POUT × (1 - η) / η = 2.4W × (1 - 0.90) / 0.90 = 267mW
-```
-
-This is the heat generated by the TPS62xx at full load. In a SOT-23 package with
-250°C/W thermal resistance: T_junction = 25 + 0.267 × 250 = 92°C — within the
-125°C maximum. As with the MT3608, a small copper pour under the package on the PCB
-significantly reduces junction temperature.
+**Efficiency and thermal.** Peak efficiency is approximately 93–95%. At ~3W
+throughput and 90% efficiency the device dissipates roughly 300mW; in the VQFN with
+its thermal pad and a copper pour vias to the ground plane, junction temperature
+stays well within the 125°C limit. As with the MT3608, the thermal pad copper is the
+primary heat path.
 
 ### 5.3 VBUS Bulk Decoupling
 
@@ -769,16 +797,307 @@ rating; 16V would be preferable if the capacitor physically fits.
 
 ---
 
-## 7. Power Rail Interdependencies and Sequencing
+## 7. Battery-Integrated Input — Charge-in-Place over USB-C
 
-### 7.1 Rail Startup Order
+This is the primary DSR-1 configuration: a LiFePO4 pack is the runtime source, and
+USB-C both charges it in place and runs the machine at the same time. The pack sits
+*below* 6V, so the shared TPS63070 B+1 regulator (Section 5.2) runs here in boost
+mode. Everything downstream of B+1 — the MT3608 (Section 3), the MCP1700 (Section 4),
+and the rail sequencing (Section 8) — is unchanged; the battery block is simply a
+third front end handing off to the same regulator.
+
+One consequence is worth stating plainly: in this configuration the IP2721 PD trigger
+and Variant A's 9V negotiation are **not fitted**. The charger described below runs
+from default 5V VBUS, and its absolute-maximum input is 6V — so a 9V PD contract would
+not merely be unnecessary here, it would *over-volt the charger*. Battery builds stay
+at 5V, and the TPS63070 boosts to B+1 from there (and from the pack on battery), the
+same part doing the same job it does by bucking in Variant A.
+
+### 7.1 The Cell — 4× IFR14500 in 1S4P
+
+Four IFR14500 LiFePO4 cells wired in parallel form a single logical cell. The pack
+is nominally 3.2V, floats fully charged at 3.6V, and has a usable floor around 2.5V.
+Capacity is the sum of the four cells — approximately 2.4 to 2.8Ah depending on the
+specific cell.
+
+Because the cells are hard-paralleled, the charger, the protection IC, and any future
+gauge all see a single 3.2V node — there is no per-cell balancing to manage. This is
+the same parallel-then-series philosophy a large EV pack uses (many small identical
+cells in parallel, managed as one logical cell), with the series count equal to one.
+
+**Reverse-insertion hazard.** The one genuinely new failure mode the battery
+introduces lives here. With user-removable cells in a holder, a single cell inserted
+backwards is reverse-charged by the other three through a near-short, which is both a
+cell hazard and a fire risk. A series polyfuse on the pack limits the fault current,
+but the clean fix is an orientation-keyed holder or permanently soldered cells. This
+deserves an explicit decision before layout — it is the same class of reverse-polarity
+failure this entire project exists to eliminate (Section 1.3), merely relocated to the
+cell side of the module.
+
+### 7.2 The CN3058E Charger
+
+The CN3058E is a complete constant-current/constant-voltage linear charger for a
+single LiFePO4 cell. It integrates the pass MOSFET (an internal P-channel device) and
+needs no external blocking diode or sense resistor, and its regulation voltage is
+internally fixed at 3.6V ±1.5% — exactly the LFP float point. It is the LFP-correct
+sibling of the TP4056 and shares both its pinout class and, importantly, its thermal
+behaviour.
+
+**Input voltage.** The CN3058E operates from 3.8V to 6V, so default 5V VBUS sits
+squarely in range. This is why the battery build stays at 5V and drops the IP2721:
+9V would exceed the charger's maximum rating.
+
+**Charge current and the thermal limit.** Charge current is set by a single resistor
+from the ISET pin to ground:
+
+```
+I_CHG = 1.218V / R_ISET        (R in Ω → I in A)
+```
+
+Because the charger is linear, it dissipates the entire input-to-battery voltage
+difference as heat inside its eSOP-8 package:
+
+```
+P_diss = (VIN - VBAT) × I_CHG
+```
+
+At 5V in and 3.6V on the pack, this sets the practical current ceiling well below
+what the cells could accept. The options:
+
+```
+R_ISET    I_CHG    C-rate(2.5Ah)   P_diss    Charge time   Note
+1.218 kΩ  1.0 A    0.40C           1.40 W    ~3 h          will thermally fold back
+1.74  kΩ  0.7 A    0.28C           0.98 W    ~4 h          borderline
+2.0   kΩ  0.6 A    0.25C           0.84 W    ~4–4.5 h      recommended — cool, kind to LFP
+```
+
+The CN3058E thermally regulates at approximately 135°C and will fold a 1A setting
+back toward this point regardless of R_ISET, so setting around 600mA (R_ISET = 2.0kΩ)
+avoids relying on foldback and keeps cell aging low. A copper pour under the eSOP-8
+thermal pad is worthwhile at any setting.
+
+**Supporting connections.** A 4.7–10µF ceramic from the BAT pin to ground stabilises
+the feedback loop (the datasheet's C2). The TEMP pin is tied to ground to disable NTC
+sensing, since the AA holder carries no thermistor — or wired to a 10kΩ NTC if one is
+added to the pack. The open-drain CHRG and DONE outputs drive indicator LEDs (LED plus
+series resistor to VIN); DONE asserts at the 10%-of-CC termination threshold. When
+USB is removed and VIN falls within 10mV of the battery voltage, the charger enters a
+3µA sleep mode, so it does not drain the pack while unplugged.
+
+### 7.3 The Power-Path — Load-Sharing P-FET
+
+The CN3058E, like the TP4056, has no power-path of its own: its BAT pin is both the
+charge output and the only battery connection. If the system load were hung directly
+on BAT, the charger could never detect true termination — the load looks like a cell
+that never finishes filling — and load transients would corrupt the CC/CV loop. The
+fix is the canonical load-sharing arrangement: isolate the battery from the load
+whenever USB is present, and run the load from USB instead.
+
+A P-channel MOSFET (Q1) sits between the battery and the system node V_SYS:
+
+```
+     VBUS ──[D2 small Schottky]──┬─────────► Q1 gate
+                                 │
+   VBAT ──── source ┐          [R1 100k]
+                   Q1 (PMOS)     │
+   V_SYS ◄── drain ┘            GND
+```
+
+**USB present:** D2 pulls Q1's gate up to roughly VBUS (5V) while its source (the
+battery) sits at ~3.6V, giving V_GS ≈ +1.4V — a PMOS is off with positive V_GS, so Q1
+is **off**. The battery is isolated, the charger sees a clean cell, and the system
+runs from USB through D1 (below).
+
+**USB absent:** R1 pulls the gate to ground, giving V_GS = −V_BAT — Q1 is **on**, and
+the battery feeds V_SYS through the FET's low R_DS(on).
+
+**D1, the USB→V_SYS path.** The simple choice is a 2–3A Schottky (SS24/SS34), but it
+drops ~0.4V (~0.4W at 1A) and pulls V_SYS down to ~4.6V. An **ideal-diode P-FET** is
+preferred here: it nearly eliminates that loss, lifts V_SYS to ~4.9V (making the
+regulator's boost-mode job easier), and still blocks the battery and boost from
+back-feeding VBUS. Either way, V_SYS lands at approximately 4.8–4.9V on USB and tracks
+the pack at 2.8–3.6V on battery.
+
+### 7.4 The B+1 Regulator in Boost Mode — V_SYS → 6.0V
+
+In the battery build the B+1 regulator is the **same TPS63070 buck-boost** specified
+in Section 5.2 — there is no separate front-end part. It simply runs entirely in
+boost mode here, because V_SYS never rises above ~4.9V (USB) and falls to the pack's
+2.8V floor on battery, both below the 6.0V output. The divider (R_upper = 649kΩ,
+R_lower = 100kΩ, 0.8V reference) and layout are identical to the wall-powered builds.
+
+**Why the shared part holds up here.** The earlier instinct was a dedicated
+high-current boost (e.g. a TPS61022) for the battery case, on the assumption the
+B+1 converter would be a buck that couldn't reach down to battery voltage. Once B+1
+is a buck-boost, that second part is unnecessary: the TPS63070's 3.6A switch limit
+covers the boost-mode current, and using one regulator across all builds keeps a
+single converter block, divider, and layout.
+
+**Worst-case input current**, taking the whole machine at ~4W on B+1, 90% efficiency,
+and the pack at its 2.8V floor:
+
+```
+I_IN = P_OUT / (V_SYS × η) = 4 / (2.8 × 0.9) ≈ 1.6 A    (motor surge briefly higher)
+```
+
+Peak inductor current approaches ~2A at this corner — under the TPS63070's 3.6A
+limit, with surge transients bounded by the B+1 bulk capacitor. And because the LFP
+curve is flat (the pack holds ~3.2V for most of its capacity and only sags to 2.8V at
+the very end), this worst-case corner is a small fraction of total runtime.
+
+**Duty cycle** at the nominal 3.2V pack voltage:
+
+```
+D ≈ 1 − V_SYS / V_OUT = 1 − 3.2 / 6.0 = 0.467
+```
+
+**Input budget.** With charging (~0.6A) and the regulator (~1.6A referred to V_SYS)
+both drawing from 5V VBUS, the USB source must supply roughly 2–2.5A at 5V (~10–12W).
+A plain 5V/2A-or-better source covers this; no PD contract is required. If a
+guaranteed high-current 5V contract is wanted, a 5V-set PD trigger can advertise a 5V
+PDO, but a simple Rd-sink presentation on the CC lines is usually sufficient.
+
+### 7.5 Pack Protection
+
+Hard-paralleled cells still need over-charge, over-discharge, and over-current
+protection on the logical cell. Use an **LFP-specific** 1S protection IC — for example
+the HY2112-CB (over-charge ~3.75V, over-discharge ~2.0–2.4V) — driving a dual N-channel
+FET (FS8205-class) in series between the pack and the rest of the block.
+
+**Do not substitute a DW01.** The DW01's thresholds (over-charge 4.25V, over-discharge
+2.4V) are Li-ion values. On a 3.6V LFP cell it would never act on over-charge and
+would cut off far too late on discharge. The chemistry-specific thresholds are the
+whole point of selecting the part.
+
+### 7.6 The Complete Battery Path
+
+```
+USB-C (5V VBUS)
+   │
+   ├──────────────► CN3058E VIN ──charges──► 1S4P IFR14500 (3.2V, ~2.5Ah)
+   │                R_ISET=2.0k (0.6A)           │ 3.6V float
+   │                CHRG/DONE LEDs        [HY2112-CB + dual N-FET protection]
+   │                                              │ VBAT
+   │  D1 (ideal-diode P-FET)             Q1 PMOS  │  load-share (OFF when USB present)
+   └────────►│──────────┬─────────────────────────┘
+                        │
+                     V_SYS  (≈4.8V on USB │ 2.8–3.6V on battery)
+                        │
+           [TPS63070 buck-boost]   ◄── shared B+1 regulator (boost mode here, D≈0.47)
+                        │
+                    B+1 (6.0V) ─────────────────────────────┐
+                        │                                     │
+                 [MT3608 boost]  (Section 3, D=0.444)  [MCP1700 LDO] (Section 4)
+                        │                                     │
+                    B+3 (10.8V) ─► Motor M901          3.3V ─► STM32
+```
+
+From B+1 rightward this is the existing, proven design. What the battery
+configuration changes is only how B+1 comes to exist: from a charged LFP pack through
+a load-shared boost, with USB-C topping the pack and running the machine at the same
+time.
+
+### 7.7 Battery Level Indicator — Re-Referencing the CX10043
+
+The machine's front-panel level meter is the five-LED bar D801–D805 (GL-9PR10),
+driven by IC801 — a Sony custom **CX10043** — with Q801 (2SC1623) as a voltage-control
+stage and the S801 switch selecting the meter's function (BATT / OFF / PARK). In
+normal operation the five LEDs form the audio peak meter. In the BATT position,
+however, the stock circuit does *not* show a bar: it drives only the bottom LED
+(D801) and indicates battery state by that LED's **brightness**, dimming as the cells
+deplete. Q801 performs that brightness drive off the R808/R809/R810 (12k/56k/68k)
+divider. Owners have long considered this scheme close to useless — apparent
+brightness depends on ambient light, and the LED only visibly dims minutes before the
+machine slows. The redesign below both fixes it and upgrades it to the proper bar the
+hardware was always capable of.
+
+**Why the battery indicator stops working in this design.** In the stock machine the
+BATT brightness tracks the machine's main rail, which *was* the raw 4×AA pack — 6V
+fresh, sagging toward 4V as the cells deplete, so D801's brightness fell with the
+battery. The DSR-1 turns that rail into a **regulated, constant 6.0V B+1.** With S801
+on BATT now, Q801 sees a constant 6.0V and holds D801 at full brightness regardless of
+the pack's real charge. The true state of charge has moved to the VBAT node (the 1S4P
+LFP pack, ~3.6V full → ~2.5V empty), which the indicator circuit no longer sees. (This
+supersedes the note in the signal chain analysis §14.4 that said no indicator
+modification was required — that held only while B+1 still tracked the battery.)
+
+Because the stock battery path is only a single-LED brightness drive — not a
+multi-level decoder — there is nothing to be gained by synthesising a voltage back
+into the CX10043. The robust fix is to let the STM32, already present and already
+monitoring rails, **own the battery indication and drive the LED bar directly** while
+S801 is in BATT. Battery mode releases all five LEDs from the peak-meter function, so
+the STM32 can light a genuine 1-to-5-segment fuel gauge — finally using the hardware
+the way it should have been used.
+
+**Architecture.** The STM32 reads VBAT through a divider, estimates state of charge,
+and drives the five LED nodes as a bar in BATT mode. It must not contend with the
+CX10043's peak-meter drive, so the takeover is gated by sensing the S801 position:
+
+```
+VBAT ──[22k]──┬── ADC_VBAT (STM32)
+
+           [100k]
+              │
+             GND
+
+S801 BATT pole ──► GPIO (mode sense)
+
+STM32 GPIO/PWM ──[Rs]──►│├─ D801 ┐
+                ─[Rs]──►│├─ D802 │   (driven only when S801 = BATT;
+                ─[Rs]──►│├─ D803 │    released to CX10043 otherwise)
+                ─[Rs]──►│├─ D804 │
+                ─[Rs]──►│├─ D805 ┘
+```
+
+**VBAT sense divider.** R_top = 22kΩ from VBAT to the ADC node, R_bot = 100kΩ to GND,
+ratio 100/122 = 0.82. At the 3.7V float this presents ~3.03V to the ADC (under the
+3.3V VDDA ceiling with margin); at the 2.5V floor, ~2.05V. A 10nF cap at the ADC node
+sets the sampling time constant against the ~18kΩ source impedance. The divider draws
+~30µA continuously; gate its ground leg with a GPIO-controlled small-signal N-FET so
+it draws nothing except during a measurement, eliminating standby drain on the pack.
+
+**LED interface.** Drive each LED node from a GPIO through a series resistor, or — to
+preserve the original 180Ω limiters and avoid five extra pins — through small Schottky
+diodes into the existing D801–D805 anodes so the STM32 can source them in BATT mode
+while CX10043 is idle. The exact method depends on how S801 reroutes the LEDs and
+whether the CX10043 outputs are released (high-impedance) in BATT mode; see the
+bench-confirm item. Brightness is set by GPIO PWM, so the bar can also be dimmed for
+night use.
+
+**Firmware.** State of charge comes from an LFP open-circuit-voltage lookup table with
+light filtering and a fixed IR-drop offset for the known load — meaningful because the
+firmware places its five thresholds where they matter on the flat LFP curve rather
+than reading raw terminal volts. SoC% → number of lit segments (1–5). For higher
+accuracy, coulomb-counting (integrating charge in from the CN3058E and load out, with
+an optional shunt) can be added and periodically re-anchored to the OCV table at the
+curve's steep regions; this is a refinement, not a requirement. Driving the bar in
+firmware yields useful behaviours for free: animating segments upward while charging
+(USB present), holding steady-full when the CN3058E asserts DONE, and flashing the
+bottom segment below ~15%.
+
+**Bench-confirm items.** Two things to characterise on the unit before finalising the
+LED interface: (1) how S801's BATT position reroutes the LED nodes, and whether the
+CX10043 LED outputs go high-impedance in that position (so the STM32 can drive them
+without contention); and (2) the LED forward characteristics through the existing
+180Ω limiters, to size the GPIO drive or Schottky-injection resistors. The Q801
+brightness path can simply be left disconnected once the STM32 owns the bar.
+
+---
+
+## 8. Power Rail Interdependencies and Sequencing
+
+### 8.1 Rail Startup Order
 
 When power is first applied (regardless of variant), the rails power up in a
 specific order determined by the time constants of each converter:
 
 1. **B+1 appears first** (approximately 1-5ms after input voltage application)
-   — sourced directly from the input stage with only the polyfuse and diode bridge
-   (Variant B) or buck converter (Variant A) in the path.
+   — produced by the TPS63070 B+1 regulator, fed through the fitted front end (the
+   diode bridge and polyfuse in Variant B, the PD path in Variant A, or the
+   charger/load-share network in the battery build). The TPS63070's own soft-start
+   sets the B+1 rise time. In the battery build the load-share P-FET ensures the pack
+   is already supplying V_SYS the instant USB is absent, so there is no source-handoff
+   gap at power-on.
 
 2. **B+3 appears approximately 2-3ms after B+1** — the MT3608 must first build up
    inductor current and bring the feedback loop into regulation.
@@ -797,11 +1116,12 @@ base pullup resistors hold Q601 off until the DAC or PWM output is explicitly
 configured by firmware. This means B+3 can be present before the servo loop runs
 without causing uncontrolled motor operation.
 
-### 7.2 What Happens When B+1 Varies
+### 8.2 What Happens When B+1 Varies
 
 The MT3608's feedback loop maintains B+3 constant regardless of B+1 variations.
-If B+1 drops from 6.0V to 5.5V (e.g., batteries discharging with Variant B in
-battery mode), the MT3608 increases its duty cycle to compensate:
+If B+1 drops from 6.0V to 5.5V (e.g., a wall adapter sagging under load, or the
+TPS63070 reaching its boost-mode input limit as the pack nears empty), the MT3608
+increases its duty cycle to compensate:
 
 ```
 D_new = 1 - (5.5 / 10.8) = 0.491  (was 0.444)
@@ -816,7 +1136,7 @@ The MCP1700 continues to regulate 3.3V as long as B+1 stays above 3.478V (3.3V +
 unpredictable, and the BOR resets the MCU at approximately 2.8V supply. The machine
 stops cleanly.
 
-### 7.3 B+3 Load Step Response
+### 8.3 B+3 Load Step Response
 
 The WM-D6C motor draws varying current depending on tape tension, reel fullness,
 and transport mode. A transition from no-load (pause) to full-load (play) represents
@@ -842,9 +1162,9 @@ speed perturbation.
 
 ---
 
-## 8. Component Selection Tradeoffs and Alternatives
+## 9. Component Selection Tradeoffs and Alternatives
 
-### 8.1 MT3608 vs Other Boost Converters
+### 9.1 MT3608 vs Other Boost Converters
 
 The MT3608 was chosen over alternatives (LT1613, TPS61023, MAX1760) primarily for
 cost and availability on LCSC. The MT3608 is one of the most widely stocked and
@@ -859,7 +1179,7 @@ improve efficiency by approximately 3-5 percentage points. For the DSR-1's power
 levels, this represents 50-80mW of recovered power — not significant. The SS14
 diode rectifier is the correct tradeoff for this application.
 
-### 8.2 MCP1700 vs Other LDOs
+### 9.2 MCP1700 vs Other LDOs
 
 The MCP1700 was chosen for its ultralow quiescent current (1.6µA), its input
 voltage range matching B+1 exactly, its small package, and its widespread
