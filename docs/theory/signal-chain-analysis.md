@@ -221,7 +221,7 @@ B+3 rail (10.8V from MT3608 boost) ──→ Q704 collector/emitter ──→ M9
                                         Q601 base ←── DSR-1 output (J1 pin 2)
 ```
 
-Q601 (2SB1013) is a PNP bipolar transistor. Its emitter connects
+Q601 (2SB733) is a PNP bipolar transistor in a TO-92 package. Its emitter connects
 to the B+3 motor supply through the Q703/Q704 mode-switching circuit. Its collector
 drives one terminal of M901. The motor current — and therefore motor speed — is
 controlled by the base current, which is controlled by the base voltage.
@@ -235,14 +235,61 @@ Pulling the base toward the emitter voltage (10.8V) turns Q601 off. Pulling the
 base further down (toward 9V or less) increases base current and drives Q601 harder,
 increasing motor current and speed.
 
-Q601 (2SB1013) is a PNP transistor with its emitter connected to B+3 (10.8V)
-through the Q703/Q704 mode-switching circuit. The base operating range is well
-above 3.3V — direct DAC drive from the STM32 cannot reach this range.
+The critical question for the DSR-1 output stage is: **what voltage range does the
+Q601 base actually operate in during normal playback?** This depends on the original
+CX20084 circuit's operating point, which is not specified in the service manual and
+must be measured on the actual unit.
 
-The exact base voltage during playback must still be measured on the bench to
-confirm R9 sizing, but the output topology is settled.
+### 2.2 Option A — Direct DAC Drive
 
-### 2.2 NPN Level-Shift Drive
+**Used when:** Measured Q601 base voltage range is within 0V to 3.3V.
+
+```
+PA4 (DAC1_OUT1)
+    │
+   [R5: 10kΩ series]
+    │
+    ├──[R6: 100kΩ pullup to VDD 3.3V]
+    │
+   J1 Pin 2 → Q601 Base
+```
+
+The STM32 12-bit DAC on PA4 produces an analog output voltage ranging from 0V to
+3.3V in 4096 steps (approximately 0.8mV per step). At the operating point
+(DAC_CENTER = 2048, output ≈ 1.65V), Q601 conducts at the level needed to maintain
+correct motor speed.
+
+**R5 (10kΩ series resistor)** limits the current into the Q601 base, protecting
+both the DAC output and Q601's base-emitter junction from excessive current. It also
+forms a low-pass filter with the Q601 base-emitter capacitance (~10pF), preventing
+the DAC's output from switching at frequencies that could excite motor resonances.
+The RC time constant is approximately 10kΩ × 10pF = 100ns — fast enough for servo
+response but filtered against high-frequency noise.
+
+**R6 (100kΩ pullup to VDD)** serves a critical safety function: at power-on, before
+the DAC is initialised, R6 holds the Q601 base at 3.3V (VDD). Because Q601's
+emitter is at B+3 (10.8V), holding the base at 3.3V means the base-emitter voltage
+is 3.3V - 10.8V = -7.5V — the transistor is firmly off. This guarantees the motor
+does not run uncontrolled during the STM32 boot sequence.
+
+Once the DAC is initialised and the servo loop starts, the DAC output overrides R6.
+At DAC_CENTER (1.65V output), the 10kΩ/100kΩ divider produces approximately
+1.65V × (10kΩ is between the two), but R6's effect is small compared to the DAC's
+low output impedance. The effective base drive voltage is approximately the DAC
+output minus the small drop across R5.
+
+**DAC output impedance and Q601 base current**: The STM32 DAC has an output
+impedance of approximately 12kΩ (output buffer off) or very low (output buffer on).
+With the output buffer enabled, the DAC can source or sink the base current through
+R5 without significant voltage error. The Q601 base current at normal operating point
+is in the microamp range — the R5 voltage drop is negligible.
+
+### 2.3 Option B — NPN Level-Shift Drive
+
+**Used when:** Measured Q601 base voltage range exceeds 3.3V.
+
+This configuration is needed when the Q601 operating point requires a base voltage
+above what the STM32's 3.3V DAC can directly produce.
 
 ```
 PA6 (TIM3_CH1 PWM)
@@ -319,11 +366,11 @@ Safe.
 ```
 STM32 servo output (PA4 DAC or PA6 PWM)
     │
-    [R7/C8/Q_LS/R8/R9 (PWM + NPN level-shift stage)]
+    [R5/R6 (Option A) or R7/C8/Q_LS/R8/R9 (Option B)]
     │
 J1 Pin 2 → Q601 base (on WM-D6C main board)
     │
-    [Q601 2SB1013 PNP — base-emitter forward biased when base < emitter]
+    [Q601 2SB733 PNP — base-emitter forward biased when base < emitter]
     │
 Q601 collector → M901 capstan motor (one terminal)
     │
@@ -644,7 +691,8 @@ DAC output reference).
 | Signal | Source | Source Level | Conditioning | STM32 Pin | Safe Range |
 |---|---|---|---|---|---|
 | FG_RAW | FG901 open-collector + pull-up | 0 to ~6V swing | R3/R4 divider, BAT54 clamp, C7 filter | PA0 / TIM2_CH1 | 0 to 3.0V after conditioning |
-| Q601_BASE | STM32 PWM+RC+NPN | 0 to 3.3V PWM → level shifted | R7, C8 RC, Q_LS NPN, R8, R9 | PA6 / TIM3_CH1 | N/A (output) |
+| Q601_BASE (A) | STM32 DAC | 0 to 3.3V | R5 series, R6 pullup | PA4 / DAC1_OUT | N/A (output) |
+| Q601_BASE (B) | STM32 PWM+RC+NPN | 0 to 3.3V PWM → level shifted | R7, C8 RC, Q_LS NPN, R8, R9 | PA6 / TIM3_CH1 | N/A (output) |
 | MOTOR_EN | IC601 pin 7 / R605 | 0 to ~4.4V | R10/R11 divider | PA5 / GPIO | 0 to 3.03V after divider |
 | RV601_WIPER | 47kΩ pot wiper | 0 to ~6V (measure) | 100Ω + BAT54 clamp | PA1 / ADC_IN1 | Must be ≤3.3V — verify |
 | RV602_WIPER | 20kΩ pot wiper | 0 to ~6V (measure) | 100Ω + BAT54 clamp | PA2 / ADC_IN2 | Must be ≤3.3V — verify |
@@ -1303,9 +1351,9 @@ value toward TARGET_PERIOD.
 **t = ~300ms**: Motor reaches operating speed. FG period settles to TARGET_PERIOD ±
 servo error. Speed lock is achieved.
 
-The motor is never uncontrolled at any point in this sequence. R9 holds Q601's
-base toward B+1, keeping Q601 off until the firmware explicitly enables motor
-drive through TIM3 PWM.
+The motor is never uncontrolled at any point in this sequence. Either R6 (Option A)
+or R9 (Option B) hold Q601 off until the firmware explicitly enables motor drive
+through the DAC or PWM.
 
 ### 14.2 Power-Off Sequence
 
@@ -1321,7 +1369,8 @@ reached for approximately 2ms. During this window, the servo loop continues runn
 and the motor is still being driven.
 
 **t = ~2ms**: BOR threshold reached. STM32 enters reset. All GPIO outputs go to
-high-impedance. R9 pulls Q601 base toward B+1 — motor drive is removed.
+high-impedance. R6 (Option A) or R9 (Option B) pull Q601 base toward its safe
+state — motor drive is removed.
 
 **Motor coasting**: M901 continues to rotate due to flywheel inertia for
 approximately 1-2 seconds after motor drive is removed. This is normal and harmless.
@@ -1362,10 +1411,16 @@ which occurs after B+1 has largely stabilised. No special handling is required.
 3.5V input, the LDO output drops and the STM32 supply follows. At approximately
 2.8V supply, the BOR fires and the machine stops cleanly.
 
-The WM-D6C's original battery indicator circuit (D801-D805 LED chain, IC801)
-monitors the B+1 rail directly and provides the standard battery state indication
-independently of the DSR-1 module. No modification to the battery indicator circuit
-is required or recommended.
+**Battery level indicator** (correction): the front-panel five-LED bar (D801–D805,
+driven by IC801/CX10043, BATT selected by S801) indicates from the machine's main
+rail. An earlier revision of this document stated no modification was required — true
+only while that rail tracked the battery. In the battery-integrated design the rail is
+a regulated, constant 6.0V B+1, so the stock battery indication (a single-LED
+brightness drive via Q801) is pinned at full and no longer reflects the cells. The
+DSR-1 therefore re-references it: the STM32 measures the actual VBAT node, estimates
+state of charge, and drives the LED bar directly as a true 1–5 segment fuel gauge
+while S801 is in BATT. See Power Supply Design §7.7 for the divider, LED interface,
+and firmware mapping.
 
 ---
 
