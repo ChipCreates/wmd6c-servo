@@ -1563,7 +1563,7 @@
 	)
 	(text "BRING-UP ORDER:\n1. Verify 9V_PD present before AP63203 powers up\n2. Check B+1 = 6.0-6.2V before enabling downstream\n3. Check B+3 = 10.5-11V (no load)\n4. Check +3.3V = 3.3V ±2%\n5. Do not connect WM-D6C harness until all rails verified"
 		(exclude_from_sim no)
-		(at 20.574 183.642 0)
+		(at 135.382 49.276 0)
 		(effects
 			(font
 				(size 1.27 1.27)
