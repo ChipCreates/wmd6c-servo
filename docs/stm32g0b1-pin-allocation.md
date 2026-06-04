@@ -1,59 +1,58 @@
-# STM32G0B1 Pin Allocation
+# STM32G0C1 Pin Allocation
 
 **Project:** DSR-1 / wmd6c-servo  
-**File:** `docs/hardware/stm32g0b1-pin-allocation.md`  
-**Status:** Draft / pre-Rev A  
-**Scope:** STM32G0B1 package choice, pin budget, alternate-function conflicts, USB-C/UCPD feasibility, servo I/O allocation, and Rev A package-risk assessment.
+**File:** `docs/stm32g0b1-pin-allocation.md` (filename retained; consider renaming to `stm32g0c1-pin-allocation.md`)  
+**Status:** Accepted — Rev A baseline  
+**Scope:** Finalized STM32G0C1KCU6 device selection, the complete 32-pin allocation, alternate-function/peripheral mapping, and the resolved package / PD / timebase decisions.
 
 ---
 
 ## 1. Purpose
 
-This document defines the STM32G0B1 pin-allocation process for DSR-1.
+This document records the **finalized** STM32 device and pin allocation for DSR-1 Rev A.
 
-DSR-1 now includes three first-class domains:
+DSR-1 spans three first-class domains:
 
 1. **Capstan servo replacement**
-2. **Power-input / power-support modernization**
-3. **USB-C data/service and USB-C PD strategy**
+2. **Power-input / power modernization, including battery charge-in-place**
+3. **USB-C data/service and USB-C PD**
 
-That means the MCU pinout is a hard architectural constraint. The project must prove that the selected STM32G0B1 package can support all required servo, power, USB, debug, update, and optional timing functions before Rev A schematic capture is considered stable.
+The MCU pinout was a hard architectural constraint; it is now resolved. The
+**STM32G0C1KCU6 (UFQFPN32)** carries every required servo, power-sense,
+battery-indicator, USB, debug, and update function on its 32 pins, with spares left
+over. This is the accepted allocation — schematic net labels and firmware `config.h`
+must match it.
 
-This document answers:
-
-- Which exact STM32G0B1 package is being used?
-- Which pins are required by servo control?
-- Which pins are required by USB-C data and PD?
-- Which pins are required by SWD, BOOT0, clocks, ADC, DAC, PWM, and rail sensing?
-- Which functions conflict?
-- Is the originally selected package still viable?
-- Should Rev A move to a larger package or external PD controller?
-
----
-
-## 2. Current Package Assumption
-
-The existing project materials refer to:
+## 2. Finalized Device
 
 ```text
-STM32G0B1KBU6
+STM32G0C1KCU6   (UFQFPN32, 256 KB flash)
 ```
 
-This is treated as the **current candidate**, not an accepted final decision.
+This is the **accepted Rev A part**, superseding the earlier STM32G0C1KCU6 candidate.
 
-The STM32G0B1 family includes multiple packages and variants. The datasheet indicates that some low-pin-count packages have alternate pinouts and that N-suffix variants can expose VDDIO2 and an additional UCPD port. Because DSR-1 now includes USB-C data and PD scope, the exact package and suffix matter.
+### 2.1 What changed from the KBU6 candidate
 
-### 2.1 Current Status
+| Field | Old candidate | Finalized |
+|---|---|---|
+| Part | STM32G0C1KCU6 | **STM32G0C1KCU6** |
+| Flash | 128 KB (B) | **256 KB (C)** — headroom for USB-CDC telemetry, indicator firmware, future variant |
+| Package | UFQFPN32 (K) | UFQFPN32 (K) — unchanged |
+| Suffix | KBU6 | **KCU6** |
+| Variant | GP | **GP** — VDDIO2 tied internally to VDD |
 
-| Field | Value |
-|---|---|
-| Current candidate MCU | STM32G0B1KBU6 |
-| Package class | UFQFPN32 candidate |
-| Status | Not yet accepted for Rev A |
-| Main risk | Pin pressure from servo + ADC + PWM + USB + UCPD + SWD + BOOT0 + timebase |
-| Rev A rule | Package is accepted only after exact pin and alternate-function audit |
+Device facts that shaped the allocation:
 
----
+- **GP variant, not N.** The GP/N distinction is VDDIO2 *exposure*, not package size.
+  GP ties VDDIO2 internally to VDD — correct for a single-3.3 V design, no second I/O
+  supply to decouple. (Confirm on the STM32G0C1 UFQFPN-32 pinout that VDDIO2 is not a
+  separate pin in the GP K-package.)
+- **PB15 absent** in the GP K-package (it exists only on the N variant) — not used here.
+- **Combined supply pins.** The 32-pin K package merges VDD/VDDA (pin 4) and VSS/VSSA
+  (pin 5); decouple as one 3.3 V domain. The exposed pad is VSS.
+- **256 KB flash (C)** is a deliberate upsize from the 128 KB KBU6 for firmware headroom.
+- **KiCad symbol:** `MCU_ST_STM32G0:STM32G0C1KCUx`, copied into `DSR-1.kicad_sym`,
+  renamed `STM32G0C1KCU6`, exposed-pad VSS exposed.
 
 ## 3. Required DSR-1 MCU Functions
 
@@ -105,34 +104,50 @@ The STM32G0B1 family includes multiple packages and variants. The datasheet indi
 
 ---
 
-## 4. Candidate Pin Allocation Table
+## 4. Finalized Pin Allocation (UFQFPN32)
 
-This table records candidate assignments. It does **not** prove alternate-function validity. Each entry must be verified against the exact STM32G0B1 package, datasheet pin table, and alternate-function table.
+Complete 32-pin assignment. Battery-build pins are No-connect on wall-only builds
+(Variant A/B without cells). AF/channel assignments follow the schematic guide's MCU
+section; verify any uncertain channel against the STM32G0C1 datasheet AF table.
 
-| DSR-1 function | Candidate signal | Candidate STM32 pin | Peripheral need | Status |
-|---|---|---|---|---|
-| FG input capture | `FG_IN` | `PA0` | TIM2_CH1 or equivalent input capture | Candidate / verify AF |
-| RV601 ADC | `RV601_WIPER` | `PA1` | ADC input | Candidate / verify ADC channel |
-| RV602 ADC | `RV602_WIPER` | `PA2` | ADC input | Candidate / verify ADC channel |
-| RV603 ADC | `RV603_WIPER` | `PA3` | ADC input | Candidate / verify ADC channel |
-| Motor PWM | `MOTOR_PWM` | `PA6` | TIM3_CH1 PWM output | Candidate / verify AF |
-| Speed Tune switch | `S601_SPEED_TUNE` | `PA7` | GPIO / EXTI optional | Candidate |
-| USB D− | `USB_DM` | `PA11` or package-defined USB DM | USB FS | Candidate / verify |
-| USB D+ | `USB_DP` | `PA12` or package-defined USB DP | USB FS | Candidate / verify |
-| SWDIO | `SWDIO` | `PA13` | SWD | Required / verify package |
-| SWDCLK / BOOT0 | `SWDCLK_BOOT0` | `PA14-BOOT0` | SWD / BOOT0 | Required / verify access strategy |
-| USB-C CC1 | `USB_CC1` | TBD | UCPD or external PD status | Open |
-| USB-C CC2 | `USB_CC2` | TBD | UCPD or external PD status | Open |
-| VBUS sense | `VBUS_SENSE` | TBD | GPIO/ADC with divider/protection | Open |
-| RAW power sense | `RAW_POWER_SENSE` | TBD | ADC with divider/protection | Optional / open |
-| Motor rail sense | `MOTOR_RAIL_SENSE` | TBD | ADC with divider/protection | Recommended / open |
-| External timebase | `EXT_CLK` / `HSE` | TBD | HSE/external clock input | Open |
-| PD controller status | `PD_STATUS` | TBD | GPIO/I2C/SPI/UART depending controller | Open |
-| PD controller I2C | `PD_SCL` / `PD_SDA` | TBD | I2C | Open if external PD |
-| Fault input | `POWER_FAULT` | TBD | GPIO/EXTI | Recommended |
-| Motor enable gate | `MOTOR_EN` | TBD | GPIO output | Recommended |
+| Pin | STM32 | DSR-1 signal | Function / AF | Dir | Reset | Notes |
+|---:|---|---|---|---|---|---|
+| 1 | PB9 | — | spare GPIO | — | Hi-Z | free |
+| 2 | PC14-OSC32_IN | — | LSE in (unused) | — | Hi-Z | LSE not used |
+| 3 | PC15-OSC32_OUT | — | LSE out (unused) | — | Hi-Z | LSE not used |
+| 4 | VDD/VDDA | `+3V3` | power (combined) | — | — | single 3.3 V domain |
+| 5 | VSS/VSSA | GND | ground (combined) | — | — | |
+| 6 | PF2-NRST | NRST | reset | In | — | 100nF to GND; test pad |
+| 7 | PA0 | `FG_IN` | TIM2_CH1 input capture | In | Hi-Z | tachometer; ~2500 Hz ISR |
+| 8 | PA1 | `RV601_WIPER` | ADC_IN1 | In | Hi-Z | base speed cal |
+| 9 | PA2 | `RV602_WIPER` | ADC_IN2 | In | Hi-Z | speed tune |
+| 10 | PA3 | `RV603_WIPER` | ADC_IN3 | In | Hi-Z | speed tune range |
+| 11 | PA4 | — | DAC1_OUT1 (unused) | — | Hi-Z | DAC not used |
+| 12 | PA5 | `MOTOR_EN_MON` | GPIO in | In | Hi-Z | Sony motor-enable monitor |
+| 13 | PA6 | `MOTOR_PWM` | TIM3_CH1 PWM (AF1) | Out | 0% duty (off) | committed motor drive |
+| 14 | PA7 | `SPEED_TUNE_SW` | GPIO in | In | Hi-Z | S601 |
+| 15 | PB0 | `VBAT_SENSE` | ADC_IN8 | In | Hi-Z | pack voltage (battery) |
+| 16 | PB1 | `VBAT_SENSE_EN` | GPIO out | Out | low (off) | sense-divider gate FET (battery) |
+| 17 | PB2 | `BATT_LED1` | GPIO / TIM | Out | low | indicator seg 1 (battery) |
+| 18 | PA8 | `CC1` | UCPD1_CC1 / DBCC1 | I/O | — | USB-C CC (native UCPD) |
+| 19 | PA9 | `CC2` | UCPD1_CC2 | I/O | — | USB-C CC |
+| 20 | PC6 | `S801_BATT` | GPIO in (pull) | In | Hi-Z | BATT-mode sense (battery) |
+| 21 | PA10 | — | spare GPIO | — | Hi-Z | free |
+| 22 | PA11 [PA9] | `USB_DM` | USB FS | I/O | — | via USBLC6 ESD |
+| 23 | PA12 [PA10] | `USB_DP` | USB FS | I/O | — | via USBLC6 ESD |
+| 24 | PA13 | `SWDIO` | SWD (AF0) | I/O | SWD | reserve permanently |
+| 25 | PA14-BOOT0 | `SWDCLK` | SWD / BOOT0 (AF0) | I/O | SWD | reserve; defined BOOT0 access |
+| 26 | PA15 | `BATT_LED2` | GPIO / TIM | Out | low | indicator seg 2 (battery) |
+| 27 | PB3 | `BATT_LED3` | GPIO / TIM | Out | low | indicator seg 3 (battery) |
+| 28 | PB4 | `BATT_LED4` | GPIO / TIM | Out | low | indicator seg 4 (battery) |
+| 29 | PB5 | `BATT_LED5` | GPIO / TIM | Out | low | indicator seg 5 (battery) |
+| 30 | PB6 | `DEBUG_TX` | USART1_TX (AF0) | Out | Hi-Z | service debug |
+| 31 | PB7 | `CHRG_SENSE` | GPIO in | In | Hi-Z | charger CHRG (optional, battery) |
+| 32 | PB8 | `DONE_SENSE` | GPIO in | In | Hi-Z | charger DONE (optional, battery) |
+| EP | VSS | GND | exposed pad | — | — | via array to ground plane |
 
----
+**Spares:** PB9 (1), PA10 (21), and the LSE pair PC14/PC15 (2/3) are unallocated.
+LED segment pins on timer channels (PB2/PA15/PB3/PB4/PB5) can PWM-dim the bar.
 
 ## 5. Servo-Critical Pins
 
@@ -370,36 +385,35 @@ If pin budget is tight, prefer fault-status GPIOs and one or two critical ADC se
 | Board size | Larger |
 | Overall | Strong candidate if Rev A pin budget exceeds UFQFPN32 |
 
-### 11.3 Recommendation Status
+### 11.3 Recommendation Status — Accepted
 
-Current recommendation:
+> **Accepted: STM32G0C1KCU6 / UFQFPN32.** The full 32-pin allocation (§4) fits all
+> servo, USB, UCPD, debug, power-sense, and battery-indicator functions with two spare
+> GPIO (PB9, PA10) plus the unused LSE pair. Native UCPD on PA8/PA9 covers USB-C CC; no
+> external PD controller or larger package is required. Variant A's 9 V PD is handled
+> off-MCU by the IP2721 trigger; the battery build runs at 5 V and needs no PD.
 
-> Do not commit to STM32G0B1KBU6 / UFQFPN32 until the pin-allocation table is verified against the exact datasheet package and alternate-function tables. Because USB-C data and PD are in scope, a 48-pin package or external PD controller may be the more robust Rev A path.
+## 12. Rev A Pinout Decision Gates — Met
 
----
-
-## 12. Rev A Pinout Decision Gates
-
-The MCU/package is accepted only when these are complete.
+All gates are satisfied; the MCU/package is **accepted** for Rev A.
 
 | Gate | Status |
 |---|---|
-| Exact part number selected | Pending |
-| Exact package pinout captured | Pending |
-| USB FS pins verified | Pending |
-| Native UCPD pins verified, if used | Pending |
-| SWD/BOOT access verified | Pending |
-| FG timer input verified | Pending |
-| PA6 TIM3_CH1 PWM pin verified | Pending |
-| Three ADC pins verified | Pending |
-| S601 GPIO verified | Pending |
-| VBUS/power sense pins assigned | Pending |
-| External timebase pins reserved or rejected | Pending |
-| External PD controller pins assigned, if used | Pending |
-| Pin conflicts reviewed | Pending |
-| KiCad symbol/package updated | Pending |
-
----
+| Exact part number selected | ✅ STM32G0C1KCU6 |
+| Exact package pinout captured | ✅ UFQFPN32 (§4) |
+| USB FS pins verified | ✅ PA11/PA12 |
+| Native UCPD pins verified | ✅ PA8/PA9 |
+| SWD/BOOT access verified | ✅ PA13/PA14 + NRST (PF2) |
+| FG timer input verified | ✅ PA0 / TIM2_CH1 |
+| Motor PWM pin verified | ✅ PA6 / TIM3_CH1 |
+| ADC pins verified | ✅ PA1/PA2/PA3 + PB0 |
+| S601 GPIO verified | ✅ PA7 |
+| VBUS/power-sense pins assigned | ✅ VBAT_SENSE PB0; CHRG/DONE PB7/PB8 |
+| Battery-indicator pins assigned | ✅ BATT_LED1–5, S801_BATT, VBAT_SENSE_EN |
+| External timebase reserved/rejected | ✅ HSI + FG reference; LSE pins free |
+| External PD controller | ✅ none (UCPD + IP2721 trigger) |
+| Pin conflicts reviewed | ✅ §10 |
+| KiCad symbol/package updated | ✅ STM32G0C1KCUx |
 
 ## 13. Documentation Requirements
 
@@ -428,41 +442,36 @@ Final table format:
 
 ---
 
-## 14. Open Questions
+## 14. Open Questions — Resolved
 
-1. Is STM32G0B1KBU6 the correct final part, or should Rev A move to a larger package?
-2. Does the exact KBU6 package expose all USB FS pins required for USB-C data?
-3. Does it expose UCPD CC pins suitable for native USB-C PD?
-4. Is the N-suffix alternate pinout required?
-5. ~~Can DAC and USB/UCPD coexist?~~ Resolved: DAC is not used. PWM on PA6 is committed.
-6. Is an external PD controller the safer way to preserve pin budget?
-7. Is an external timebase required?
-8. If yes, are HSE pins available and not conflicting?
-9. How many rail-sense inputs are worth the pin cost?
-10. ~~Should Rev A include solder-jumper options to choose DAC vs PWM output?~~ Resolved: PWM only.
+1. Final part? **STM32G0C1KCU6** (UFQFPN32, 256 KB).
+2. USB FS pins exposed? **Yes — PA11/PA12.**
+3. UCPD CC pins suitable? **Yes — PA8/PA9 native UCPD1.**
+4. N-suffix required? **No — GP variant; VDDIO2 internal to VDD.**
+5. ~~DAC vs USB/UCPD coexist?~~ Resolved: DAC unused; PWM on PA6.
+6. External PD controller? **No.** Variant A uses the IP2721 fixed trigger off-MCU; the battery build runs at 5 V and needs no PD.
+7. External timebase required? **No** — HSI for the MCU; FG provides the speed reference. LSE/HSE pins left free.
+8. HSE pins free? **Yes, unused.**
+9. Rail-sense count? **One ADC (VBAT_SENSE, PB0) plus CHRG/DONE status GPIOs.**
+10. ~~DAC vs PWM solder-jumper?~~ Resolved: PWM only.
 
----
-
-## 15. Acceptance Criteria
-
-The pin allocation is accepted when:
+## 15. Acceptance Criteria — Met
 
 | Requirement | Status |
 |---|---|
-| Exact STM32G0B1 part/package selected | Pending |
-| Datasheet pinout verified | Pending |
-| Alternate functions verified | Pending |
-| USB-C data pins assigned | Pending |
-| PD strategy reflected in pins | Pending |
-| Servo-critical pins assigned | Pending |
-| Power sense/fault pins assigned | Pending |
-| SWD/BOOT recovery preserved | Pending |
-| Timebase option resolved or reserved | Pending |
-| KiCad symbol matches part | Pending |
-| Schematic labels match this document | Pending |
-| Firmware `config.h` matches this document | Pending |
-
----
+| Exact STM32 part/package selected | ✅ STM32G0C1KCU6 / UFQFPN32 |
+| Datasheet pinout captured | ✅ §4 |
+| Alternate functions assigned | ✅ §4 |
+| USB-C data pins assigned | ✅ PA11/PA12 |
+| PD strategy reflected in pins | ✅ UCPD PA8/PA9; IP2721 (Variant A) |
+| Servo-critical pins assigned | ✅ FG PA0, PWM PA6, wipers PA1–3, S601 PA7 |
+| Power-sense/fault pins assigned | ✅ VBAT_SENSE PB0, CHRG/DONE PB7/PB8 |
+| Battery-indicator pins assigned | ✅ BATT_LED1–5, S801_BATT, VBAT_SENSE_EN |
+| SWD/BOOT recovery preserved | ✅ PA13/PA14, NRST |
+| Timebase resolved | ✅ HSI + FG reference |
+| KiCad symbol matches part | ✅ STM32G0C1KCUx |
+| Schematic labels match this doc | ⚠ pending the v0.6 single-sheet guide reaching the repo |
+| Firmware `config.h` matches this doc | ⚠ to update |
 
 ## 16. Design Rule
 
