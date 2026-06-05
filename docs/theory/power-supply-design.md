@@ -49,7 +49,7 @@ above and below the operating point to apply corrective torque in both direction
 **Implicitly: approximately 3-5V for logic**: The CX20084 servo IC and the
 MSM58141RS divider IC operate from B+1 directly. At 6V battery supply these ICs
 have comfortable operating margin — their specified supply range is typically 4-7V.
-The DSR-1's STM32G0B1KBU6 requires a separate regulated 3.3V supply because modern
+The DSR-1's STM32G0B1KCU6 requires a separate regulated 3.3V supply because modern
 CMOS logic at 64 MHz demands tighter voltage regulation than a battery rail can
 provide.
 
@@ -98,41 +98,53 @@ simultaneously.
 ## 2. The DSR-1 Power Architecture Overview
 
 The DSR-1 produces all three supply rails (B+1, B+3, and 3.3V) from a single B+1
-node. The B+1 regulator itself is **one shared part in every build** — a TPS63070
-buck-boost — fed by one of three interchangeable input front ends that all hand off
-to it:
+node. A TPS63070 buck-boost generates B+1 (6.0V) in every build; what differs is
+*where that regulator physically lives* and which input front end feeds it:
 
-- **Battery-integrated (primary)**: a 1S4P LiFePO4 pack is the runtime source,
-  charged in place over USB-C while the machine runs. The pack sits below 6V, so the
-  TPS63070 runs in *boost* mode here. This is the self-contained configuration and
-  the one the rest of this project assumes (Section 7).
-- **Variant A (wall-only)**: a 9V USB-C PD contract, which the TPS63070 *bucks*
-  down to B+1, with no cells fitted (Section 5).
-- **Variant B (wall-only)**: the original barrel jack with polarity correction,
-  presenting 5–9V that the TPS63070 bucks or boosts to B+1, with no cells fitted
-  (Section 6).
+- **Battery-integrated (primary)** — a **two-board** design. A dedicated **power
+  daughter board**, mounted behind the battery bay, carries the entire power
+  subsystem: USB-C 5V input, the BQ24074 power-path charger, the 3-cell LiPo pack,
+  DW01 + dual-FET pack protection, and the TPS63070 boost that produces B+1. The
+  daughter board injects its regulated 6.0V **at the original battery-terminal node**
+  on the main board (the contacts the AA cartridge used to feed), so the stock S901
+  power switch remains the machine's real on/off control. The servo module in the
+  CP304 cavity *receives* B+1 through its harness and no longer generates it — its
+  power-input zone is unpopulated in this build (Section 7).
+- **Variant A (wall-only)** — single module. A 9V USB-C PD contract, which the
+  module's on-board TPS63070 *bucks* down to B+1, with no cells fitted (Section 5).
+- **Variant B (wall-only)** — single module. The original barrel jack with polarity
+  correction, presenting 5–9V that the module's on-board TPS63070 bucks or boosts to
+  B+1, with no cells fitted (Section 6).
 
 The crucial architectural point is that the B+1 regulator is a **buck-boost that
 crosses through unity automatically** — it bucks the 9V case and boosts the
 battery/5V cases without any reconfiguration — so the same converter, divider, and
-layout serve all three front ends. Everything *downstream* of B+1 is likewise
-identical in every build.
+layout serve every front end. Everything *downstream* of B+1 is likewise identical in
+every build; the wall variants drive B+1 out through the harness, while the battery
+build drives B+1 in at the machine's battery terminals and the module consumes it.
 
 ```
-Front ends (exactly one fitted):
-  Battery: USB-C 5V ─┬─► CN3058E charger ─► 1S4P LFP pack ─► [protection] ─► load-share ─┐
-                     └─► system path via ideal-diode D1 ──────────────────────────────────┤
-  Variant A: USB-C 9V PD ───────────────────────────────────────────────────────────────┤
-  Variant B: Barrel 5–9V either polarity ─► [LTC4359 bridge] ─────────────────────────────┤
-                                                                                          │
-                                                                  V_RAIL (≈2.8–9V) ────────┘
-                                                                          │
-                                                                  [TPS63070 buck-boost] ◄── single shared B+1 regulator
-                                                                          │
-                                                                  B+1 (6.0V regulated)
-                                                                          │   ──► WM-D6C main board
-                                                                          ├──[MT3608 boost ↑]──► B+3 (10.8V) ──► Motor
-                                                                          └──[MCP1700 LDO]─────► 3.3V ──► STM32
+WALL VARIANTS (single module, B+1 generated on-module, driven out via harness):
+  Variant A: USB-C 9V PD ──────────────────────────────────────────┐
+  Variant B: Barrel 5–9V either polarity ─► [LTC4359 bridge] ───────┤
+                                                  V_RAIL (≈5–9V) ────┘
+                                                        │
+                                                [TPS63070 buck-boost]  (on module)
+                                                        │
+                                                    B+1 (6.0V) ──► harness J1.7 ──► WM-D6C main board
+                                                        ├──[MT3608]──► B+3 (10.8V) ──► Motor
+                                                        └──[MCP1700]─► 3.3V ──► STM32
+
+BATTERY BUILD (two boards; B+1 generated on the daughter board, injected at battery terminals):
+  ── Power daughter board (behind battery bay) ──────────────────────────────────┐
+  USB-C 5V ─► BQ24074 power-path ─┬─► SYS ─► [TPS63070 boost] ─► B+1 (6.0V) ──────┼──► main-board
+                                  └─► BAT ─► 3P LiPo pack ─► [DW01 + dual-FET]      │   battery terminals
+                                            (3.7V, 3000mAh) ◄── charged in place    │   (─► S901 ─► B+1 net)
+  ───────────────────────────────────────────────────────────────────────────────┘
+        B+1 propagates through the machine's B+1 net to the CP304 harness ─► servo module
+        Servo module: receives B+1 (power-input zone unpopulated)
+                        ├──[MT3608]──► B+3 (10.8V) ──► Motor
+                        └──[MCP1700]─► 3.3V ──► STM32
 ```
 
 The elegance of this architecture is that the entire machine — audio circuits,
@@ -430,7 +442,7 @@ essentially mandatory in modern boost converters.
 
 ### 4.1 Why a Linear Regulator for the STM32
 
-The STM32G0B1KBU6 requires a stable, low-noise 3.3V supply. Two approaches are
+The STM32G0B1KCU6 requires a stable, low-noise 3.3V supply. Two approaches are
 possible: a switching step-down (buck) converter from B+1, or a linear LDO
 regulator.
 
@@ -616,12 +628,12 @@ These are the same divider values used in every build.
 **Current capability and the battery-floor case.** The TPS63070 delivers up to 2A
 output in both buck and boost mode, bounded by its 3.6A switch current limit. The
 WM-D6C's total B+1 load is ~400–650mA. In buck mode (Variant A, 9V in) this is
-trivial. Boost mode is the demanding case: at the LFP floor of 2.8V producing 6.0V
-at ~0.65A, the input current is ~1.6A and the peak inductor current approaches ~2A —
+trivial. Boost mode is the demanding case: at the LiPo floor of ~3.0V producing 6.0V
+at ~0.65A, the input current is ~1.5A and the peak inductor current approaches ~2A —
 comfortably under the 3.6A limit, with a motor-surge transient briefly higher but
-bounded by the B+1 bulk capacitor. Crucially the LFP discharge curve is flat: the
-pack holds near 3.2V for most of its capacity and only sags toward 2.8V at the very
-end, so the worst-case boost current is a small sliver of total runtime (see
+bounded by the B+1 bulk capacitor. The LiPo discharge curve sags more gradually than
+LFP — the pack holds above ~3.5V for much of its capacity and reaches ~3.0V only near
+the end — so the worst-case boost current is a small sliver of total runtime (see
 Section 7.4 for the battery-build budget).
 
 **Efficiency and thermal.** Peak efficiency is approximately 93–95%. At ~3W
@@ -797,248 +809,254 @@ rating; 16V would be preferable if the capacitor physically fits.
 
 ---
 
-## 7. Battery-Integrated Input — Charge-in-Place over USB-C
+## 7. Battery-Integrated Input — Charge-in-Place over USB-C (Two-Board Design)
 
-This is the primary DSR-1 configuration: a LiFePO4 pack is the runtime source, and
-USB-C both charges it in place and runs the machine at the same time. The pack sits
-*below* 6V, so the shared TPS63070 B+1 regulator (Section 5.2) runs here in boost
-mode. Everything downstream of B+1 — the MT3608 (Section 3), the MCP1700 (Section 4),
-and the rail sequencing (Section 8) — is unchanged; the battery block is simply a
-third front end handing off to the same regulator.
+This is the primary DSR-1 configuration: a LiPo pack is the runtime source, and USB-C
+both charges it in place and runs the machine at the same time. Unlike the wall
+variants, the battery build is split across **two boards**:
 
-One consequence is worth stating plainly: in this configuration the IP2721 PD trigger
-and Variant A's 9V negotiation are **not fitted**. The charger described below runs
-from default 5V VBUS, and its absolute-maximum input is 6V — so a 9V PD contract would
-not merely be unnecessary here, it would *over-volt the charger*. Battery builds stay
-at 5V, and the TPS63070 boosts to B+1 from there (and from the pack on battery), the
-same part doing the same job it does by bucking in Variant A.
+- A **power daughter board**, mounted *behind the battery bay* (not inside it), which
+  carries the whole power subsystem — USB-C 5V input, the BQ24074 power-path charger,
+  the LiPo pack connections, DW01 + dual-FET pack protection, and the TPS63070 boost
+  that produces B+1.
+- The **servo module** in the CP304 cavity, which in this build *receives* B+1 and
+  does not generate it. Its power-input zone (the on-module TPS63070 and front-end
+  parts used by Variants A/B) is left unpopulated.
 
-### 7.1 The Cell — 4× IFR14500 in 1S4P
+The daughter board injects its regulated 6.0V at the **original battery-terminal node**
+on the main board — the contacts the four-AA cartridge used to feed. That 6.0V then
+propagates through the machine's own B+1 net (through S901, the power switch) and
+reaches the servo module via the existing CP304 harness, exactly as battery power
+always did. Two consequences follow directly: the stock **S901 power switch keeps
+working** as the machine's real on/off control, and the servo module needs no power
+front end of its own.
 
-Four IFR14500 LiFePO4 cells wired in parallel form a single logical cell. The pack
-is nominally 3.2V, floats fully charged at 3.6V, and has a usable floor around 2.5V.
-Capacity is the sum of the four cells — approximately 2.4 to 2.8Ah depending on the
-specific cell.
+One point worth stating plainly: in this configuration there is **no USB PD**. The
+BQ24074 charges from default 5V VBUS, and a 1S LiPo charger wants ~5V in — a 9V PD
+contract would be both unnecessary and harmful. The battery build presents a plain
+5V-sink on the CC lines and the TPS63070 boosts to B+1 from the 5V/pack SYS rail.
 
-Because the cells are hard-paralleled, the charger, the protection IC, and any future
-gauge all see a single 3.2V node — there is no per-cell balancing to manage. This is
-the same parallel-then-series philosophy a large EV pack uses (many small identical
-cells in parallel, managed as one logical cell), with the series count equal to one.
+### 7.1 The Pack — 3× LiPo in 3P
 
-**Reverse-insertion hazard.** The one genuinely new failure mode the battery
-introduces lives here. With user-removable cells in a holder, a single cell inserted
-backwards is reverse-charged by the other three through a near-short, which is both a
-cell hazard and a fire risk. A series polyfuse on the pack limits the fault current,
-but the clean fix is an orientation-keyed holder or permanently soldered cells. This
-deserves an explicit decision before layout — it is the same class of reverse-polarity
-failure this entire project exists to eliminate (Section 1.3), merely relocated to the
-cell side of the module.
+The runtime source is **three LiPo cells wired in parallel (3P)**. The reference cell
+is the 803040 form factor (8 × 30 × 40 mm, 3.7V, 1000mAh, with on-cell PCM and a
+PH2.0 pigtail), giving a pack that is nominally 3.7V, ~4.2V fully charged, ~3.0V
+usable floor, **3000mAh / ~11.1Wh** total. This supersedes the earlier 1S4P IFR14500
+LiFePO4 selection; the move to LiPo was made because LiPo pouches in the required
+form factor are available off-the-shelf with JST pigtails and protection, whereas a
+fitting LFP pouch is a custom order.
 
-### 7.2 The CN3058E Charger
+**Why three, and why they fit.** The real battery cavity measures approximately
+57 × 32 × 29 mm (≈52 cm³) — confirmed by the depth from the battery-cover lid to the
+bottom of the original Sony holder (1 1/8" ≈ 28.6 mm), not the shallower figure an
+incomplete tape-measure reading first suggested. Three 803040 cells stacked flat
+occupy 40 × 30 × 24 mm, leaving ~4.6 mm of clearance on the stacking (depth) axis.
+That axis is also the direction LiPo cells swell, so the clearance is swell
+allowance: three cells bulging ~0.8 mm each at end of life (~2.4 mm) sit comfortably
+under the 4.6 mm gap. The gap must be left empty — it is the swell budget, not space
+to pad out.
 
-The CN3058E is a complete constant-current/constant-voltage linear charger for a
-single LiFePO4 cell. It integrates the pass MOSFET (an internal P-channel device) and
-needs no external blocking diode or sense resistor, and its regulation voltage is
-internally fixed at 3.6V ±1.5% — exactly the LFP float point. It is the LFP-correct
-sibling of the TP4056 and shares both its pinout class and, importantly, its thermal
-behaviour.
+**3P relaxes the rate problem.** Each 803040 is a low-rate "non-power" cell (~1–2A).
+In 3P the worst-case ~1.5A machine draw is ~0.5A per cell and a ~3A motor-startup
+surge is ~1A per cell — well within each cell's comfort, with the B+1 bulk capacitor
+absorbing sub-millisecond transients regardless.
 
-**Input voltage.** The CN3058E operates from 3.8V to 6V, so default 5V VBUS sits
-squarely in range. This is why the battery build stays at 5V and drops the IP2721:
-9V would exceed the charger's maximum rating.
+**Balance before joining.** The three cells must be matched to within ~30–50 mV of
+resting voltage before they are first paralleled, to avoid cell-to-cell inrush at the
+moment of connection. After the first equalisation they track. The on-cell PCMs do
+*not* prevent this inrush — they protect the external load/charge path, not two cells
+meeting each other — so balance-first is a mandatory assembly step. The 3P junction
+(three positives bussed, three negatives bussed) is formed on the daughter board,
+where the cells plug in.
 
-**Charge current and the thermal limit.** Charge current is set by a single resistor
-from the ISET pin to ground:
+**Service disconnect.** The cells plug into the daughter board; pulling the three
+cell connectors removes the pack for service. This restores the convenient
+"removable pack" behaviour of the original cartridge without the AA holder (which
+does not fit the cavity once cells of this length are stacked).
 
-```
-I_CHG = 1.218V / R_ISET        (R in Ω → I in A)
-```
+### 7.2 The BQ24074 Power-Path Charger
 
-Because the charger is linear, it dissipates the entire input-to-battery voltage
-difference as heat inside its eSOP-8 package:
+The charger is a TI **BQ24074** — a single-cell Li-ion/LiPo linear charger with
+**integrated dynamic power-path management (DPPM)**. It is chosen specifically
+because the design requires the machine to run from USB *while* the battery charges,
+with the load taking priority. The BQ24074 has separate IN, SYS, and BAT terminals
+and does this natively:
 
-```
-P_diss = (VIN - VBAT) × I_CHG
-```
+- **DPPM** powers the SYS load from USB first and routes only surplus input current
+  to charging — i.e. "the deck runs from USB, the battery charges from what's left."
+- **Supplement mode** lets the battery assist the SYS load when a transient (motor
+  startup surge) briefly exceeds the input current limit, so the machine cannot brown
+  out on inrush while plugged in.
+- A **programmable input current limit** (ILIM) protects a weak USB source, and
+  **thermal regulation** folds back charge current if the IC heats up — useful on the
+  small daughter board.
+- When USB is removed, SYS hands off to the battery seamlessly (the B+1 bulk
+  capacitor covers the microsecond transition).
 
-At 5V in and 3.6V on the pack, this sets the practical current ceiling well below
-what the cells could accept. The options:
+This replaces the earlier CN3058E-plus-discrete-load-share approach: a bare charger
+(CN3058E or TP4056) has only a BAT terminal and cannot cleanly power a load while
+charging. The BQ24074 folds the charger and the load-share into one correct part.
 
-```
-R_ISET    I_CHG    C-rate(2.5Ah)   P_diss    Charge time   Note
-1.218 kΩ  1.0 A    0.40C           1.40 W    ~3 h          will thermally fold back
-1.74  kΩ  0.7 A    0.28C           0.98 W    ~4 h          borderline
-2.0   kΩ  0.6 A    0.25C           0.84 W    ~4–4.5 h      recommended — cool, kind to LFP
-```
+**Charge current** is set by R_ISET on the ISET pin (I_CHG = K_ISET / R_ISET,
+K_ISET ≈ 890 AΩ). A starting value of **R_ISET ≈ 1.1 kΩ → ~0.8A** charge is a gentle
+~0.27C into 3000mAh — kind to the cells and low-dissipation. At 5V in and ~4.0V on
+the pack the pass element dissipates ≈ (5 − 4.0) × 0.8 ≈ 0.8W, so give the IC a
+copper pour.
 
-The CN3058E thermally regulates at approximately 135°C and will fold a 1A setting
-back toward this point regardless of R_ISET, so setting around 600mA (R_ISET = 2.0kΩ)
-avoids relying on foldback and keeps cell aging low. A copper pour under the eSOP-8
-thermal pad is worthwhile at any setting.
+**Input current limit** is set by R_ILIM (I_INLIM = K_ILIM / R_ILIM, K_ILIM ≈
+1600 AΩ). **R_ILIM ≈ 800 Ω → ~2A** matches a 5V/2.4A-or-better USB-C source. With DPPM
+the deck always gets priority and charge throttles automatically when the deck draws
+more, so the input budget does not have to be hand-partitioned. Total demand is
+deck (~3–4W) plus charge (~0.8A × 4.2V ≈ 3.4W) ≈ 7–8W, which a 5V/3A (15W) source
+covers with margin.
 
-**Supporting connections.** A 4.7–10µF ceramic from the BAT pin to ground stabilises
-the feedback loop (the datasheet's C2). The TEMP pin is tied to ground to disable NTC
-sensing, since the AA holder carries no thermistor — or wired to a 10kΩ NTC if one is
-added to the pack. The open-drain CHRG and DONE outputs drive indicator LEDs (LED plus
-series resistor to VIN); DONE asserts at the 10%-of-CC termination threshold. When
-USB is removed and VIN falls within 10mV of the battery voltage, the charger enters a
-3µA sleep mode, so it does not drain the pack while unplugged.
+**Supporting connections.** The TS pin must be set into its valid window with a fixed
+resistor pair (the 803040 cells expose no thermistor) or wired to a 10kΩ NTC against
+the pack if temperature qualification is wanted. The CHG and PGOOD status outputs are
+read by the STM32 (routed across the board-to-board link, Section 7.6) to drive the
+charging animation on the LED fuel gauge.
 
-### 7.3 The Power-Path — Load-Sharing P-FET
+### 7.3 Pack Protection — DW01 + Dual FET
 
-The CN3058E, like the TP4056, has no power-path of its own: its BAT pin is both the
-charge output and the only battery connection. If the system load were hung directly
-on BAT, the charger could never detect true termination — the load looks like a cell
-that never finishes filling — and load transients would corrupt the CC/CV loop. The
-fix is the canonical load-sharing arrangement: isolate the battery from the load
-whenever USB is present, and run the load from USB instead.
+The 3P pack needs over-charge, over-discharge, and over-current protection on the
+logical cell. Use a **DW01** protection IC driving a dual N-channel FET (FS8205-class)
+in series between the pack and the rest of the daughter board.
 
-A P-channel MOSFET (Q1) sits between the battery and the system node V_SYS:
+For LiPo this is the correct part: the DW01's thresholds (over-charge 4.25V,
+over-discharge ~2.4V) are the Li-ion/LiPo values that match a 4.2V-float cell.
+(An earlier revision of this project used an LFP pack and an HY2112-CB, and explicitly
+warned *against* the DW01 — that warning applied only to the LFP chemistry, whose 3.6V
+float made the DW01 thresholds wrong. With the change to LiPo, the DW01 is now exactly
+right.) The three cells' on-cell PCMs provide a first layer; the daughter-board DW01 +
+FET pack is the pack-level backstop. Because per-cell current stays well under each
+PCM's trip point in normal operation, the layers do not nuisance-trip against each
+other.
 
-```
-     VBUS ──[D2 small Schottky]──┬─────────► Q1 gate
-                                 │
-   VBAT ──── source ┐          [R1 100k]
-                   Q1 (PMOS)     │
-   V_SYS ◄── drain ┘            GND
-```
+### 7.4 The B+1 Regulator in Boost Mode — SYS → 6.0V
 
-**USB present:** D2 pulls Q1's gate up to roughly VBUS (5V) while its source (the
-battery) sits at ~3.6V, giving V_GS ≈ +1.4V — a PMOS is off with positive V_GS, so Q1
-is **off**. The battery is isolated, the charger sees a clean cell, and the system
-runs from USB through D1 (below).
+On the daughter board the B+1 regulator is the **same TPS63070 buck-boost** used by
+the wall variants (Section 5.2), here running in boost mode because the BQ24074 SYS
+rail sits below 6.0V (≈4.6–4.9V on USB, tracking the pack at 3.0–4.2V on battery).
+The divider (R_upper = 649 kΩ, R_lower = 100 kΩ, 0.8V reference) and layout are
+identical to the wall builds — the only difference is that in the battery build this
+regulator lives on the daughter board rather than the servo module.
 
-**USB absent:** R1 pulls the gate to ground, giving V_GS = −V_BAT — Q1 is **on**, and
-the battery feeds V_SYS through the FET's low R_DS(on).
-
-**D1, the USB→V_SYS path.** The simple choice is a 2–3A Schottky (SS24/SS34), but it
-drops ~0.4V (~0.4W at 1A) and pulls V_SYS down to ~4.6V. An **ideal-diode P-FET** is
-preferred here: it nearly eliminates that loss, lifts V_SYS to ~4.9V (making the
-regulator's boost-mode job easier), and still blocks the battery and boost from
-back-feeding VBUS. Either way, V_SYS lands at approximately 4.8–4.9V on USB and tracks
-the pack at 2.8–3.6V on battery.
-
-### 7.4 The B+1 Regulator in Boost Mode — V_SYS → 6.0V
-
-In the battery build the B+1 regulator is the **same TPS63070 buck-boost** specified
-in Section 5.2 — there is no separate front-end part. It simply runs entirely in
-boost mode here, because V_SYS never rises above ~4.9V (USB) and falls to the pack's
-2.8V floor on battery, both below the 6.0V output. The divider (R_upper = 649kΩ,
-R_lower = 100kΩ, 0.8V reference) and layout are identical to the wall-powered builds.
-
-**Why the shared part holds up here.** The earlier instinct was a dedicated
-high-current boost (e.g. a TPS61022) for the battery case, on the assumption the
-B+1 converter would be a buck that couldn't reach down to battery voltage. Once B+1
-is a buck-boost, that second part is unnecessary: the TPS63070's 3.6A switch limit
-covers the boost-mode current, and using one regulator across all builds keeps a
-single converter block, divider, and layout.
-
-**Worst-case input current**, taking the whole machine at ~4W on B+1, 90% efficiency,
-and the pack at its 2.8V floor:
+**Worst-case input current**, whole machine ~4W on B+1, 90% efficiency, pack near its
+3.0V floor:
 
 ```
-I_IN = P_OUT / (V_SYS × η) = 4 / (2.8 × 0.9) ≈ 1.6 A    (motor surge briefly higher)
+I_IN = P_OUT / (V_SYS × η) = 4 / (3.0 × 0.9) ≈ 1.5 A    (motor surge briefly higher)
 ```
 
 Peak inductor current approaches ~2A at this corner — under the TPS63070's 3.6A
-limit, with surge transients bounded by the B+1 bulk capacitor. And because the LFP
-curve is flat (the pack holds ~3.2V for most of its capacity and only sags to 2.8V at
-the very end), this worst-case corner is a small fraction of total runtime.
+switch limit, with surge transients bounded by the B+1 bulk capacitor.
 
-**Duty cycle** at the nominal 3.2V pack voltage:
+**Duty cycle** at the nominal 3.7V pack voltage:
 
 ```
-D ≈ 1 − V_SYS / V_OUT = 1 − 3.2 / 6.0 = 0.467
+D ≈ 1 − V_SYS / V_OUT = 1 − 3.7 / 6.0 = 0.383
 ```
 
-**Input budget.** With charging (~0.6A) and the regulator (~1.6A referred to V_SYS)
-both drawing from 5V VBUS, the USB source must supply roughly 2–2.5A at 5V (~10–12W).
-A plain 5V/2A-or-better source covers this; no PD contract is required. If a
-guaranteed high-current 5V contract is wanted, a 5V-set PD trigger can advertise a 5V
-PDO, but a simple Rd-sink presentation on the CC lines is usually sufficient.
+### 7.5 6V Injection at the Battery Terminals, and S901
 
-### 7.5 Pack Protection
+The daughter board's 6.0V output is wired to the main board at the **original
+battery-positive terminal location** (the corroded/leaked stock spring contacts are
+removed — see the installation notes — and the daughter-board feed replaces them).
+Because the stock wiring runs battery → S901 → B+1 net, injecting on the battery side
+of S901 keeps the front-panel power switch fully functional: it still switches the
+whole machine on and off, including the servo module fed downstream through the CP304
+harness.
 
-Hard-paralleled cells still need over-charge, over-discharge, and over-current
-protection on the logical cell. Use an **LFP-specific** 1S protection IC — for example
-the HY2112-CB (over-charge ~3.75V, over-discharge ~2.0–2.4V) — driving a dual N-channel
-FET (FS8205-class) in series between the pack and the rest of the block.
+A series Schottky (1N5819-class) at the injection point provides reverse protection
+against a power-sequencing fault; its ~0.3V drop puts ~5.7V on the machine's B+1,
+within the machine's operating specification.
 
-**Do not substitute a DW01.** The DW01's thresholds (over-charge 4.25V, over-discharge
-2.4V) are Li-ion values. On a 3.6V LFP cell it would never act on over-charge and
-would cut off far too late on discharge. The chemistry-specific thresholds are the
-whole point of selecting the part.
+The 6V output run now carries the full machine current — including the motor draw
+reflected back through the MT3608, which peaks above 1.5A. This path is no longer the
+millimetres of the original battery-spring-to-board connection; it runs from the
+daughter board behind the bay to the injection point. Size the conductor for the
+current and keep it short.
 
-### 7.6 The Complete Battery Path
+### 7.6 The Board-to-Board Interface
+
+Because the pack and B+1 generation moved off the servo module, a small set of
+conductors links the daughter board to the rest of the machine:
+
+| Conductor | Direction | Purpose |
+|---|---|---|
+| B+1 (6.0V) | Daughter → main-board battery terminal | Machine + module supply, through S901 |
+| GND | Shared | Common return |
+| VBAT_SENSE | Daughter → servo module ADC | Pack voltage for the fuel gauge (Section 7.8) |
+| CHG / PGOOD | Daughter → servo module GPIO | Charger status for the LED animation |
+| USB D+/D− (optional) | Daughter ↔ servo module | If USB CDC tuning is routed from the daughter board's USB-C; otherwise a separate bench header on the module |
+
+The servo module's J1 pin 7 (B+1) consequently flips from an **output** (it drove B+1
+in the wall variants) to an **input** in the battery build — it now only receives B+1.
+A Schottky there can be retained as input reverse-protection or omitted, since its
+original anti-back-feed purpose no longer applies.
+
+### 7.7 The Complete Battery Path
 
 ```
-USB-C (5V VBUS)
-   │
-   ├──────────────► CN3058E VIN ──charges──► 1S4P IFR14500 (3.2V, ~2.5Ah)
-   │                R_ISET=2.0k (0.6A)           │ 3.6V float
-   │                CHRG/DONE LEDs        [HY2112-CB + dual N-FET protection]
-   │                                              │ VBAT
-   │  D1 (ideal-diode P-FET)             Q1 PMOS  │  load-share (OFF when USB present)
-   └────────►│──────────┬─────────────────────────┘
-                        │
-                     V_SYS  (≈4.8V on USB │ 2.8–3.6V on battery)
-                        │
-           [TPS63070 buck-boost]   ◄── shared B+1 regulator (boost mode here, D≈0.47)
-                        │
-                    B+1 (6.0V) ─────────────────────────────┐
-                        │                                     │
-                 [MT3608 boost]  (Section 3, D=0.444)  [MCP1700 LDO] (Section 4)
-                        │                                     │
-                    B+3 (10.8V) ─► Motor M901          3.3V ─► STM32
+USB-C (5V VBUS)  ── on power daughter board ──────────────────────────────────────┐
+   │                                                                                │
+   └─► BQ24074  IN ──► SYS ──────────────────────────────► [TPS63070 boost] ─► B+1 │
+        (power-path)    │  (deck priority via DPPM)              (D≈0.38)    (6.0V) │
+        R_ISET≈1.1k     │                                                       │   │
+        R_ILIM≈800Ω     └─► BAT ─► 3× 803040 LiPo (3P, 3.7V, 3000mAh)           │   │
+        CHG/PGOOD ───────────────► [DW01 + FS8205 dual-FET protection]          │   │
+                                    (cells balance-matched before join)         │   │
+   ─────────────────────────────────────────────────────────────────────────────┘ │
+                                                                                    │
+   B+1 ─► main-board battery terminal ─► S901 ─► machine B+1 net ─► CP304 harness ──┘
+                                                                          │
+                                                          ── servo module (B+1 input) ──
+                                                          ├──[MT3608]──► B+3 (10.8V) ──► Motor M901
+                                                          └──[MCP1700]─► 3.3V ──► STM32
 ```
 
 From B+1 rightward this is the existing, proven design. What the battery
-configuration changes is only how B+1 comes to exist: from a charged LFP pack through
-a load-shared boost, with USB-C topping the pack and running the machine at the same
-time.
+configuration changes is only how B+1 comes to exist: from a charged 3P LiPo pack
+through a power-path charger and a daughter-board boost, with USB-C running the
+machine and topping the pack at the same time, injected at the battery terminals so
+S901 still commands the machine.
 
-### 7.7 Battery Level Indicator — Re-Referencing the CX10043
+**Runtime.** 3000mAh × 3.7V ≈ 11.1Wh; at a realistic ~2.5–3W average draw this is
+roughly **3–4 hours** per charge — comparable to the original four-AA alkaline
+runtime, and rechargeable in place. The cavity (~52 cm³) is near the physical ceiling
+for rechargeable lithium energy in this space; the charge-in-place USB-C path is what
+turns that ceiling from a limitation into "plug in and keep going."
+
+### 7.8 Battery Level Indicator — Re-Referencing the CX10043
 
 The machine's front-panel level meter is the five-LED bar D801–D805 (GL-9PR10),
 driven by IC801 — a Sony custom **CX10043** — with Q801 (2SC1623) as a voltage-control
 stage and the S801 switch selecting the meter's function (BATT / OFF / PARK). In
-normal operation the five LEDs form the audio peak meter. In the BATT position,
-however, the stock circuit does *not* show a bar: it drives only the bottom LED
-(D801) and indicates battery state by that LED's **brightness**, dimming as the cells
-deplete. Q801 performs that brightness drive off the R808/R809/R810 (12k/56k/68k)
-divider. Owners have long considered this scheme close to useless — apparent
-brightness depends on ambient light, and the LED only visibly dims minutes before the
-machine slows. The redesign below both fixes it and upgrades it to the proper bar the
-hardware was always capable of.
+normal operation the five LEDs form the audio peak meter. In the BATT position the
+stock circuit does *not* show a bar: it drives only the bottom LED (D801) and
+indicates battery state by that LED's **brightness**, dimming as the cells deplete.
+Q801 performs that brightness drive off the R808/R809/R810 (12k/56k/68k) divider.
+Owners have long considered this scheme close to useless. The redesign below both
+fixes it and upgrades it to the proper bar the hardware was always capable of.
 
 **Why the battery indicator stops working in this design.** In the stock machine the
-BATT brightness tracks the machine's main rail, which *was* the raw 4×AA pack — 6V
-fresh, sagging toward 4V as the cells deplete, so D801's brightness fell with the
-battery. The DSR-1 turns that rail into a **regulated, constant 6.0V B+1.** With S801
-on BATT now, Q801 sees a constant 6.0V and holds D801 at full brightness regardless of
-the pack's real charge. The true state of charge has moved to the VBAT node (the 1S4P
-LFP pack, ~3.6V full → ~2.5V empty), which the indicator circuit no longer sees. (This
-supersedes the note in the signal chain analysis §14.4 that said no indicator
-modification was required — that held only while B+1 still tracked the battery.)
+BATT brightness tracked the machine's main rail, which *was* the raw 4×AA pack — 6V
+fresh, sagging as the cells depleted. The DSR-1 turns that rail into a regulated,
+constant 6.0V B+1. With S801 on BATT, Q801 now sees a constant 6.0V and holds D801 at
+full brightness regardless of the pack's real charge. The true state of charge has
+moved to the VBAT node on the daughter board, which the indicator circuit no longer
+sees.
 
-Because the stock battery path is only a single-LED brightness drive — not a
-multi-level decoder — there is nothing to be gained by synthesising a voltage back
-into the CX10043. The robust fix is to let the STM32, already present and already
-monitoring rails, **own the battery indication and drive the LED bar directly** while
-S801 is in BATT. Battery mode releases all five LEDs from the peak-meter function, so
-the STM32 can light a genuine 1-to-5-segment fuel gauge — finally using the hardware
-the way it should have been used.
-
-**Architecture.** The STM32 reads VBAT through a divider, estimates state of charge,
-and drives the five LED nodes as a bar in BATT mode. It must not contend with the
-CX10043's peak-meter drive, so the takeover is gated by sensing the S801 position:
+**Architecture.** The STM32 (on the servo module) reads VBAT through the VBAT_SENSE
+conductor (Section 7.6), estimates state of charge, and drives the five LED nodes as a
+bar in BATT mode. It must not contend with the CX10043's peak-meter drive, so the
+takeover is gated by sensing the S801 BATT position on a GPIO:
 
 ```
-VBAT ──[22k]──┬── ADC_VBAT (STM32)
-
-           [100k]
-              │
-             GND
+VBAT (daughter board) ──► VBAT_SENSE ──[22k]──┬── ADC_VBAT (STM32)
+                                            [100k]
+                                              │
+                                             GND
 
 S801 BATT pole ──► GPIO (mode sense)
 
@@ -1049,40 +1067,33 @@ STM32 GPIO/PWM ──[Rs]──►│├─ D801 ┐
                 ─[Rs]──►│├─ D805 ┘
 ```
 
-**VBAT sense divider.** R_top = 22kΩ from VBAT to the ADC node, R_bot = 100kΩ to GND,
-ratio 100/122 = 0.82. At the 3.7V float this presents ~3.03V to the ADC (under the
-3.3V VDDA ceiling with margin); at the 2.5V floor, ~2.05V. A 10nF cap at the ADC node
-sets the sampling time constant against the ~18kΩ source impedance. The divider draws
-~30µA continuously; gate its ground leg with a GPIO-controlled small-signal N-FET so
-it draws nothing except during a measurement, eliminating standby drain on the pack.
+**VBAT sense divider.** R_top = 22 kΩ, R_bot = 100 kΩ, ratio 0.82. At the 4.2V LiPo
+peak this presents ~3.45V to the ADC — above the 3.3V VDDA ceiling, so for LiPo either
+raise R_top (e.g. 33 kΩ → ~3.05V at 4.2V) or accept clamping above full; at the 3.0V
+floor a 33k/100k divider presents ~2.26V. A 10nF cap at the ADC node sets the sampling
+time constant. Gate the divider's ground leg with a GPIO-controlled small-signal N-FET
+so it draws nothing except during a measurement.
 
 **LED interface.** Drive each LED node from a GPIO through a series resistor, or — to
 preserve the original 180Ω limiters and avoid five extra pins — through small Schottky
 diodes into the existing D801–D805 anodes so the STM32 can source them in BATT mode
-while CX10043 is idle. The exact method depends on how S801 reroutes the LEDs and
-whether the CX10043 outputs are released (high-impedance) in BATT mode; see the
-bench-confirm item. Brightness is set by GPIO PWM, so the bar can also be dimmed for
+while CX10043 is idle. Brightness is set by GPIO PWM, so the bar can also be dimmed for
 night use.
 
-**Firmware.** State of charge comes from an LFP open-circuit-voltage lookup table with
-light filtering and a fixed IR-drop offset for the known load — meaningful because the
-firmware places its five thresholds where they matter on the flat LFP curve rather
-than reading raw terminal volts. SoC% → number of lit segments (1–5). For higher
-accuracy, coulomb-counting (integrating charge in from the CN3058E and load out, with
-an optional shunt) can be added and periodically re-anchored to the OCV table at the
-curve's steep regions; this is a refinement, not a requirement. Driving the bar in
-firmware yields useful behaviours for free: animating segments upward while charging
-(USB present), holding steady-full when the CN3058E asserts DONE, and flashing the
+**Firmware.** State of charge comes from a **LiPo open-circuit-voltage lookup table**
+with light filtering and a fixed IR-drop offset for the known load. The LiPo discharge
+curve (4.2V → 3.0V) is usefully sloped, so voltage-to-SoC mapping is reliable — easier
+than the flat LFP curve the earlier design had to work around. SoC% → number of lit
+segments (1–5). Reading the BQ24074's CHG/PGOOD status lets the firmware animate
+segments upward while charging, hold steady-full when charge terminates, and flash the
 bottom segment below ~15%.
 
-**Bench-confirm items.** Two things to characterise on the unit before finalising the
-LED interface: (1) how S801's BATT position reroutes the LED nodes, and whether the
+**Bench-confirm items.** Two things to characterise before finalising the LED
+interface: (1) how S801's BATT position reroutes the LED nodes, and whether the
 CX10043 LED outputs go high-impedance in that position (so the STM32 can drive them
 without contention); and (2) the LED forward characteristics through the existing
 180Ω limiters, to size the GPIO drive or Schottky-injection resistors. The Q801
 brightness path can simply be left disconnected once the STM32 owns the bar.
-
----
 
 ## 8. Power Rail Interdependencies and Sequencing
 
@@ -1093,11 +1104,11 @@ specific order determined by the time constants of each converter:
 
 1. **B+1 appears first** (approximately 1-5ms after input voltage application)
    — produced by the TPS63070 B+1 regulator, fed through the fitted front end (the
-   diode bridge and polyfuse in Variant B, the PD path in Variant A, or the
-   charger/load-share network in the battery build). The TPS63070's own soft-start
-   sets the B+1 rise time. In the battery build the load-share P-FET ensures the pack
-   is already supplying V_SYS the instant USB is absent, so there is no source-handoff
-   gap at power-on.
+   diode bridge and polyfuse in Variant B, the PD path in Variant A, or the BQ24074
+   power-path on the daughter board in the battery build). The TPS63070's own
+   soft-start sets the B+1 rise time. In the battery build the BQ24074's power-path
+   keeps SYS supplied from the pack the instant USB is absent, so there is no
+   source-handoff gap at power-on.
 
 2. **B+3 appears approximately 2-3ms after B+1** — the MT3608 must first build up
    inductor current and bring the feedback loop into regulation.
