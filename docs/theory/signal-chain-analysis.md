@@ -27,12 +27,12 @@ eight-position JST PH J1 connector. The signals are:
 | 4 | RV601_WIPER | Machine → Module | Analog DC, machine voltage levels |
 | 5 | RV602_WIPER | Machine → Module | Analog DC, machine voltage levels |
 | 6 | RV603_WIPER | Machine → Module | Analog DC, machine voltage levels |
-| 7 | B+1 / VBATT | Machine ↔ Module | DC power rail, 6V |
+| 7 | B+1 / VBATT | Machine ↔ Module | DC power rail, 6V (module drives it in wall variants; receives it in the two-board battery build) |
 | 8 | GND | Shared | Common ground reference |
 
 The fundamental electrical challenge is that all signals on the machine side operate
 at voltages referenced to the B+1 supply rail — nominally 6V from batteries. The
-STM32G0B1KBU6 operates at 3.3V and its absolute maximum input voltage is VDD + 0.3V
+STM32G0B1KCU6 operates at 3.3V and its absolute maximum input voltage is VDD + 0.3V
 = 3.6V. Every signal must be conditioned to bring it within safe operating range
 before it reaches an STM32 pin, and every output from the STM32 must be level-
 shifted or amplified to drive the machine's circuitry correctly.
@@ -652,23 +652,39 @@ The CC lines require no level shifting — they operate at USB PD signal levels
 
 ### 7.1 B+1 Rail (J1 Pin 7)
 
-J1 pin 7 connects the module to the WM-D6C's main 6V B+1 supply rail. In battery-
-powered operation, this rail is sourced from the batteries (through S901 power
-switch). In Variant A and Variant B powered operation, this rail is *driven* by
-the module — the module's regulated output is fed back into the machine through
-this pin, powering all the machine's circuits.
+J1 pin 7 connects the servo module to the WM-D6C's main 6V B+1 supply rail. Its
+direction depends on the build:
 
-This dual-direction power flow is managed by the module's power architecture: the
-regulated 6V output of the buck converter (Variant A) or the polarity-corrected
-input (Variant B) drives J1 pin 7. The batteries are not connected when the module
-is the power source — the BP-23 battery pack connector or AA battery holder is
-simply absent or disconnected.
+- **Wall variants (A and B):** the rail is *driven by the module* — the module's
+  regulated TPS63070 output is fed into the machine through this pin, powering all the
+  machine's circuits. J1 pin 7 is an **output**.
+- **Battery build (two-board):** B+1 is generated on the **power daughter board**
+  (behind the battery bay) and injected at the machine's original battery-terminal
+  node, ahead of the S901 power switch. It propagates through the machine's B+1 net
+  and reaches the servo module through this same pin. J1 pin 7 is therefore an
+  **input** in this build — the module receives B+1 and its own power-input zone is
+  unpopulated. Because injection is on the battery side of S901, the front-panel power
+  switch still commands the whole machine.
+
+The batteries are never wired to J1 pin 7 directly: their raw 3.7V would be far below
+the 6V the rail expects. The daughter board's charger, protection, and boost convert
+the pack to a regulated 6.0V first (see Power Supply Design §7).
 
 **Protection**: A 1N5819 Schottky diode in series at J1 pin 7 (on the module board)
-prevents reverse current flow from the B+1 rail back into the converter output in
-the event of a power sequencing issue. The 0.3V forward voltage drop at operating
-current means the machine sees approximately 5.7V on B+1 instead of 6.0V — within
-the machine's operating specification.
+prevents reverse current flow in the event of a power-sequencing issue. The 0.3V
+forward drop at operating current means the module sees approximately 5.7V on B+1
+instead of 6.0V — within operating specification. In the battery build, where J1 pin 7
+is input-only, this Schottky may be retained as input reverse-protection or omitted,
+since its original anti-back-feed purpose (module driving the rail out) no longer
+applies.
+
+**Battery-build board-to-board link.** Moving the pack and B+1 generation onto the
+daughter board adds a small interface between the daughter board and the servo module,
+separate from the J1 machine harness: B+1 and GND (the power path, via the battery
+terminals), **VBAT_SENSE** (pack voltage to an STM32 ADC, for the fuel gauge — see
+§14.4), the BQ24074 **CHG/PGOOD** status lines (to an STM32 GPIO, for the charge
+animation), and optionally the **USB D+/D−** pair if USB-CDC tuning is routed from the
+daughter board's USB-C rather than a separate bench header on the module.
 
 ### 7.2 GND (J1 Pin 8)
 
@@ -1406,21 +1422,26 @@ The MCP1700 output follows the input with a delay determined by its transient
 response. The STM32 will not begin executing until VDD reaches the POR threshold,
 which occurs after B+1 has largely stabilised. No special handling is required.
 
-**Low battery detection**: As batteries discharge, B+1 drops. The MCP1700 maintains
-3.3V output down to approximately 3.5V input (178mV dropout at 100mA load). Below
-3.5V input, the LDO output drops and the STM32 supply follows. At approximately
-2.8V supply, the BOR fires and the machine stops cleanly.
+**Low battery detection**: In the two-board battery build, B+1 is held at a regulated
+6.0V by the daughter board's TPS63070 until the pack is nearly empty, so B+1 does *not*
+sag with the cells the way the original raw-AA rail did. State of charge is instead
+sensed on the daughter board's VBAT node and reported to the STM32 over the VBAT_SENSE
+line (see the indicator note below). When the pack reaches its floor, the DW01 + FET
+pack protection (and the cells' own PCMs) disconnect it; B+1 then collapses, the
+MCP1700 drops out below ~3.5V input, and at approximately 2.8V supply the STM32 BOR
+fires and the machine stops cleanly.
 
 **Battery level indicator** (correction): the front-panel five-LED bar (D801–D805,
-driven by IC801/CX10043, BATT selected by S801) indicates from the machine's main
-rail. An earlier revision of this document stated no modification was required — true
-only while that rail tracked the battery. In the battery-integrated design the rail is
-a regulated, constant 6.0V B+1, so the stock battery indication (a single-LED
-brightness drive via Q801) is pinned at full and no longer reflects the cells. The
-DSR-1 therefore re-references it: the STM32 measures the actual VBAT node, estimates
-state of charge, and drives the LED bar directly as a true 1–5 segment fuel gauge
-while S801 is in BATT. See Power Supply Design §7.7 for the divider, LED interface,
-and firmware mapping.
+driven by IC801/CX10043, BATT selected by S801) originally indicated from the machine's
+main rail. In the two-board battery design that rail is a regulated, constant 6.0V B+1,
+so the stock battery indication (a single-LED brightness drive via Q801) is pinned at
+full and no longer reflects the cells. The true state of charge lives on the VBAT node
+*on the power daughter board*, which the stock indicator circuit cannot see. The DSR-1
+therefore re-references it: the STM32 reads VBAT through the **VBAT_SENSE** board-to-
+board conductor, estimates state of charge from a LiPo open-circuit-voltage table, and
+drives the LED bar directly as a true 1–5 segment fuel gauge while S801 is in BATT —
+animating it from the BQ24074 CHG/PGOOD status while charging. See Power Supply Design
+§7.8 for the divider, LED interface, and firmware mapping.
 
 ---
 
