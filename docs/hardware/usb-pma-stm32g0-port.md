@@ -4,17 +4,19 @@
 **File:** `docs/hardware/usb-pma-stm32g0-port.md`
 **Status:** Defect note + porting guidance / pre-Rev A
 **Scope:** Why the current `usb_cdc.c` packet-memory-area (PMA) access is wrong for
-the STM32G0B1, what differs between the two ST USB device IP generations, and the
-concrete changes required. Register names and offsets below must be confirmed
-against RM0444 before relying on this note.
+the STM32G0x1 USB device IP used by the selected STM32G0C1KCU6 target, what differs
+between the two ST USB device IP generations, and the concrete changes required.
+Register names and offsets below must be confirmed against RM0444 before relying on
+this note.
 
 ---
 
 ## 1. Problem statement
 
 `firmware/src/usb_cdc.c` accesses the USB packet memory area and buffer descriptor
-table using the **first-generation** ST USB device convention. The STM32G0B1 uses
-the **second-generation** device IP, which accesses the PMA differently. The code
+table using the **first-generation** ST USB device convention. The selected
+STM32G0C1KCU6 target uses the **second-generation** STM32G0x1 device IP, which
+accesses the PMA differently. The code
 will not enumerate as written.
 
 The two affected constructs:
@@ -54,7 +56,7 @@ with no padding. The current code writes to the wrong addresses and leaves
 unwritten gaps the hardware does not expect.
 
 > This is a documented IP-generation difference, not a board-specific quirk. It is
-> the single reason the present USB layer cannot work on the STM32G0B1, independent
+> the single reason the present USB layer cannot work on the selected STM32G0C1KCU6 target, independent
 > of any descriptor or endpoint-state-machine issues.
 
 ---

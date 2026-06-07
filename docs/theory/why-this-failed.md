@@ -18,7 +18,7 @@ Someone connected a standard DC power adapter to your WM-D6C. The adapter had th
 wrong polarity for this machine. The polarity reversal instantly and permanently
 destroyed the capstan servo IC — a Sony CX20084 chip that has been out of production
 for decades. There is no repair for the destroyed IC using original parts. The
-DSR-1 module replaces it entirely with a modern microcontroller, and eliminates the
+DSR-1 Servo Control Board replaces it entirely with a modern microcontroller, and eliminates the
 failure mode so it can never happen again.
 
 ---
@@ -115,7 +115,7 @@ damaged by incorrect storage or previous handling. Installing an unknown-provena
 CX20084 into a repaired machine and then connecting the wrong adapter again would
 simply destroy it a second time.
 
-The DSR-1 module sidesteps this problem entirely. Instead of replacing the
+The DSR-1 Servo Control Board sidesteps this problem entirely. Instead of replacing the
 CX20084 with another CX20084, it replaces the *function* of the CX20084 with a
 modern, currently-manufactured, fully-documented microcontroller that performs the
 same servo control task with better accuracy and permanent protection against the
@@ -152,9 +152,9 @@ may be some time after the damaging event.
 
 ---
 
-## 5. What the DSR-1 Module Does About It
+## 5. What the DSR-1 Boards Do About It
 
-The DSR-1 module addresses this failure mode at three levels:
+The DSR-1 board set addresses this failure mode at three levels:
 
 ### Level 1: Replace the destroyed component
 
@@ -171,7 +171,7 @@ electronically before any power is delivered. It is physically impossible to app
 the wrong polarity through a USB-C connector.
 
 **Variant B (protected barrel jack)**: CN301 is retained in the panel. However, the
-module's input stage includes an ideal diode bridge — four MOSFETs controlled by an
+wall-input board's input stage includes an ideal diode bridge — four MOSFETs controlled by an
 LTC4359 — that detects the polarity of whatever is connected and corrects it before
 the voltage reaches any sensitive circuitry. A standard centre-positive adapter,
 the original Sony AC-D4M, or any other adapter of either polarity produces the same
@@ -233,9 +233,9 @@ wanders, the problem is mechanical.
 
 ---
 
-## 7. Checklist Before Installing the DSR-1 Module
+## 7. Checklist Before Installing DSR-1
 
-Complete these checks before installing the module:
+Complete these checks before installing the DSR-1 boards:
 
 1. **Clean the battery compartment**: If battery leakage is present, neutralise
    with white vinegar on a cotton swab, then clean with isopropyl alcohol. Check
@@ -256,10 +256,10 @@ Complete these checks before installing the module:
 
 6. **Measure B+3 rail**: With batteries installed, measure the CP304 output. It
    should be approximately 10.8V. If zero or very low, CP304 has also failed — the
-   DSR-1 module's MT3608 boost converter replaces this function.
+   Servo Control Board's MT3608 boost converter replaces this function in wall-input builds.
 
-The DSR-1 module addresses the electronic failure. Mechanical service addresses the
-wear. A properly serviced machine with the DSR-1 module installed will perform at or
+The DSR-1 boards address the electronic failure. Mechanical service addresses the
+wear. A properly serviced machine with DSR-1 installed will perform at or
 beyond its original specification, and will be immune to the failure mode that caused
 the problem in the first place.
 
@@ -270,4 +270,4 @@ the problem in the first place.
 - [Original Servo Circuit](original-servo-circuit.md) — what the CX20084 did
 - [Digital PLL Servo](digital-pll-servo.md) — what the DSR-1 does instead
 - [Installation Guide](../installation/) — step-by-step installation procedure
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete specification
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — complete specification

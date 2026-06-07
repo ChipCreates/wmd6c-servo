@@ -407,5 +407,5 @@ required for clock maintenance.
   servo loop isolated from USB handling
 - [Signal Chain Analysis](signal-chain-analysis.md) — USB data path routing and ESD
   protection
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — clock configuration
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — clock configuration
   in Section 3.3

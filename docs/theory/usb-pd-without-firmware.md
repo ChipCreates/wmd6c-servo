@@ -34,7 +34,7 @@ inserted either way. There is no polarity to get wrong.
 voltage to VBUS until a successful negotiation handshake has occurred on the CC
 lines. A dumb adapter with no VBUS will apply whatever voltage it produces without
 negotiation — but a PD charger will not deliver 9V until the sink explicitly
-requests and confirms it. This means that if the module's PD trigger fails or the
+requests and confirms it. This means that if the PD trigger fails or the
 CC lines are miswired, the worst outcome is 5V default VBUS — insufficient to power
 the machine, but harmless to the circuitry.
 
@@ -123,7 +123,7 @@ If no request ever comes (because the sink is a simple 5V-only device), VBUS sta
 at 5V and full power is available at that voltage. This backward compatibility means
 that USB-C PD chargers can charge old devices that only understand 5V.
 
-For the DSR-1 module, 5V VBUS is insufficient — the machine needs 6V B+1. Without
+For DSR-1, 5V VBUS is insufficient — the machine needs 6V B+1. Without
 a successful 9V negotiation, the TPS62xx buck converter has no valid input. The
 IP2721 handles this situation by failing gracefully: if no PD source responds or if
 9V is not available, the IP2721 does not enable its output path, VBUS remains at 5V,
@@ -392,7 +392,7 @@ negotiate USB PD voltages above 5V. These will not power the Variant A module at
 **Cable length**: Longer cables have higher resistance, which causes VBUS to sag
 under load. At 0.5A load through a 3m USB-C cable with 0.2Ω per conductor
 resistance: V_sag = 0.5 × 0.4Ω = 200mV. This reduces 9V VBUS to 8.8V at the
-module connector — still well above the 8V minimum VBUS monitoring threshold.
+board connector — still well above the 8V minimum VBUS monitoring threshold.
 Standard cables (1m to 2m) present negligible sag.
 
 ### 5.3 Hot-Plug and Re-Plug Behaviour
@@ -528,5 +528,5 @@ variants are electrically identical at and beyond the rail outputs.
   USB data path, CC line routing
 - [Why This Failed](why-this-failed.md) — the original failure mode that motivated
   the USB-C power input
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete electrical
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — complete electrical
   specification for both variants

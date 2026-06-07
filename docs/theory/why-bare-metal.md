@@ -309,7 +309,7 @@ the hardware behaviour and the HAL's representation of it.
 
 For a community open source project where contributors range from professional
 embedded engineers to technically capable amateurs, transparency is a feature.
-The person debugging a field installation of the DSR-1 module does not need to
+The person debugging a field installation of the DSR-1 Servo Control Board does not need to
 understand the STM32Cube HAL. They need the reference manual and the source code.
 Both are freely available, both are authoritative, and both say the same thing about
 what the hardware is doing.

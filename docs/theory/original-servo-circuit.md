@@ -5,7 +5,7 @@
 This document explains how the original Sony WM-D6C capstan servo system worked —
 the CX20084 IC, the 34.7 kHz crystal reference, the MSM58141RS divider, and the
 motor drive chain. Understanding the original circuit is the foundation for
-understanding why the DSR-1 module replaces it, and why the digital implementation
+understanding why the DSR-1 Servo Control Board replaces it, and why the digital implementation
 is more robust than the analog circuit it replaces.
 
 This is written for a technically curious person who has serviced cassette decks
@@ -148,7 +148,7 @@ designed the outer loop as independently disengageable.
 
 ### 4.2 What the DSR-1 Does With This
 
-When the DSR-1 module replaces IC601, the removal of the CX20084 open-circuits
+When the DSR-1 Servo Control Board replaces IC601, the removal of the CX20084 open-circuits
 the outer loop at both ends simultaneously — IC601 pin 9 (which fed IC701) and
 IC601 pin 4 (which received the correction) both become empty pads. IC701 is
 left with a floating FG input and its correction output driving nothing. There is
@@ -283,7 +283,7 @@ surviving units due to electrolytic capacitor degradation in the potted assembly
 the 10.8V motor rail collapses, the motor receives insufficient voltage, and the
 machine either runs slowly or stops entirely.
 
-The DSR-1 module replaces CP304 with an MT3608-based boost converter designed with
+The DSR-1 Servo Control Board replaces CP304 with an MT3608-based boost converter designed with
 known, documented, replaceable components.
 
 ---
@@ -312,7 +312,7 @@ There is no modern equivalent, no pin-compatible replacement, and no repair path
 the damaged IC itself. A WM-D6C with a dead CX20084 cannot be restored to original
 specification using original parts.
 
-This is the failure mode that the DSR-1 module was designed to address — not by
+This is the failure mode that the DSR-1 board set was designed to address — not by
 repairing the original circuit, but by replacing it entirely with a more capable and
 permanently protected alternative.
 
@@ -346,7 +346,7 @@ compensate.
 specialised test equipment. Diagnosing a poorly-performing servo requires an
 oscilloscope, a test tape, and considerable experience.
 
-The DSR-1 module addresses all of these limitations. Its reference is a digital
+The DSR-1 Servo Control Board addresses all of these limitations. Its reference is a digital
 integer stored in flash — it does not drift with temperature or age. Its loop
 parameters are constants in a header file, adjustable in real time via USB. Its
 internal state is observable via USB CDC telemetry at any time. And it is immune to
@@ -360,4 +360,4 @@ the polarity reversal that destroyed the original.
 - [IC701 Outer Loop Analysis](ic701-outer-loop.md) — schematic trace of the outer
   crystal phase loop; confirms it is open-circuited and harmless when IC601 is absent
 - [Why This Failed](why-this-failed.md) — the reverse polarity failure explained
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete DSR-1 specification
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — complete DSR-1 specification

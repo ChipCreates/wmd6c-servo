@@ -300,7 +300,8 @@ confirm R9 sizing and the PWM duty-cycle-to-speed mapping.
 - MCU reset, bootloader entry, firmware crash, USB connection, or PD negotiation must not drive the motor uncontrolled.
 - A passive default state should hold the motor-control interface in a safe condition until firmware is active.
 - The output stage must not backfeed Sony rails when DSR-1 is unpowered.
-- Direct DAC drive is prohibited until the control-node voltage range is proven safe.
+- Direct DAC drive is not used; control-node voltage measurements are for validating
+  the committed PWM + NPN level-shift output stage.
 
 ---
 
@@ -604,7 +605,7 @@ Affected signals:
 
 Rules:
 
-- Direct DAC output is not used for motor drive.
+- PA4/DAC1 direct drive is not used for motor drive.
 - PWM output must be filtered and shielded from audio-sensitive paths.
 - Output stage must have a known safe state during reset and boot.
 

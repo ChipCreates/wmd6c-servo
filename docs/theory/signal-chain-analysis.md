@@ -705,7 +705,7 @@ When reviewing the KiCad schematic, use this document to verify:
 - [Original Servo Circuit](original-servo-circuit.md) — signal sources in the WM-D6C
 - [Digital PLL Servo](digital-pll-servo.md) — how the STM32 processes these signals
 - [Bench Measurements](../bench-measurements/) — measured values for SN72795
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete electrical specification
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — complete electrical specification
 
 ---
 
@@ -1390,4 +1390,4 @@ and firmware mapping.
 - [Power Supply Design](power-supply-design.md) — MT3608 and MCP1700 design detail
 - [Fixed-Point Arithmetic](fixed-point-arithmetic.md) — control algorithm mathematics
 - [Bench Measurements](../bench-measurements/) — measured values for SN72795
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete specification
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — complete specification

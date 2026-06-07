@@ -22,9 +22,14 @@ firmware prototype, not bench-validated"). The intent is to convert that general
 caveat into specific, actionable items before Rev A schematic capture and first
 hardware bring-up.
 
+> **Historical review note:** this review was written against the earlier G0B1
+> firmware prototype. The current hardware target is STM32G0C1KCU6; use
+> `PROJECT_STATUS.md` and `docs/stm32g0c1-pin-allocation.md` for current design
+> authority.
+
 References used:
 
-- STM32G0B1 datasheet (`stm32g0b1cc.pdf`, in project files)
+- STM32G0B1 datasheet (`stm32g0b1cc.pdf`, historical prototype reference)
 - STMicroelectronics RM0444 (STM32G0x1 reference manual) — for items marked "verify"
 - ST community guidance on the two USB controller generations (see §3.2)
 
@@ -57,8 +62,8 @@ Two findings have dedicated companion documents:
 
 ### 3.1 The firmware does not build as committed
 
-`firmware/build/Makefile` sets `STARTUP := $(SRC_DIR)/startup_stm32g0b1xx.s` and the
-linker script `STM32G0B1KBUx_FLASH.ld` depends on the symbols that file provides
+At the time of this review, `firmware/build/Makefile` set `STARTUP := $(SRC_DIR)/startup_stm32g0b1xx.s` and the
+legacy linker script `STM32G0B1KBUx_FLASH.ld` depended on the symbols that file provides
 (`Reset_Handler`, the `.isr_vector` table, and the `.data`/`.bss` init that runs
 before `main()`). That file is not present in the repository. Unlike the CMSIS
 path, there is no graceful error — the build fails at the assembler step with a

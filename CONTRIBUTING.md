@@ -50,7 +50,7 @@ of theoretical documentation.
 
 ### You Own a Different Sony Professional Walkman
 
-The DSR-1 module's variant system is designed specifically for you. A variant port
+The DSR-1 subsystem's variant system is designed specifically for you. A variant port
 requires exactly three files and is described in detail in
 [Section 4](#4-submitting-a-variant-port) below.
 
@@ -105,7 +105,7 @@ IC601 pads or at J1 resolves ambiguity that written descriptions cannot.
 
 ## 4. Submitting a Variant Port
 
-A variant port makes the DSR-1 module compatible with a different machine. This is
+A variant port makes the DSR-1 hardware and firmware compatible with a different machine. This is
 the contribution type most likely to have a large impact — each successful variant
 opens the project to an entire community of machine owners.
 
@@ -156,7 +156,7 @@ files.
 
 ### How to Measure FG_TARGET_HZ
 
-1. Install the DSR-1 module in the target machine with default WM-D6C constants as
+1. Install the DSR-1 hardware in the target machine with default WM-D6C constants as
    a starting point.
 2. Insert a calibrated test tape and play it back.
 3. Use the USB CDC `T` command to enable continuous telemetry output.

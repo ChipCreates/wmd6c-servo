@@ -2,7 +2,7 @@
 
 ## Purpose of This Document
 
-The DSR-1 module's entire purpose is to maintain a precise tape speed. Understanding
+The DSR-1 Servo Control Board's entire purpose is to maintain a precise tape speed. Understanding
 what "precise tape speed" means mechanically — how the WM-D6C's transport achieves
 it, what each component contributes, and how the components degrade with age —
 provides the foundation for understanding what the servo system is controlling and
@@ -388,7 +388,7 @@ portable cassette machine. For comparison:
 The WM-D6C achieves broadcast-quality tape transport in a jacket pocket. This
 specification was achieved through the combination of the precision flywheel
 (mechanical flutter rejection), the CX20084 servo system (electronic speed control),
-and high-precision mechanical components. The DSR-1 module replaces the electronic
+and high-precision mechanical components. The DSR-1 Servo Control Board replaces the electronic
 portion with a system that is inherently more accurate — digital period measurement
 vs analog phase comparison — while preserving the mechanical components that provide
 the flywheel filtering.
@@ -417,7 +417,7 @@ is the standard for confirming the 0.05% specification is met.
 
 ## 8. Summary: The Mechanical Prerequisites for Correct Servo Operation
 
-Before the DSR-1 module can be correctly calibrated and before its speed performance
+Before the DSR-1 Servo Control Board can be correctly calibrated and before its speed performance
 can be evaluated, the following mechanical conditions must be met:
 
 | Condition | Check | Action if failed |

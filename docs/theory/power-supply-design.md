@@ -6,7 +6,7 @@ This document explains every aspect of the DSR-1 power supply architecture
 — why each design decision was made, how each component was chosen, how the circuits
 work quantitatively, and how they relate specifically to the requirements of the
 Sony WM-D6C. It is written for the engineer who wants to understand, verify, or
-modify the power supply, and for the contributor who wants to port the module to a
+modify the power supply, and for the contributor who wants to port DSR-1 to a
 different machine with different power requirements.
 
 The power supply is not an afterthought in this project. The original WM-D6C power
@@ -88,7 +88,7 @@ virtually every other manufacturer's convention. The Sony AC-D4M adapter matches
 this polarity. Every generic replacement adapter has the opposite polarity.
 
 When a reversed adapter is connected, the B+1 rail is driven negative relative to
-ground. The CX20084 is destroyed in milliseconds. The DSR-1 module makes this
+ground. The CX20084 is destroyed in milliseconds. The DSR-1 power architecture makes this
 failure mode impossible in both variants — and replaces CP304 in the same
 installation — addressing all three of the original power system's weaknesses
 simultaneously.
@@ -469,7 +469,7 @@ for this application:
 approximately 3.5V (nearly discharged batteries) and 6.5V (fresh alkaline cells
 or adapter high-end). With Variant A or B regulated supply, B+1 is a constant 6.0V
 — perfectly within range. With battery-only operation (if someone retains battery
-power alongside the module), the LDO continues operating down to 3.5V input,
+power alongside the Servo Control Board), the LDO continues operating down to 3.5V input,
 which occurs when each of the four AA cells has discharged to 0.875V — well past
 the point where the machine's audio performance has already degraded unacceptably.
 
@@ -480,7 +480,7 @@ discharge point discussed above. Regulation never fails before the audio circuit
 become unusable — the LDO is never the limiting factor in battery runtime.
 
 **Quiescent current: 1.6µA typical**. The MCP1700 draws only 1.6µA from the input
-when unloaded. In the WM-D6C context this matters because the module is always
+when unloaded. In the WM-D6C context this matters because the Servo Control Board is always
 powered when the machine's power switch S901 is on — even in pause mode with the
 motor stopped, the LDO remains active to keep the STM32 running. At 1.6µA +
 9mA (STM32 at idle) = 10.6mA total LDO load in pause mode, the power consumption
@@ -725,14 +725,14 @@ approximately 400mA on B+1. An underrated adapter driving 400mA may overheat. Th
 polyfuse at 500mA hold provides no protection against this — it is intentionally
 sized to allow normal operation (400mA continuous) while tripping on fault currents
 (>1.5A). Protecting underrated adapters is the user's responsibility; the polyfuse
-protects the machine and the module, not the adapter.
+protects the machine and DSR-1 electronics, not the adapter.
 
 **Polyfuse characteristics that matter**:
 - Hold current: 500mA — must be above maximum normal operating current (~400mA)
 - Trip current: 1.5A — must be below the short-circuit current the machine circuitry
   can experience without damage
 - Hold current derating with temperature: at 60°C ambient, the polyfuse holds
-  approximately 400mA — still adequate but with reduced margin. If the module is
+  approximately 400mA — still adequate but with reduced margin. If the board is
   installed in a warm enclosure, a 750mA polyfuse provides better margin.
 - Reset time: 30-60 seconds after the fault is cleared and polyfuse cools
 
@@ -761,8 +761,8 @@ toward the B+3 rail and, to a lesser extent, toward B+1. The TVS clamps these
 spikes before they can reach the polarity bridge or the input adapter.
 
 *Adapter hot-plug*: When a barrel jack adapter is connected to a live machine (or
-when the module first powers on from an adapter that has been sitting in an outlet),
-the inrush current into the module's bulk capacitors creates a voltage spike on the
+when the board first powers on from an adapter that has been sitting in an outlet),
+the inrush current into the board's bulk capacitors creates a voltage spike on the
 adapter output. If the adapter has a high source impedance (common in cheap
 unregulated adapters), this spike can momentarily exceed the normal output voltage.
 The TVS clamps it.
@@ -984,7 +984,7 @@ conductors links the Power Board to the rest of the machine:
 
 | Conductor | Direction | Purpose |
 |---|---|---|
-| B+1 (6.0V) | Power Board → main-board battery terminal | Machine + module supply, through S901 |
+| B+1 (6.0V) | Power Board → main-board battery terminal | Machine + Servo Control Board supply, through S901 |
 | GND | Shared | Common return |
 | VBAT_SENSE | Power Board → Servo Control Board ADC | Pack voltage for the fuel gauge (Section 7.8) |
 | CHG_STAT / PGOOD | Power Board → Servo Control Board GPIO | Charger status for the LED animation |
@@ -1215,5 +1215,5 @@ pin-compatible alternatives available at similar cost.
 - [Signal Chain Analysis](signal-chain-analysis.md) — noise coupling from the MT3608
   into the analog signal paths
 - [Why This Failed](why-this-failed.md) — the original power system failure modes
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete electrical
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — complete electrical
   specification including absolute maximum ratings and operating characteristics

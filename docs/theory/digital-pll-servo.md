@@ -2,7 +2,7 @@
 
 ## Purpose of This Document
 
-This document explains how the DSR-1 module's digital servo loop works — the period
+This document explains how the DSR-1 Servo Control Board's digital servo loop works — the period
 measurement, the PI control algorithm, the fixed-point arithmetic, and the motor
 drive output. It is written for someone who understands the original analog servo
 (see [original-servo-circuit.md](original-servo-circuit.md)) and wants to understand
@@ -53,7 +53,7 @@ accuracy of 0.05%.
 
 ### 2.2 TIM2 Input Capture
 
-The STM32G0B1's TIM2 is configured as a free-running 32-bit counter clocked at
+The selected STM32G0C1KCU6's TIM2 is configured as a free-running 32-bit counter clocked at
 64 MHz. The input capture function on channel 1 (PA0) monitors the FG signal and,
 on every rising edge, **automatically records the current counter value in the
 CCR1 register** and sets an interrupt flag. This happens entirely in hardware with
@@ -198,7 +198,7 @@ error elimination function in normal operation.
 
 ### 4.1 Why No Floating Point
 
-The STM32G0B1's Cortex-M0+ core has no hardware floating-point unit. A floating-
+The selected STM32G0C1KCU6's Cortex-M0+ core has no hardware floating-point unit. A floating-
 point multiplication in software takes approximately 20-40 clock cycles, depending
 on operand values and the compiler's soft-float library implementation. At 64 MHz
 this is 300-600 nanoseconds — acceptable for a single operation, but the ISR
@@ -330,7 +330,7 @@ and a terminal application. The original circuit requires an oscilloscope and
 specialised knowledge to observe its internal state.
 
 **It cannot be destroyed by a wrong power adapter.** The original CX20084 had no
-protection against reverse polarity. The DSR-1 module eliminates this failure mode
+protection against reverse polarity. The DSR-1 power architecture eliminates this failure mode
 at the hardware level in both variants.
 
 ---
@@ -340,4 +340,4 @@ at the hardware level in both variants.
 - [Original Servo Circuit](original-servo-circuit.md) — how the CX20084 worked
 - [Fixed-Point Arithmetic](fixed-point-arithmetic.md) — Q16 format explained in detail
 - [Why This Failed](why-this-failed.md) — the reverse polarity failure
-- [Module Datasheet](../datasheet/WMD6C_Module_Datasheet.pdf) — complete specification
+- [Module Datasheet](../design/WMD6C_Module_Datasheet.PDF) — complete specification

@@ -175,7 +175,7 @@ Pre-built `.bin` files for each release are in `firmware/releases/`.
 
 **No heap:** All memory is statically allocated. `_Min_Heap_Size = 0` in the linker script. `malloc` is not available and must not be added.
 
-**Contributor rule:** All firmware contributions must use register-level C only. The STM32G0B1 Reference Manual (RM0444) is the authoritative source — not the HAL API. See `docs/theory/why-bare-metal.md` for the full rationale.
+**Contributor rule:** All firmware contributions must use register-level C only. The STM32G0x1 Reference Manual (RM0444) and the selected STM32G0C1KCU6 datasheet are the authoritative sources — not the HAL API. See `docs/theory/why-bare-metal.md` for the full rationale.
 
 ---
 
