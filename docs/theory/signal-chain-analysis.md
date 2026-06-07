@@ -32,7 +32,7 @@ eight-position JST PH J1 connector. The signals are:
 
 The fundamental electrical challenge is that all signals on the machine side operate
 at voltages referenced to the B+1 supply rail — nominally 6V from batteries. The
-STM32G0B1KCU6 operates at 3.3V and its absolute maximum input voltage is VDD + 0.3V
+STM32G0C1KCU6 operates at 3.3V and its absolute maximum input voltage is VDD + 0.3V
 = 3.6V. Every signal must be conditioned to bring it within safe operating range
 before it reaches an STM32 pin, and every output from the STM32 must be level-
 shifted or amplified to drive the machine's circuitry correctly.
@@ -619,7 +619,7 @@ contact discharge specification. The device's very low capacitance (2.5pF per li
 means it has negligible effect on the USB 2.0 signal integrity at 12 Mbit/s.
 
 The USB signals are driven directly by the STM32's internal USB Full Speed
-transceiver — no external resistors or components are needed. The STM32G0B1
+transceiver — no external resistors or components are needed. The STM32G0C1
 datasheet (DS13560 Rev 6, Table 80) confirms the internal matching impedance of
 36Ω on the output driver, satisfying the USB 2.0 specification's 45Ω line impedance
 requirement.
@@ -1066,7 +1066,7 @@ tune response is essentially instantaneous from the user's perspective.
 
 ### 12.1 The Source Impedance Problem
 
-The STM32G0B1 ADC has an internal sample-and-hold capacitor CADC of approximately
+The STM32G0C1 ADC has an internal sample-and-hold capacitor CADC of approximately
 5pF (specified in DS13560 Rev 6, Figure 29 and surrounding text). To achieve full
 12-bit accuracy, the source must be able to charge this capacitor to within 0.5 LSB
 during the sampling time.
@@ -1088,12 +1088,12 @@ t_charge = 9 × (23,500 + 100 + 6,000) × 5×10⁻¹²
          = 1,332ns = 1.33µs
 ```
 
-The maximum sampling time in the STM32G0B1 ADC is 239.5 cycles at the ADC clock
+The maximum sampling time in the STM32G0C1 ADC is 239.5 cycles at the ADC clock
 of 4 MHz (16 MHz / 4 prescaler) = 59.9µs. This is more than 44× longer than the
 required charging time. Full 12-bit accuracy is achievable even with the highest
 pot source impedances.
 
-**However**, the STM32G0B1 datasheet specifies a maximum external source impedance
+**However**, the STM32G0C1 datasheet specifies a maximum external source impedance
 of 10kΩ for full ADC accuracy (DS13560 Rev 6, Section 5.3.18). The pot wipers
 can present source impedances up to 23.5kΩ — more than twice this limit. At high
 source impedances, parasitic effects (leakage currents, input capacitance variation)
@@ -1119,7 +1119,7 @@ accuracy limitation does not affect the system's speed accuracy.
 ### 12.2 Oversampling for Improved Accuracy
 
 If higher effective ADC resolution is desired (for example, to provide finer Speed
-Tune granularity), oversampling can be used. The STM32G0B1 ADC has hardware
+Tune granularity), oversampling can be used. The STM32G0C1 ADC has hardware
 oversampling support that averages multiple conversions and provides up to 16-bit
 effective resolution.
 
@@ -1139,7 +1139,7 @@ in the ADC configuration.
 
 ### 12.3 ADC Reference Accuracy
 
-The STM32G0B1 in the 32-pin UFQFPN32 package has no VREF+ pin. The ADC reference
+The STM32G0C1 in the 32-pin UFQFPN32 package has no VREF+ pin. The ADC reference
 is internally connected to VDDA. The absolute accuracy of the ADC voltage measurement
 therefore depends on the stability and accuracy of the 3.3V MCP1700 output.
 

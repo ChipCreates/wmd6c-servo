@@ -1,19 +1,24 @@
-# DSR-1 KiCad 10 Schematic Implementation Guide
+# DSR-1 Servo Module — KiCad 10 Schematic Guide
 
-**Project:** WM-D6C Capstan Servo Replacement Module (DSR-1)
+**Project:** `hardware/servo-module/` — WM-D6C Capstan Servo Replacement Module (DSR-1)
 **Tool:** KiCad 10.x
-**Scope:** Complete schematic entry instructions, sheet by sheet
+**Scope:** Servo module schematic only. Power daughter board has its own KiCad project.
 
-> This document is the working guide for translating the DSR-1 design into a
-> KiCad 10 schematic. Read each zone before drawing it. The signal
+> This document is the working guide for translating the DSR-1 **servo module**
+> design into a KiCad 10 schematic. Read each zone before drawing it. The signal
 > chain analysis, interface contract, and power architecture documents are the
 > authoritative sources for all component values — this document tells you *how*
 > to enter them in KiCad, not *why* they are what they are.
 >
 > **Structure:** the design is one flat **D-size** sheet — no hierarchy, no sub-sheets.
 > The KiCad project's sheet is already a single D page; its component set is still the
-> pre-battery design (AP63203, no charger), so the battery / charge / indicator entries
-> here are changes to apply.
+> pre-battery design (AP63203, no charger), so the wall-variant power and servo entries
+> here are the changes to apply.
+>
+> **Two KiCad projects.** The battery-integrated build uses a separate power daughter
+> board. That board's schematic lives in `hardware/power-board/` and is covered by
+> `kicad-power-board-guide.md`. This guide covers the servo module only — the board
+> that fits in the CP304 cavity in all three builds.
 
 ---
 
@@ -55,7 +60,7 @@ Before opening KiCad:
 
 1. `.gitignore` is committed (excludes `*-backups/`, `fp-info-cache`, `*.lock`,
    `*_autosave.*`)
-2. `hardware/datasheets/` contains `stm32g0b1cc.pdf` (DS13560 Rev 6), `mt3608.pdf`,
+2. `hardware/datasheets/` contains `stm32g0c1cc.pdf` (DS13560 Rev 6), `mt3608.pdf`,
    `fb4872.pdf`, and `sony_wm-d6c_tc-d6c_ver-1.1.pdf`
 3. The `DSR-1.kicad_sym` project symbol library has been created and registered
    under Project scope in Preferences → Manage Symbol Libraries
@@ -95,8 +100,8 @@ electrical meaning:
 ```
 ┌─ Power ─────────────┐ ┌─ Microcontroller ─┐ ┌─ Signal Conditioning ─┐ ┌─ Connectors ─┐
 │ USB-C / barrel in   │ │ STM32G0C1KCU6     │ │ FG divider + clamp    │ │ J1 harness   │
-│ CN3058E charge +    │ │ decoupling, boot, │ │ NPN motor drive       │ │ J2 SWD       │
-│ LiFePO4 power-path  │ │ pin assignments   │ │ ADC clamps            │ │ J3 LED board │
+│ BQ24074 charge +    │ │ decoupling, boot, │ │ NPN motor drive       │ │ J2 SWD       │
+│ LiPo power-path     │ │ pin assignments   │ │ ADC clamps            │ │ J3 LED board │
 │ TPS63070 B+1        │ │                   │ │ VBAT sense divider    │ │ test pads    │
 │ MT3608 B+3, MCP1700 │ │                   │ │                       │ │              │
 └─────────────────────┘ └───────────────────┘ └───────────────────────┘ └──────────────┘
@@ -136,7 +141,7 @@ sub-zones: **(A)** input — USB-C and/or barrel; **(B)** charge, battery, and p
 **battery-integrated build (primary)**, **Variant A** (wall, USB-C 9V PD, no cells),
 and **Variant B** (wall, barrel, no cells).
 
-> **Authoritative values:** `power-supply-design.md` §5.2 (TPS63070) and §7.1–§7.7
+> **Authoritative values:** `power-supply-design.md` §5.2 (TPS63070) and §7.1–§7.8
 > (cell, charger, power-path, protection, indicator). This guide tells you how to enter
 > them in KiCad.
 >
@@ -152,7 +157,7 @@ and **Variant B** (wall, barrel, no cells).
 **J_USB — USB-C mid-mount receptacle** (battery build + Variant A; DNP for Variant B)
 
 - Symbol: search `USB_C` in the KiCad Connector library or use a custom symbol.
-- VBUS → `VBUS` net (feeds the CN3058E charger at 5V in the battery build) and, in
+- VBUS → `VBUS` net (feeds the BQ24074 charger IN pin at 5V in the battery build) and, in
   Variant A, the IP2721 input.
 - D+/D− → `USB_DP_RAW`, `USB_DM_RAW`; CC1, CC2 → `CC1`, `CC2`; GND/Shield → GND.
 
@@ -162,7 +167,7 @@ and **Variant B** (wall, barrel, no cells).
   together). VBUS (P$16) → `9V_PD` after successful negotiation. CC1/CC2 → `CC1`/`CC2`.
   SEL (P$11) → configure for a 9V request. C1 4.7µF 16V X5R VBUS→GND.
 - **DNP on the battery build and Variant B.** In the battery build a 9V contract would
-  over-volt the CN3058E charger (6V VIN max) — the battery build stays at 5V.
+  over-volt the BQ24074 charger (VIN abs-max ~6.5V) — the battery build stays at 5V.
 
 > **VBUSG note:** VBUSG is the internal pass-element gate drive and must be tied to VIN;
 > floating it prevents `9V_PD` from becoming valid after negotiation.
@@ -200,76 +205,44 @@ tip ───|◄──┴───────────────┴──
 
 ---
 
-### B. Charge, Battery & Power-Path (battery-integrated build)
+### B. Charge, Battery & Power-Path — Power Daughter Board
 
-**BT1 — 1S4P LiFePO4 pack (4× IFR14500)**
-
-- 2-pin to the cell holder: `VBAT+` → `VBAT` (via protection), `VBAT−` → GND.
-- 3.2V nominal, 3.6V float, ~2.4–2.8Ah.
-- Schematic note: `⚠ Parallel user-removable cells: a reversed insertion reverse-charges
-  the others. Use an orientation-keyed holder or soldered cells; a series polyfuse limits
-  fault current. See power-supply-design.md §7.1.`
-
-**U_PROT — 1S LFP protection (HY2112-CB + dual N-FET)**
-
-- HY2112-CB (over-charge ~3.75V, over-discharge ~2.0–2.4V) + dual N-FET (FS8205-class)
-  in series between the pack and the `VBAT` node.
-- Schematic note: `Use the LFP-specific HY2112-CB — NOT a DW01 (its 4.25V/2.4V Li-ion
-  thresholds never protect a 3.6V LFP cell). See §7.5.`
-
-**U_CHG — CN3058E LiFePO4 charger (eSOP-8)**
-
-| CN3058E pin | Connection |
-|---|---|
-| VIN | `VBUS` (5V) + 1µF to GND |
-| BAT | `VBAT` + C_BAT 4.7–10µF to GND (loop stability) |
-| ISET | R_ISET 2.0kΩ to GND → I_CHG = 1.218 / 2000 ≈ 0.6A (0.25C) |
-| TEMP | GND (NTC disabled) |
-| CHRG, DONE | open-drain → LED + series R to VIN; optionally to `CHRG_SENSE`/`DONE_SENSE` |
-| GND / thermal pad | GND, copper pour |
-
-- Schematic note: `Linear charger dissipates (VIN−VBAT)·I_CHG ≈ 0.84W at 0.6A; folds
-  above ~600mA. 5V VBUS only — 9V exceeds the 6V VIN max. See §7.2.`
-
-**Power-path — load-sharing P-FET**
-
-```
-   VBUS ──[D1: ideal-diode P-FET (or SS34 Schottky)]──┬────────────► V_SYS ──► TPS63070 VINx
-                                                       │
-   VBUS ──[D2: small Schottky]──┬──────► Q_PP gate     │
-                                │                       │
-   VBAT ── source ┐          [R_G 100k]                 │
-                 Q_PP (PMOS)    │                       │
-   V_SYS ◄─ drain ┘            GND ──── (battery feeds V_SYS when USB absent)
-```
-
-- Q_PP PMOS: source `VBAT`, drain `V_SYS`. USB present → gate to VBUS via D2 → **off**
-  (battery isolated, charger sees a clean cell). USB absent → R_G to GND → **on**.
-- D1: prefer an ideal-diode P-FET (`V_SYS` ≈ 4.9V); SS34 Schottky is the simple fallback
-  (≈ 4.6V). Also blocks back-feed into VBUS.
+> **These components are not on the servo module.** The entire battery-integrated
+> power subsystem — USB-C input, BQ24074 charger, cell connectors, DW01/FET protection,
+> and the TPS63070 boost that generates B+1 — lives on the **power daughter board**,
+> a separate KiCad project in `hardware/power-board/`.
+>
+> See **`kicad-power-board-guide.md`** for the full schematic entry of sub-zone B.
+>
+> What crosses from the daughter board to this servo module schematic as net labels
+> on the board-to-board connector J_BBL (defined in the Connectors zone below):
+> `VBAT_SENSE` → PB0 (ADC_IN8), `CHG_STAT` → PB7 (GPIO), `PGOOD` → PB8 (GPIO).
+> `VBAT_SENSE_EN` (PB1) drives back to the daughter board to gate the sense divider.
 
 ---
 
-### C. B+1 Regulator — TPS63070 Buck-Boost
+### C. B+1 Regulator — TPS63070 Buck-Boost (wall variants; DNP for battery build)
 
-The single B+1 regulator in every build. It **replaces the AP63203 buck** so one part
-covers all inputs: it boosts when `V_SYS`/VBUS is below 6V (battery and 5V cases) and
-bucks the 9V Variant A case.
+The single B+1 regulator for wall variants. In the battery build this sub-zone is
+**DNP** — B+1 is generated by the TPS63070 on the power daughter board and arrives
+via the battery-terminal harness path. In wall builds this TPS63070 **replaces the
+AP63203 buck** so one part covers both: it bucks the 9V Variant A case and boosts a
+5V source if Variant B input sags below 6V.
 
-| TPS63070 pin | Connection |
+| TPS63070 pin | Connection (wall builds only) |
 |---|---|
-| VINA / VINB | `V_SYS` (battery) or `9V_PD`/bridge (wall) + 10µF input cap to GND |
+| VINA / VINB | `9V_PD` (Variant A) or `B+1_RAW` bridge output (Variant B) + 10µF input cap to GND |
 | VOUT | `B+1` node, 6.0V + bulk output cap to GND |
 | FB | R1 (649kΩ) from `B+1` / R2 (100kΩ) to GND |
 | L1, L2 | inductor **between the two switch pins** (not SW→VOUT), 1.5µH class, ≥3.6A sat |
-| EN | RC soft-start to `V_SYS`; **do not float** (0.8V threshold) |
+| EN | RC soft-start to input rail; **do not float** (0.8V threshold) |
 | PS/SYNC, PG | per datasheet |
 | GND / PGND / thermal pad | GND + via array |
 
 - Vref 0.8V; 0.8 × (1 + 649/100) = 5.99V ✓ (PWR_FLAG on `B+1`).
-- 3.6A switch limit; ~1.6A input at the 2.8V pack floor.
 - Schematic note: `Buck-boost inductor sits between L1 and L2 — different routing from
-  the AP63203 buck. See power-supply-design.md §5.2.`
+  the AP63203 buck. DNP for battery-integrated build (power board provides B+1).
+  See power-supply-design.md §5.2.`
 
 ---
 
@@ -311,20 +284,22 @@ Downstream of the `B+1` node; present in every build.
 | U1 IP2721 PD trigger | **DNP** (9V over-volts charger) | Populate | DNP |
 | D1 USBLC6 ESD | Populate | Populate | DNP |
 | J2 barrel + D2–D5 + F1 + D6 TVS | DNP | DNP | Populate |
-| BT1 pack, U_PROT, U_CHG, Q_PP, D1/D2 power-path | Populate | DNP | DNP |
+| BT1 3P LiPo + U_PROT DW01/FET + U_CHG BQ24074 (daughter board) | Populate | DNP | DNP |
 | U_BOOST MT3608, U_LDO MCP1700 | Populate | Populate | Populate |
 
 ---
 
 ### Net labels used in this zone
 
-- `VBUS` — USB 5V in (charger + power-path)
+- `VBUS` — USB 5V in (BQ24074 charger IN pin; battery build on daughter board)
 - `9V_PD` — Variant A only (IP2721 → TPS63070 VIN)
 - `B+1_RAW` — Variant B bridge output → TPS63070 VIN
-- `V_SYS` — power-path output → TPS63070 VIN (battery build); local
-- `VBAT` — pack / protection node (charger BAT, power-path, sense-divider tap); local
+- `V_SYS` — BQ24074 SYS pin output → TPS63070 VINx (battery build; daughter board); local
+- `VBAT` — pack / protection node (BQ24074 BAT, sense-divider tap); local on daughter board
+- `VBAT_SENSE` → the Microcontroller zone (PB0/ADC_IN8) — arrives via board-to-board link from daughter board
+- `CHG_STAT` → the Microcontroller zone (PB7) — BQ24074 CHG status; board-to-board link
+- `PGOOD` → the Microcontroller zone (PB8) — BQ24074 power-good; board-to-board link
 - `USB_DP`, `USB_DM`, `CC1`, `CC2` → the Microcontroller zone
-- `CHRG_SENSE`, `DONE_SENSE` → the Microcontroller zone (optional, battery build)
 
 ---
 
@@ -340,12 +315,11 @@ Use the KiCad `MCU_ST_STM32G0` library symbol `STM32G0C1KCUx`, copied to
 **1 VDD and 1 VSS** in the 32-pin K package. VDD and VDDA share one pin;
 VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 
-> **⚠ Verify VDDIO2 against STM32G0C1 datasheet.** The G0B1 GP variant had no
-> separate VDDIO2 pin. The G0C1 may differ — confirm in the STM32G0C1 UFQFPN-32
-> pinout table. If a separate VDDIO2 pin is present, add 100nF X5R 0402 +
-> 4.7µF X5R 0402 decoupling to `+3V3` and update this guide.
+> **VDDIO2 confirmed absent in the GP variant.** STM32G0C1KCU6 (_KxU) has VDDIO2
+> tied to VDD internally — no separate VDDIO2 pin, no additional decoupling needed.
+> (stm32g0c1cc.pdf Figure 4, GP version confirmed.)
 
-**UFQFPN-32 GP (_KxU) confirmed pin map — DS13564 Rev 5:**
+**UFQFPN-32 GP (_KxU) confirmed pin map — DS13560 (stm32g0c1cc.pdf):**
 
 | Pin | Name | DSR-1 assignment |
 |-----|------|-----------------|
@@ -379,8 +353,8 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 | 28 | PB4 | `BATT_LED4` / GPIO·TIM (battery) |
 | 29 | PB5 | `BATT_LED5` / GPIO·TIM (battery) |
 | 30 | PB6 | `DEBUG_TX` / USART1_TX |
-| 31 | PB7 | `CHRG_SENSE` / GPIO in (optional) |
-| 32 | PB8 | `DONE_SENSE` / GPIO in (optional) |
+| 31 | PB7 | `CHG_STAT` / GPIO in — BQ24074 CHG status (low while charging; battery build) |
+| 32 | PB8 | `PGOOD` / GPIO in — BQ24074 power-good status (battery build) |
 | EP | VSS | GND — expose this pin in Symbol Editor; via array in layout |
 
 > **PB15 does not exist in the GP variant** (_KxU). PB15 is only present in
@@ -392,7 +366,7 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 > available.
 >
 > **VDDIO2 confirmed absent** in GP variant. Pin 20 = PC6. No VDDIO2 decoupling
-> needed. (DS13564 Figure 4, GP version _KxU confirmed.)
+> needed. (stm32g0c1cc.pdf Figure 4, GP version _KxU confirmed.)
 
 > **PA4 (DAC1_OUT1) is not used for motor drive.** Q601 (2SB1013 PNP) on
 > Ver. 1.0 boards has its emitter at B+3 (10.8V); the base operating range
@@ -407,7 +381,7 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 > **Battery-build pins:** pins 15–17, 20, 26–29, and 31–32 carry the battery level
 > indicator and charge-status signals (No-connect on wall-only builds). LED segment
 > pins on timer channels can PWM-dim the bar (night dimming, charge animation); plain
-> GPIO gives on/off segments. Reconcile with `stm32g0b1-pin-allocation.md`.
+> GPIO gives on/off segments. Reconcile with `stm32g0c1-pin-allocation.md`.
 
 ### Decoupling Network
 
@@ -419,9 +393,8 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 All three caps connect between pin 4 and GND. The C0G cap should be placed
 closest to the pin on the PCB as it serves the ADC inputs.
 
-> **VDDIO2:** Verify whether the STM32G0C1KCU6 UFQFPN-32 exposes VDDIO2 as a
-> separate pin. If present, add 100nF X5R 0402 + 4.7µF X5R 0402 between
-> VDDIO2 and GND. If absent (combined with VDD), no additional decoupling needed.
+> **VDDIO2:** Absent in the STM32G0C1KCU6 GP variant (_KxU). No additional
+> decoupling needed — VDDIO2 is tied to VDD internally.
 
 All capacitor GND terminals connect directly to the nearest GND power symbol.
 
@@ -454,7 +427,7 @@ All capacitor GND terminals connect directly to the nearest GND power symbol.
 - `MOTOR_PWM` → the Signal Conditioning zone
 
 **Battery build:**
-- Inputs: `VBAT_SENSE`, `S801_BATT`, `CHRG_SENSE`, `DONE_SENSE`
+- Inputs: `VBAT_SENSE`, `S801_BATT`, `CHG_STAT`, `PGOOD`
 - Outputs: `VBAT_SENSE_EN`, `BATT_LED1`…`BATT_LED5`
 
 ---
@@ -478,8 +451,8 @@ FG_RAW (from the Connectors zone, J1 pin 1)
     │
    [R4: 22kΩ 1% 0402] ──── GND        ← voltage divider lower leg
     │
-   ├──[D_FG1: BAT54, anode→node, cathode→+3V3]   ← high-side clamp
-   ├──[D_FG2: BAT54, anode→GND, cathode→node]    ← low-side clamp
+   ├──[D_FG1: BAT54S, anode→node, cathode→+3V3]   ← high-side clamp (BAT54S = dual SOT-23; one package serves both clamps)
+   ├──[D_FG2: BAT54S, anode→GND, cathode→node]    ← low-side clamp
    │
    [C7: 10pF C0G 0402] ──── GND        ← motor-brush noise filter
     │
@@ -487,7 +460,7 @@ FG_RAW (from the Connectors zone, J1 pin 1)
 ```
 
 Divider math: V_node = V_FG × 22/(10+22) = V_FG × 0.6875
-At 5.9V swing: 5.9 × 0.6875 = 4.06V → BAT54 clamps to ≤3.6V ✓
+At 5.9V swing: 5.9 × 0.6875 = 4.06V → BAT54S clamps to ≤3.6V ✓
 
 Schematic note: `⚠ VERIFY ACTUAL FG SWING ON BENCH BEFORE POWER-ON.
 R4 value may need adjustment based on measured B+1 and pull-up resistor.
@@ -563,7 +536,7 @@ board. Verify voltage on bench before connecting. See signal-chain-analysis.md �
 ### ADC Inputs — RV601, RV602, RV603 (J1 Pins 4, 5, 6 → PA1, PA2, PA3)
 
 Each potentiometer wiper may be referenced to B+1 and could exceed 3.3V.
-The 100Ω series resistor plus BAT54 clamp is the minimum safe configuration.
+The 100Ω series resistor plus BAT54S clamp is the minimum safe configuration.
 
 **⚠ Measure wiper voltage on bench before first power-on.** If any wiper exceeds
 3.3V at B+1 = 6V, add a resistor divider before the clamp.
@@ -573,8 +546,8 @@ RV601 (from the Connectors zone, J1 pin 4)
     │
    [R_ADC1: 100Ω 5% 0402]              ← source impedance limit + protection
     │
-   ├──[BAT54, anode→node, cathode→+3V3]  ← overvoltage clamp
-   ├──[BAT54, anode→GND, cathode→node]   ← undervoltage clamp
+   ├──[BAT54S, anode→node, cathode→+3V3]  ← overvoltage clamp
+   ├──[BAT54S, anode→GND, cathode→node]   ← undervoltage clamp
     │
    RV601_WIPER (net label → the Microcontroller zone, PA1/ADC_IN1)
 ```
@@ -589,26 +562,44 @@ before the 100Ω series resistor. Adjust ADC scaling in firmware to match.`
 
 ### Battery Sense (VBAT → ADC) — battery build
 
+> **VBAT is on the daughter board.** In the battery-integrated build, the raw pack
+> voltage (VBAT) lives on the daughter board's VBAT node. It arrives at the servo
+> module as `VBAT_SENSE` via the board-to-board link — a wire from the daughter
+> board's sense tap to PB0 on the servo module. The divider and sense-gate below
+> sit on the **servo module** (receiving end).
+
 ```
-VBAT ──[R_VS1: 22kΩ 1% 0402]──┬── VBAT_SENSE (net label → the Microcontroller zone, PB0/ADC_IN8)
-                              │
-                          [R_VS2: 100kΩ 1% 0402]
-                              │
-                          Q_VS drain  (2N7002 N-FET; gate ← VBAT_SENSE_EN; source → GND)
-                              │
+VBAT_SENSE (from daughter board board-to-board link)
+    │
    [C_VS: 10nF C0G 0402] ──── GND     (at the VBAT_SENSE node)
+    │
+   ┌─ ADC_IN8 / PB0 (Microcontroller zone)
+   │
+[R_VS1: 33kΩ 1% 0402] ──┬── above node
+                         │
+                     [R_VS2: 100kΩ 1% 0402]
+                         │
+                     Q_VS drain  (2N7002 N-FET; gate ← VBAT_SENSE_EN / PB1; source → GND)
 ```
 
-- Divider ratio 100/122 = 0.82 → 3.7V float presents ~3.03V to the ADC (under 3.3V
-  VDDA, with margin); 2.5V floor → ~2.05V.
+- **33kΩ / 100kΩ divider** (updated from 22k for the LiPo 4.2V peak): ratio
+  100/133 = 0.75 → 4.2V float presents ~3.16V to ADC (under 3.3V VDDA with margin);
+  3.0V floor → ~2.26V. LiPo discharge curve (4.2V → 3.0V) is usefully sloped, so
+  voltage-based SoC is more reliable here than on the flat LFP curve.
 - Q_VS gates the divider's ground leg so it draws ~0 except during a measurement
-  (firmware raises `VBAT_SENSE_EN`, settles, samples, lowers) — no standby pack drain.
-- Schematic note: `Source impedance ~18kΩ — allow adequate ADC sample time. See §7.7.`
+  (firmware raises `VBAT_SENSE_EN`, settles, samples, lowers) — no standby drain on
+  the pack. Q_VS source sits on the servant board module schematic; it drains down
+  through R_VS2.
+- Schematic note: `Source impedance ~25kΩ — allow adequate ADC sample time (≥10µs
+  sample time at 64MHz). LiPo OCV table in firmware; sloped 4.2V→3.0V curve gives
+  reliable SoC. VBAT arrives via board-to-board link from daughter board. See §7.8.`
 
 **Battery level indicator drive:** the five `BATT_LED1…5` lines route from the
 Microcontroller zone to J3 (Connectors zone) and on to the WM-D6C LED board. Optional
 small series resistors per line may go here; the existing 180Ω limiters (R814–818) live
-on the LED board.
+on the LED board. CHG_STAT and PGOOD (PB7/PB8) drive the charge animation — segments
+march upward while PGOOD is high and CHG_STAT is low (charging); hold full when
+CHG_STAT goes high (done).
 
 ### Net labels used in this zone
 
@@ -712,6 +703,31 @@ header under the installed board; keep accessible during Rev A development.`
 > polarity through the on-board 180Ω limiters, to set drive direction. The stock
 > single-LED brightness path (Q801) is left disconnected once the STM32 owns the bar.`
 
+### J_BBL — Board-to-Board Link (battery build only)
+
+A small polarised connector carrying the signals between the power daughter board and
+this servo module. **DNP on wall-only builds.** Use a latching, foolproof connector
+rated for ≥2A continuous on the power conductors — JST-PH or Molex PicoBlade are
+suitable.
+
+| J_BBL Pin | Net | Dir | Description |
+|---|---|---|---|
+| 1 | GND | Shared | Common ground return |
+| 2 | `VBAT_SENSE` | DB → Module | LiPo pack voltage sense (33kΩ/100kΩ divider; see Signal zone) |
+| 3 | `VBAT_SENSE_EN` | Module → DB | Gate control for daughter board sense divider (PB1 GPIO) |
+| 4 | `CHG_STAT` | DB → Module | BQ24074 CHG status — low while charging (PB7 GPIO) |
+| 5 | `PGOOD` | DB → Module | BQ24074 power-good status (PB8 GPIO) |
+| 6 | USB_D− *(optional)* | Bidirectional | CDC tuning, if USB-C is on daughter board |
+| 7 | USB_D+ *(optional)* | Bidirectional | CDC tuning, if USB-C is on daughter board |
+
+Schematic note: `J_BBL: board-to-board link to power daughter board (battery build).
+DNP for Variant A and Variant B wall builds. B+1 and GND are NOT on this connector —
+they travel via the battery-terminal injection point on the WM-D6C main board and the
+CP304 harness. USB D+/D- pins populate only if CDC tuning routes through the daughter
+board USB-C rather than a bench header.`
+
+---
+
 ### Test Pads
 
 Add `Device:TestPoint` for each of:
@@ -772,7 +788,7 @@ git add hardware/kicad/
 git commit -m "DSR-1 Rev A schematic — single D-size sheet, ERC clean, pre-layout
 
 - Single flat D-size sheet (no hierarchy)
-- Power zone: USB-C / barrel input, CN3058E charge + LiFePO4 power-path (battery
+- Power zone: USB-C / barrel input, BQ24074 charge + LiPo power-path (battery
   build), TPS63070 B+1 buck-boost, MT3608 B+3, MCP1700 3.3V
 - MCU zone: STM32G0C1KCU6 decoupling, pin assignments; motor PWM on PA6 (TIM3_CH1)
 - Signal zone: FG divider/clamp, NPN motor drive, ADC clamps, VBAT sense
@@ -826,9 +842,11 @@ See `signal-chain-analysis.md §10` for full layout rule derivations.
 
 ---
 
-*Document version: 0.6 — Matches DSR-1 hardware Rev A*
+*Document version: 0.8 — Matches DSR-1 hardware Rev A*
 *Replaces: initial draft (v0.1) — corrected motor drive topology, full production run scope added, sheet filenames aligned with actual KiCad project*
 *v0.3 adds: battery-integrated charge-in-place (CN3058E + power-path), TPS63070 buck-boost B+1 regulator, and STM32-driven battery level indicator (CX10043 re-reference). Per power-supply-design.md §5.2, §7.*
 *v0.4: consolidated power onto a single Power sheet (was Power Input Zone + Power Management); sheets renumbered to 5 total (MCU→3, Signal→4, Connectors→5).*
 *v0.6: merged the battery appendix inline — battery/charge/power-path/TPS63070 now live in the Power zone, and the indicator pins/sense/J3 in the MCU, Signal, and Connectors zones; single cohesive guide, no addendum.*
 *v0.5: flattened to a single D-size sheet — hierarchy, root sheet, and sheet pins removed; zones replace sheets; added Distribution & Printing.*
+*v0.7: chemistry swap LFP → LiPo; charger CN3058E → BQ24074 (DPPM power-path, R_ISET=1.1kΩ/0.8A, R_ILIM=800Ω/2A); protection HY2112-CB → DW01+FS8205; two-board architecture noted; **NOTE: v0.7 incorrectly renamed G0C1 → G0B1 throughout — reverted in v0.8.** CHG_STAT/PGOOD nets; VBAT_SENSE divider 22k→33k; LiPo OCV note; §7.8 cross-reference.*
+*v0.8: two-project split — servo module guide only; Section B replaced with pointer to kicad-power-board-guide.md; J_BBL board-to-board connector added to Connectors zone; TPS63070 sub-zone C marked DNP for battery build; **MCU corrected back to STM32G0C1KCU6** (verified against repo schematic STM32G0C1 and decoupling.kicad_sch, symbol MCU_ST_STM32G0:STM32G0C1KCUx, U5); DS reference updated; BAT54 → BAT54S (dual SOT-23, as placed in Signal conditioning.kicad_sch); intro updated for two-project structure.*

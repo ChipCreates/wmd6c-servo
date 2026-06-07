@@ -49,7 +49,7 @@ above and below the operating point to apply corrective torque in both direction
 **Implicitly: approximately 3-5V for logic**: The CX20084 servo IC and the
 MSM58141RS divider IC operate from B+1 directly. At 6V battery supply these ICs
 have comfortable operating margin — their specified supply range is typically 4-7V.
-The DSR-1's STM32G0B1KCU6 requires a separate regulated 3.3V supply because modern
+The DSR-1's STM32G0C1KCU6 requires a separate regulated 3.3V supply because modern
 CMOS logic at 64 MHz demands tighter voltage regulation than a battery rail can
 provide.
 
@@ -442,7 +442,7 @@ essentially mandatory in modern boost converters.
 
 ### 4.1 Why a Linear Regulator for the STM32
 
-The STM32G0B1KCU6 requires a stable, low-noise 3.3V supply. Two approaches are
+The STM32G0C1KCU6 requires a stable, low-noise 3.3V supply. Two approaches are
 possible: a switching step-down (buck) converter from B+1, or a linear LDO
 regulator.
 
