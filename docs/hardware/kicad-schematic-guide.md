@@ -94,17 +94,17 @@ is one D-size sheet in `hardware/kicad/DSR-1/`; the Power Board is one sheet in
 all-in-one project: power management and battery charging belong in the separate
 Power Board project.
 
-Organize the canvas into four visual **zones**, left-to-right by signal flow. Zones are
+Organize the Servo Control Board canvas into three visual **zones**, left-to-right by signal flow. Zones are
 just same-sheet regions (optionally boxed with a graphic rectangle + text label);
 they are not KiCad sheets and carry no electrical meaning:
 
 ```
-┌─ Power ─────────────┐ ┌─ Microcontroller ─┐ ┌─ Signal Conditioning ─┐ ┌─ Connectors ─┐
-│ Wall-input option   │ │ STM32G0C1KCU6     │ │ FG divider + clamp    │ │ J1 harness   │
-│ B+1 receive/drive   │ │ decoupling, boot, │ │ NPN motor drive       │ │ J2 SWD       │
-│ board-to-board link │ │ pin assignments   │ │ ADC clamps            │ │ J3 LED board │
-│ MT3608 B+3, MCP1700 │ │                   │ │ VBAT sense input      │ │ test pads    │
-└─────────────────────┘ └───────────────────┘ └───────────────────────┘ └──────────────┘
+┌─ Microcontroller ─┐ ┌─ Signal Conditioning ─┐ ┌─ Connectors ─────────────┐
+│ STM32G0C1KCU6     │ │ FG divider + clamp    │ │ J1 harness              │
+│ decoupling, boot, │ │ NPN motor drive       │ │ J_BBL Power Board link  │
+│ pin assignments   │ │ ADC clamps            │ │ J2 SWD / J3 LED board   │
+│ USB / ADC / PWM   │ │ VBAT sense input      │ │ test pads               │
+└───────────────────┘ └───────────────────────┘ └──────────────────────────┘
 ```
 
 The sections below are written per zone. Component values come from the design docs
@@ -132,178 +132,31 @@ common ERC pitfall of the old hierarchical layout ("net has no driver / not impo
 
 ---
 
-## Power Zone
+## Power Board Interface
 
-**Purpose:** The entire power chain on one region of the sheet, in signal-flow
-sub-zones: **(A)** input — USB-C and/or barrel; **(B)** charge, battery, and power-path
-(battery-integrated build); **(C)** the TPS63070 B+1 buck-boost; and **(D)** B+3
-(MT3608) and 3.3V (MCP1700). Three builds share this zone, differentiated by DNP: the
-**battery-integrated build (primary)**, **Variant A** (wall, USB-C 9V PD, no cells),
-and **Variant B** (wall, barrel, no cells).
+**Purpose:** document only the nets that cross from the separate Power Board project
+into this Servo Control Board project. Do not draw USB-C input, PD trigger, charger,
+cell protection, B+1 regulation, B+3 generation, or 3.3V regulation in the DSR-1
+schematic.
 
-> **Authoritative values:** `power-supply-design.md` §5.2 (TPS63070) and §7.1–§7.8
-> (cell, charger, power-path, protection, indicator). This guide tells you how to enter
-> them in KiCad.
->
-> **⚠ KiCad is behind the design.** The committed project still shows U3 = AP63203WU-7
-> (a fixed buck) and no battery. The entries below are the intended design — the
-> AP63203 is **replaced** by the TPS63070 (sub-zone C) and the battery front end
-> (sub-zone B) is added. Treat sub-zones B and C as the changes to apply.
+The Power Board schematic is the single sheet in
+`hardware/kicad/Power-Board/wm-d6c-power-board/`. Its local power nets, including
+`VBUS`, `9V_PD`, `B+1_RAW`, `V_SYS`, and `VBAT`, stay in that project unless they are
+explicitly exported through a connector.
 
----
+Servo Control Board interface nets:
 
-### A. Input
-
-**J_USB — USB-C mid-mount receptacle** (battery build + Variant A; DNP for Variant B)
-
-- Symbol: search `USB_C` in the KiCad Connector library or use a custom symbol.
-- VBUS → `VBUS` net. In the battery Power Board this must remain the plain USB-C
-  5V sink rail feeding the BQ24074 charger IN pin; in Variant A it is the IP2721
-  input and may rise above 5V after PD negotiation.
-- `VBUS`/USB +5V is not USB-C PD by itself. It is the default Type-C VBUS rail
-  available to a sink after attach. Treat it as PD only if a PD controller or UCPD
-  stack actively negotiates a contract on CC1/CC2.
-- D+/D− → `USB_DP_RAW`, `USB_DM_RAW`; CC1, CC2 → `CC1`, `CC2`; GND/Shield → GND.
-
-**U1 — IP2721 USB PD Trigger (TSSOP-16)** — Variant A only
-
-- Pins VIN, VBUSG, VBUS, CC1, CC2, SEL, GND. VIN (P$2) and VBUSG (P$1) → VBUS (tie
-  together). VBUS (P$16) → `9V_PD` after successful negotiation. CC1/CC2 → `CC1`/`CC2`.
-  SEL (P$11) → configure for a 9V request. C1 4.7µF 16V X5R VBUS→GND.
-- **DNP on the battery build and Variant B.** In the battery build a 9V contract would
-  over-volt the BQ24074 charger (VIN abs-max ~6.5V) — the battery build stays at 5V.
-
-> **VBUSG note:** VBUSG is the internal pass-element gate drive and must be tied to VIN;
-> floating it prevents `9V_PD` from becoming valid after negotiation.
-
-**ESD — USBLC6-2SC6Y (SOT-23-6)**
-
-- I/O1 → `USB_DM_RAW`; I/O2 → `USB_DP_RAW`; GND → GND; VCC → `+3V3`.
-- Outputs `USB_DM`, `USB_DP` → the Microcontroller zone.
-
-**Variant B — barrel jack, polarity-agnostic** (DNP for battery build and Variant A)
-
-> Variant B accepts 9V DC via a 5.5mm/2.1mm barrel jack with **no assumed polarity** —
-> a Schottky bridge guarantees correct output polarity regardless of adapter wiring,
-> eliminating the original CN301 centre-negative failure mode.
-
-- **J2** barrel jack: both pins feed the bridge (no polarity). 9V DC, ≥500mA adapter.
-- **Bridge D2–D5 (SS14, SOD-123):**
-
-```
-         D2               D3
-tip ───►|──┬─── DC+ ───────┬──|◄─── sleeve
-           │               │
-        (left AC)       (right AC)
-           │               │
-tip ───|◄──┴───────────────┴──►|─── sleeve
-         D4               D5
-                   │
-                  GND
-```
-
-- DC+ (D2,D3 cathodes) → **F1** (polyfuse 500mA hold / 1.5A trip, 0805) → `B+1_RAW`;
-  GND (D4,D5 anodes) → GND; DC+ ≈ 8.2V at load.
-- **D6** SMBJ12A-13-F TVS (SMA): cathode → `B+1_RAW` (after F1), anode → GND. 12V
-  standoff, 19.9V max clamp — under the regulator VIN max.
-
----
-
-### B. Charge, Battery & Power-Path — Power Board
-
-> **These components are not on the Servo Control Board.** The entire battery-integrated
-> power subsystem — USB-C input, BQ24074 charger, cell connectors, DW01/FET protection,
-> and the TPS63070 boost that generates B+1 — lives on the **Power Board**,
-> a separate KiCad project in `hardware/kicad/Power-Board/wm-d6c-power-board/`.
->
-> What crosses from the Power Board to this Servo Control Board schematic as net labels
-> on the board-to-board connector J_BBL (defined in the Connectors zone below):
-> `VBAT_SENSE` → PB0 (ADC_IN8), `CHG_STAT` → PB7 (GPIO), `PGOOD` → PB8 (GPIO).
-> `VBAT_SENSE_EN` (PB1) drives back to the Power Board to gate the sense divider.
-
----
-
-### C. B+1 Regulator — TPS63070 Buck-Boost (wall variants; DNP for battery build)
-
-The single B+1 regulator for wall variants. In the battery build this sub-zone is
-**DNP** — B+1 is generated by the TPS63070 on the Power Board and arrives
-via the battery-terminal harness path. In wall builds this TPS63070 **replaces the
-AP63203 buck** so one part covers both: it bucks the 9V Variant A case and boosts a
-5V source if Variant B input sags below 6V.
-
-| TPS63070 pin | Connection (wall builds only) |
-|---|---|
-| VINA / VINB | `9V_PD` (Variant A) or `B+1_RAW` bridge output (Variant B) + 10µF input cap to GND |
-| VOUT | `B+1` node, 6.0V + bulk output cap to GND |
-| FB | R1 (649kΩ) from `B+1` / R2 (100kΩ) to GND |
-| L1, L2 | inductor **between the two switch pins** (not SW→VOUT), 1.5µH class, ≥3.6A sat |
-| EN | RC soft-start to input rail; **do not float** (0.8V threshold) |
-| PS/SYNC, PG | per datasheet |
-| GND / PGND / thermal pad | GND + via array |
-
-- Vref 0.8V; 0.8 × (1 + 649/100) = 5.99V ✓ (PWR_FLAG on `B+1`).
-- Schematic note: `Buck-boost inductor sits between L1 and L2 — different routing from
-  the AP63203 buck. DNP for battery-integrated build (power board provides B+1).
-  See power-supply-design.md §5.2.`
-
----
-
-### D. B+3 (10.8V) and 3.3V Generation
-
-Downstream of the `B+1` node; present in every build.
-
-**U_BOOST — MT3608 Boost (SOT-23-6), 6V → 10.8V**
-
-| MT3608 pin | Connection |
-|---|---|
-| VIN | `B+1` + 10µF input cap to GND |
-| GND | GND |
-| SW | L_BOOST (4.7µH, CDRH4D28) → D_BOOST anode |
-| EN | `B+1` (always-on) |
-| FB | R_UPPER (169kΩ) / R_LOWER (10kΩ) junction |
-| (implicit) | D_BOOST cathode = VOUT = `B+3` |
-
-- VOUT = 0.6 × (1 + 169/10) = 10.74V ✓. D_BOOST = SS14 (SMA).
-- C_BOOST_IN 10µF 10V X5R; **C_BOOST_OUT 47µF 16V X5R** (not 22µF — DC-bias derating).
-- PWR_FLAG on `B+3`.
-- Schematic note: `SW node high dV/dt at 1.2 MHz — trace <3mm; ≥2mm clearance to all
-  FG/ADC/PWM traces.`
-
-**U_LDO — MCP1700T-3302E/TT LDO (SOT-23-3), 6V → 3.3V**
-
-- VIN → `B+1`; VOUT → `+3V3`; GND → GND.
-- C_LDO_IN / C_LDO_OUT: 1µF 10V X5R (0402) + 10µF 10V X5R (0805) each. PWR_FLAG on `+3V3`.
-
----
-
-### Build matrix & DNP
-
-| Component | Battery-integrated | Variant A (wall) | Variant B (wall) |
+| Net | Direction | DSR-1 entry point | Notes |
 |---|---|---|---|
-| U3 TPS63070 buck-boost (B+1) | Populate | Populate | Populate |
-| AP63203WU-7 | — superseded | — superseded | — superseded |
-| J_USB USB-C receptacle | Populate (5V) | Populate (9V PD) | DNP |
-| U1 IP2721 PD trigger | **DNP** (9V over-volts charger) | Populate | DNP |
-| D1 USBLC6 ESD | Populate | Populate | DNP |
-| J2 barrel + D2–D5 + F1 + D6 TVS | DNP | DNP | Populate |
-| BT1 3P LiPo + U_PROT DW01/FET + U_CHG BQ24074 (Power Board) | Populate | DNP | DNP |
-| U_BOOST MT3608, U_LDO MCP1700 | Populate | Populate | Populate |
+| `VBAT_SENSE` | Power Board → Servo Control Board | J_BBL → PB0/ADC_IN8 | Scaled pack-voltage sense |
+| `VBAT_SENSE_EN` | Servo Control Board → Power Board | PB1 → J_BBL | Gates the Power Board sense divider |
+| `CHG_STAT` | Power Board → Servo Control Board | J_BBL → PB7 | BQ24074 charge status, low while charging |
+| `PGOOD` | Power Board → Servo Control Board | J_BBL → PB8 | BQ24074 power-good status |
+| `USB_DM` / `USB_DP` | Bidirectional | J_BBL → PA11/PA12 | Optional if the Power Board USB-C connector carries CDC/service data |
+| `CC1` / `CC2` | Bidirectional/monitor | J_BBL → PA8/PA9 | Optional only if the Servo MCU monitors or participates in Type-C/UCPD |
 
----
-
-### Net labels used in this zone
-
-- `VBUS` — USB-C connector bus. In the battery build this is a plain 5V sink rail
-  into the BQ24074 charger IN pin; in Variant A it is the IP2721 input and may rise
-  above 5V after PD negotiation.
-- `9V_PD` — Variant A only (IP2721 → TPS63070 VIN)
-- `B+1_RAW` — Variant B bridge output → TPS63070 VIN
-- `V_SYS` — BQ24074 SYS pin output → TPS63070 VINx (battery build; Power Board); local
-- `VBAT` — pack / protection node (BQ24074 BAT, sense-divider tap); local on Power Board
-- `VBAT_SENSE` → the Microcontroller zone (PB0/ADC_IN8) — arrives via board-to-board link from Power Board
-- `CHG_STAT` → the Microcontroller zone (PB7) — BQ24074 CHG status; board-to-board link
-- `PGOOD` → the Microcontroller zone (PB8) — BQ24074 power-good; board-to-board link
-- `USB_DP`, `USB_DM`, `CC1`, `CC2` → the Microcontroller zone
+Power rails that feed the Servo Control Board arrive through the WM-D6C battery-terminal
+and CP304 harness path, not through a local power-entry zone in this schematic.
 
 ---
 
@@ -423,7 +276,7 @@ All capacitor GND terminals connect directly to the nearest GND power symbol.
 ### Net labels used in this zone
 
 **Inputs:**
-- `USB_DP`, `USB_DM`, `CC1`, `CC2` ← the Power zone
+- `USB_DP`, `USB_DM`, optional `CC1`, `CC2` ← the Connectors zone via J_BBL Power Board link
 - `FG_IN`, `RV601_WIPER`, `RV602_WIPER`, `RV603_WIPER`, `MOTOR_EN_MON` ← the Signal Conditioning zone
 - `SPEED_TUNE_SW`, `SWDIO`, `SWDCLK` ← the Connectors zone
 
@@ -713,10 +566,9 @@ header under the installed board; keep accessible during Rev A development.`
 
 ### J_BBL — Board-to-Board Link (battery build only)
 
-A small polarised connector carrying the signals between the Power Board and this
-Servo Control Board. **DNP on wall-only builds.** Use a latching, foolproof connector
-rated for ≥2A continuous on the power conductors — JST-PH or Molex PicoBlade are
-suitable.
+A small polarised connector carrying status, sense, and optional USB/service signals
+between the Power Board and this Servo Control Board. **DNP on wall-only builds.**
+Use a latching, foolproof connector. It does not carry the B+1 power rail.
 
 | J_BBL Pin | Net | Dir | Description |
 |---|---|---|---|
@@ -725,14 +577,16 @@ suitable.
 | 3 | `VBAT_SENSE_EN` | Servo Control Board → Power Board | Gate control for Power Board sense divider (PB1 GPIO) |
 | 4 | `CHG_STAT` | Power Board → Servo Control Board | BQ24074 CHG status — low while charging (PB7 GPIO) |
 | 5 | `PGOOD` | Power Board → Servo Control Board | BQ24074 power-good status (PB8 GPIO) |
-| 6 | USB_D− *(optional)* | Bidirectional | CDC tuning, if USB-C is on Power Board |
-| 7 | USB_D+ *(optional)* | Bidirectional | CDC tuning, if USB-C is on Power Board |
+| 6 | `USB_DM` *(optional)* | Bidirectional | CDC tuning, if USB-C is on Power Board |
+| 7 | `USB_DP` *(optional)* | Bidirectional | CDC tuning, if USB-C is on Power Board |
+| 8 | `CC1` *(optional)* | Bidirectional/monitor | UCPD/Type-C monitoring if the Servo MCU participates |
+| 9 | `CC2` *(optional)* | Bidirectional/monitor | UCPD/Type-C monitoring if the Servo MCU participates |
 
 Schematic note: `J_BBL: board-to-board link to Power Board (battery build).
 DNP for Variant A and Variant B wall builds. B+1 and GND are NOT on this connector —
 they travel via the battery-terminal injection point on the WM-D6C main board and the
-CP304 harness. USB D+/D- pins populate only if CDC tuning routes through the daughter
-board USB-C rather than a bench header.`
+CP304 harness. USB and CC pins populate only if service data or UCPD monitoring routes
+through the Power Board USB-C connector rather than a bench header.`
 
 ---
 
@@ -755,9 +609,8 @@ Add `Device:TestPoint` for each of:
 
 The design is one flat sheet, so annotate in a single pass: Tools → Annotate Schematic
 → Annotate. A single sequential pass is fine; for readability you can group designators
-by zone by assigning ranges as you place parts. After merging or adding the battery
-block, re-run Annotate to resolve any duplicate designators (e.g. the MCP1700 LDO
-should be a single Ux, and the flatten/merge can leave gaps — that is harmless).
+by zone by assigning ranges as you place parts. If parts are moved between zones,
+re-run Annotate to resolve duplicate designators; gaps are harmless.
 
 ## Symbol Properties Checklist
 
@@ -796,11 +649,9 @@ git add hardware/kicad/
 git commit -m "DSR-1 Rev A schematic — single D-size sheet, ERC clean, pre-layout
 
 - Single flat D-size sheet (no hierarchy)
-- Power zone: USB-C / barrel input, BQ24074 charge + LiPo power-path (battery
-  build), TPS63070 B+1 buck-boost, MT3608 B+3, MCP1700 3.3V
 - MCU zone: STM32G0C1KCU6 decoupling, pin assignments; motor PWM on PA6 (TIM3_CH1)
 - Signal zone: FG divider/clamp, NPN motor drive, ADC clamps, VBAT sense
-- Connectors zone: J1 harness, J2 SWD, J3 LED board, S601 rewire, test pads
+- Connectors zone: J1 harness, J_BBL Power Board link, J2 SWD, J3 LED board, S601 rewire, test pads
 - Rev A targets Ver. 1.0 CX20084 boards (1984-2001)
 - ERC: 0 errors"
 
@@ -840,22 +691,23 @@ After ERC passes, update the PCB (Tools → Update PCB from Schematic) and begin
 placement in this priority order:
 
 1. STM32 decoupling caps within 0.5mm of the combined VDD/VDDA pin
-2. MT3608 switching loop (VIN cap → L1 → SW → D_BOOST → VOUT cap) as compact as possible; SW node trace ≤3mm
-3. USB differential pair: matched length, 90Ω differential impedance, ≤25mm, routed away from MT3608 SW node
+2. J1 WM-D6C harness and J_BBL Power Board link placement with service clearance
+3. USB differential pair, if populated: matched length, 90Ω differential impedance, short route to the MCU
 4. B+3 motor drive traces: minimum 0.5mm width for 500mA
 5. GND pour on both layers; via array under STM32 exposed VSS pad (2×2 or 3×3 grid, 0.3mm drill)
-6. Analog signal zone (FG, ADC, motor drive) on opposite side of board from MT3608
+6. Analog signal region (FG, ADC, motor-drive monitor) kept away from PWM/base-drive and USB traces
 
 See `signal-chain-analysis.md §10` for full layout rule derivations.
 
 ---
 
-*Document version: 0.9 — Matches DSR-1 hardware Rev A*
+*Document version: 1.0 — Matches DSR-1 hardware Rev A*
 *Replaces: initial draft (v0.1) — corrected motor drive topology, full production run scope added, schematic filenames aligned with actual KiCad project*
-*v0.3 adds: battery-integrated charge-in-place (CN3058E + power-path), TPS63070 buck-boost B+1 regulator, and STM32-driven battery level indicator (CX10043 re-reference). Per power-supply-design.md §5.2, §7.*
-*v0.4: consolidated power into one Power zone (was split between separate power sections); legacy multi-sheet numbering removed in later flat-sheet revisions.*
-*v0.6: merged the battery appendix inline — battery/charge/power-path/TPS63070 now live in the Power zone, and the indicator pins/sense/J3 in the MCU, Signal, and Connectors zones; single cohesive guide, no addendum.*
+*v0.3: legacy all-in-one draft added battery-integrated charge-in-place notes and STM32-driven battery level indicator references. Superseded by the two-project split.*
+*v0.4: legacy all-in-one draft consolidated power content before the two-project split; legacy multi-sheet numbering removed in later flat-sheet revisions.*
+*v0.6: legacy battery appendix merged before power moved to its own KiCad project; single cohesive guide, no addendum.*
 *v0.5: flattened to a single D-size sheet — hierarchy, root sheet, and sheet pins removed; zones replace sheets; added Distribution & Printing.*
 *v0.7: chemistry swap LFP → LiPo; charger CN3058E → BQ24074 (DPPM power-path, R_ISET=1.1kΩ/0.8A, R_ILIM=800Ω/2A); protection HY2112-CB → DW01+FS8205; two-board architecture noted; **NOTE: v0.7 incorrectly renamed G0C1 → G0B1 throughout — reverted in v0.8.** CHG_STAT/PGOOD nets; VBAT_SENSE divider 22k→33k; LiPo OCV note; §7.8 cross-reference.*
-*v0.8: two-project split — Servo Control Board guide only; Section B replaced with Power Board project pointer; J_BBL board-to-board connector added to Connectors zone; TPS63070 sub-zone C marked DNP for battery build; **MCU corrected back to STM32G0C1KCU6** (verified against repo schematic STM32G0C1 and decoupling.kicad_sch, symbol MCU_ST_STM32G0:STM32G0C1KCUx, U5); DS reference updated; BAT54 → BAT54S (dual SOT-23, as placed in Signal conditioning.kicad_sch); intro updated for two-project structure.*
+*v0.8: two-project split — Servo Control Board guide only; Power Board content replaced with project/interface pointer; J_BBL board-to-board connector added to Connectors zone; **MCU corrected back to STM32G0C1KCU6** (verified against repo schematic STM32G0C1 and decoupling.kicad_sch, symbol MCU_ST_STM32G0:STM32G0C1KCUx, U5); DS reference updated; BAT54 → BAT54S (dual SOT-23, as placed in Signal conditioning.kicad_sch); intro updated for two-project structure.*
 *v0.9: updated Servo/Power Board KiCad project paths; clarified that each project has one flat schematic sheet; clarified that `VBUS`/USB +5V is the default Type-C sink rail, not USB-C PD, and that `9V_PD` is Variant A only after IP2721 negotiation.*
+*v1.0: removed the obsolete DSR-1 power region from this Servo Control Board guide; the DSR-1 sheet now has only Microcontroller, Signal Conditioning, and Connectors zones, with power content represented only by the J_BBL interface contract.*
