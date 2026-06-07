@@ -19,6 +19,7 @@
 > Board** and **Servo Control Board**. The Power Board schematic lives in
 > `hardware/kicad/Power-Board/wm-d6c-power-board/`. This guide covers the Servo
 > Control Board only — the board that fits in the CP304 cavity in all three builds.
+> Use `docs/hardware/kicad-power-board-guide.md` for the Power Board schematic.
 
 ---
 
@@ -143,6 +144,8 @@ The Power Board schematic is the single sheet in
 `hardware/kicad/Power-Board/wm-d6c-power-board/`. Its local power nets, including
 `VBUS`, `9V_PD`, `B+1_RAW`, `V_SYS`, and `VBAT`, stay in that project unless they are
 explicitly exported through a connector.
+
+See `docs/hardware/kicad-power-board-guide.md` for the Power Board entry guide.
 
 Servo Control Board interface nets:
 
