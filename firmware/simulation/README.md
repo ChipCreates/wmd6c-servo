@@ -1,6 +1,8 @@
 # DSR-1 Renode Simulation
 
-Renode-based simulation for the DSR-1 STM32G0B1KBU6 firmware.
+Renode-based simulation for the DSR-1 firmware. The simulation platform still
+models the earlier STM32G0B1 prototype until the firmware tree is migrated to the
+STM32G0C1KCU6 hardware target.
 Run from the **workspace root** (`d:/Projects/wmd6c-servo`).
 
 ## Prerequisites

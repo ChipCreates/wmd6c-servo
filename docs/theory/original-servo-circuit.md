@@ -220,8 +220,10 @@ without modifying the PCB.
 ### 5.3 Voltage-Controlled Motor Drive
 
 The filtered error voltage drives pin 15 of the CX20084, which is the motor drive
-output. This pin controls the base of Q601, a 2SB733 PNP transistor whose collector
-current drives the capstan motor M901.
+output. This pin controls the base of Q601, the motor-current device whose collector
+current drives the capstan motor M901. The exact Q601 package/marking must be
+confirmed on the C11-494-12 SMD board before installation documentation treats it as
+settled.
 
 Q601 is configured as a common-emitter amplifier. Its emitter is connected to the
 B+3 motor supply rail (approximately 10.8V, produced by the CP304 boost converter).

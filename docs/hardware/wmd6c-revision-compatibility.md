@@ -34,7 +34,7 @@ Two distinct servo circuit families exist across the production run:
 
 | Family | Servo IC | Motor drive | Approx. years | Governing reference |
 |---|---|---|---|---|
-| **Ver. 1.0** | CX20084 | Single Q601 (2SB1013 PNP) | 1984 – mid 2001 | `fb4872.pdf` |
+| **Ver. 1.0** | CX20084 | Single Q601 motor-control path; exact device/package depends on board construction | 1984 – mid 2001 | `fb4872.pdf` |
 | **Ver. 1.1** | CX-069A | Q601–Q605 (five transistors + JFET) | mid 2001 – 2002 | `sony_wm-d6c_tc-d6c_ver-1.1.pdf` |
 
 The change is documented in the Ver. 1.1 service manual revision history as
@@ -57,8 +57,8 @@ Within Ver. 1.0, two PCB construction generations exist:
 
 Both sub-generations have the same CX20084-based servo circuit and the same DSR-1
 electrical interface. The difference is mechanical: harness routing, test-point
-location, and connector placement differ between boards. The DSR-1 module PCB
-does not change — installation harness documentation covers both.
+location, and connector placement differ between boards. The Servo Control Board
+electrical interface does not change — installation harness documentation covers both.
 
 The 1994 service manual Supplement-2 documents the SMD board transition. Earlier
 supplements (1985, 1994) do not change the servo circuit.
@@ -114,7 +114,7 @@ The service manual is the reference starting point. The actual unit on the bench
 If governing references conflict, the order of authority is:
 1. Bench measurement on the actual target unit
 2. Appropriate service manual for the confirmed board revision
-3. STM32G0B1 datasheet
+3. STM32G0C1KCU6 package/device documentation
 4. DSR-1 design assumptions
 
 ---
@@ -132,11 +132,12 @@ Each known test unit should be listed here.
 | Serial-number evidence | Battery-compartment label photo |
 | Estimated manufacture date | Late 1986 – early 1987 (most likely 1987) |
 | Head type | Rounded amorphous, part number 35711 (HRP901) |
-| Board construction era | Early through-hole (pre-1994 SMD revision) |
-| Servo IC | **CX20084 confirmed** (Ver. 1.0 board) |
-| Motor drive transistor | **Q601 = 2SB1013 PNP** (single transistor, Ver. 1.0) |
+| Board construction era | Later SMD construction |
+| Observed PCB marking | **C11-494-12** |
+| Servo IC | **Surface-mount CX20084 confirmed** (Ver. 1.0 board) |
+| Motor drive transistor | **Q601 exact part/package pending physical confirmation** |
 | Crystal reference | X701 34.7 kHz + IC701 MSM58141RS (present, Ver. 1.0) |
-| Board revision | Pending internal inspection and photo |
+| Board revision | C11-494-12 observed; detailed harness/pad mapping pending photos |
 | Power path condition | Pending inspection |
 | CN301 condition | Pending inspection |
 | CP304 condition | Pending inspection |
@@ -263,7 +264,7 @@ Record whether the following are present and visually original:
 
 | Reference | Present? | Notes |
 |---|---:|---|
-| IC601 | Pending photo | CX20084 (Ver. 1.0) or CX-069A (Ver. 1.1) — read IC markings |
+| IC601 | Confirmed | Surface-mount CX20084 on the observed C11-494-12 board |
 | IC602 | Pending photo | Present on Ver. 1.1 only (NJM2904V); should be absent on Ver. 1.0 |
 | IC701 | Pending | MSM58141RS divider — present on both versions |
 | X701 | Pending | 34.7 kHz crystal — present on both versions |
@@ -271,7 +272,7 @@ Record whether the following are present and visually original:
 | CN301 | Pending | External DC jack — centre-negative polarity |
 | M901 | Pending | Capstan motor |
 | FG901 | Pending | Optical interrupter (GP2S22AB) |
-| Q601 | Pending photo | 2SB1013 PNP on Ver. 1.0; 2SC1623 NPN on Ver. 1.1 — read markings |
+| Q601 | Pending photo | Identify package/marking on the C11-494-12 SMD board before finalizing installation docs |
 | Q602–Q605 | Pending photo | Present on Ver. 1.1 only; should be absent on Ver. 1.0 |
 | RV601 | Pending | 47kΩ cermet trimmer, rear panel |
 | RV602 | Pending | 20kΩ carbon slider, front panel Speed Tune |
@@ -313,11 +314,10 @@ Required:
 - Safe inactive state identified.
 - Original components to remove/retain documented.
 
-**Ver. 1.0 boards (CX20084) — settled:** Q601 is a 2SB1013 PNP transistor with
-emitter at B+3 (10.8V). Base operating range is well above 3.3V. DSR-1 uses
-PWM + RC filter + NPN level-shift (TIM3_CH1 PA6 → Q_LS MMBT3904). Direct DAC
-drive is not used. Q601 base voltage during playback still requires bench
-measurement to confirm R9 sizing.
+**Ver. 1.0 boards (CX20084) — output topology settled:** DSR-1 uses PWM + RC filter
++ NPN level-shift (TIM3_CH1 PA6 → Q_LS MMBT3904). Direct DAC drive is not used.
+On the primary C11-494-12 SMD board, Q601 exact part/package and base voltage during
+playback still require bench measurement to confirm R9 sizing and PWM-to-speed sign.
 
 **Ver. 1.1 boards (CX-069A) — not yet characterized:** Q601 is a 2SC1623 NPN
 small-signal transistor driving a five-transistor network (Q601–Q605 including
@@ -522,15 +522,15 @@ Anything less is a candidate, not a supported variant.
 
 **Confirmed:**
 - IC601 = CX20084 (Ver. 1.0 board) ✓
-- Q601 = 2SB1013 PNP, motor drive NPN level-shift required ✓
+- Q601 exact part/package pending; motor drive NPN level-shift required ✓
 - Manufacture date: ~late 1986 – early 1987 ✓
 - Head: rounded amorphous 35711 (HRP901) ✓
-- Early through-hole board construction ✓
+- Surface-mount board construction; PCB marking C11-494-12 ✓
 - Governing manual: `fb4872.pdf` ✓
 
 **Still pending:**
 1. Internal board photographs — confirm board layout vs service manual
-2. IC601, Q601 physical confirmation by reading markings (expected to match above)
+2. Q601 physical confirmation by reading marking/package on the C11-494-12 board
 3. CP304 condition — original and functional?
 4. CN301 condition — original, damaged, or modified?
 5. FG901 waveform at correct tape speed
@@ -548,7 +548,7 @@ As compatibility work proceeds, update this table.
 
 | Unit | Serial | Board revision | Servo IC | Motor drive | Power path | USB-C status | DSR-1 status |
 |---|---:|---|---|---|---|---|---|
-| Unit 001 | 72795 | Early through-hole (~1987) | CX20084 ✓ | 2SB1013 PNP ✓ | Pending measurement | Pending mechanical | Candidate |
+| Unit 001 | 72795 | SMD, C11-494-12 | Surface-mount CX20084 ✓ | Q601 package/marking pending | Pending measurement | Pending mechanical | Candidate |
 
 ---
 

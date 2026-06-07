@@ -15,9 +15,9 @@ module and wants to know whether they need to update.
 - Board outline pending: CP304 cavity dimensions to be measured on SN72795 unit
   arriving 2 June 2025
 - Motor output stage committed to PWM + RC filter + NPN level-shift (TIM3_CH1 PA6):
-  Q601 (2SB1013 PNP) emitter at B+3 (10.8V) rules out direct DAC drive on all
-  Ver. 1.0 CX20084 boards. Q601 base voltage measurement still required to confirm
-  R9 sizing.
+  direct DAC drive is rejected for the primary C11-494-12 SMD CX20084 board. Q601
+  exact package/marking and base voltage measurement still required to confirm R9
+  sizing and PWM-to-speed sign.
 - R3/R4 FG divider values pending: FG901 swing voltage measurement required on
   target unit
 

@@ -1,12 +1,12 @@
 # wmd6c-servo — DSR-1
 
-**Open-source / open-hardware servo, power, and USB-C service module for the Sony Walkman WM-D6C / TC-D6C**
+**Open-source / open-hardware servo, power, and USB-C service subsystem for the Sony Walkman WM-D6C / TC-D6C**
 
-DSR-1 is an in-development replacement and modernization module for the Sony WM-D6C / TC-D6C, targeting the **full production run (1984–2002)**. Its purpose is to preserve machines across the entire collector and restorer community by replacing the fragile capstan-servo IC (CX20084 on pre-2001 boards; CX-069A on 2001–2002 boards), modernizing the external power interface, and adding USB-C data/service access for tuning, telemetry, firmware update, and diagnostics.
+DSR-1 is an in-development replacement and modernization subsystem for the Sony WM-D6C / TC-D6C. Rev A targets the **CX20084 former-type servo family**, with the first physical unit identified as WM-D6C serial `72795`, PCB marking `C11-494-12`, and a surface-mount CX20084 at IC601. Its purpose is to preserve machines by replacing the fragile capstan-servo IC path, modernizing the external power interface, and adding USB-C data/service access for tuning, telemetry, firmware update, and diagnostics.
 
-This project is not yet a finished drop-in repair module. It is currently in **source-grounded design and firmware-prototype development**. The firmware architecture exists, the KiCad project structure exists, and the design is being revised against the Sony WM-D6C/TC-D6C service manual and the STM32G0B1 datasheet. PCB layout, hardware validation, installation documentation, and performance testing remain pending.
+This project is not yet a finished installation-ready repair. It is currently in **source-grounded design and firmware-prototype development**. The firmware architecture exists, the KiCad files are in-flight and not yet synchronized with the latest documentation, and the design is being revised against the Sony WM-D6C/TC-D6C service manual and the selected STM32G0C1KCU6 device. PCB layout, hardware validation, installation documentation, and performance testing remain pending.
 
-DSR-1 should be understood as an integrated subsystem project, not a servo-only daughterboard.
+DSR-1 should be understood as an integrated two-board subsystem project, not a servo-only daughterboard: a **Power Board** and a **Servo Control Board**.
 
 ---
 
@@ -32,11 +32,11 @@ DSR-1 aims to make the WM-D6C repairable without reducing it to a generic motor 
 |---|---|
 | Architecture | Defined at a high level |
 | Sony service-manual review | In progress |
-| STM32G0B1 datasheet review | In progress |
+| STM32G0C1KCU6 package/pinout review | Accepted baseline; firmware migration pending |
 | Firmware prototype | Register-level C source exists; bench validation pending |
 | USB-C data/service path | Design requirement; validation pending |
 | USB-C PD / power path | First-class design requirement; final implementation pending |
-| KiCad schematic | Project hierarchy exists; functional sheets still being populated |
+| KiCad schematic | In-flight legacy project exists; manual split to Power Board and Servo Control Board pending |
 | PCB layout | Not complete |
 | Bench measurements | Required before Rev A finalization |
 | Installation guide | Planned; not yet valid for users |
@@ -58,6 +58,10 @@ DSR-1 targets the **full WM-D6C / TC-D6C production run (1984–2002)**. Two ser
 
 Rev A targets CX20084 boards — the large majority of surviving units. CX-069A board support is planned as a separate variant once Rev A is validated. See `docs/hardware/wmd6c-revision-compatibility.md` for detailed production timeline and identification guidance.
 
+The primary unit currently being mapped is serial `72795`, observed PCB marking
+`C11-494-12`, with a surface-mount CX20084 at IC601. Earlier assumptions that this
+unit was a through-hole board are superseded.
+
 ---
 
 ## Governing References
@@ -70,13 +74,13 @@ Rev A is being grounded against these primary references:
 2. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06 (`sony_wm-d6c_tc-d6c_ver-1.1.pdf`)**
    - Documents the 2001 servo circuit change to CX-069A. Reference for Ver. 1.1 variant design (post Rev A).
 
-3. **STMicroelectronics STM32G0B1xB/xC/xE Datasheet, DS13560 Rev 6, February 2026**
+3. **STMicroelectronics STM32G0C1KCU6 / STM32G0 family documentation**
    - Primary reference for MCU capabilities, electrical limits, package constraints, ADC/timer/USB/UCPD features, and operating conditions.
 
 The repository documentation should distinguish clearly between:
 
 - facts supported by the Sony service manual,
-- facts supported by the STM32G0B1 datasheet,
+- facts supported by the selected STM32G0C1KCU6 package/device documentation,
 - behavior implemented in source code,
 - behavior measured on the bench,
 - and design goals not yet proven.
@@ -85,28 +89,29 @@ The repository documentation should distinguish clearly between:
 
 ## Design Position
 
-DSR-1 is now scoped as an integrated module with three first-class domains:
+DSR-1 is now scoped as an integrated two-board subsystem with three first-class domains:
 
 | Domain | Purpose |
 |---|---|
 | Capstan servo | Replace the obsolete CX20084-based servo path with a measurable digital control loop |
-| Power | Replace or protect the fragile original power-input/support path, including wrong-adapter protection |
+| Power | Power Board for USB-C input, charger, LiPo/protection, regulation, and battery telemetry |
 | USB-C data/service | Provide telemetry, live tuning, firmware update, diagnostics, and optional PD negotiation |
 
 The servo loop remains the hardest performance-critical problem, but power and USB-C are not deferred side features. They are part of the Rev A architecture and must be represented in schematics, firmware, verification plans, and documentation.
 
 ---
 
-## Compatibility Scope
+## Known Target Unit Facts
 
-The first target is the **Sony WM-D6C / TC-D6C Ver. 1.1 servo circuit** documented in the 2001 service-manual supplement.
-
-Earlier WM-D6C servo revisions and related machines must not be assumed compatible until their schematics, harness points, FG behavior, speed-control network, motor-drive interface, power path, and connector behavior are separately mapped and measured.
+The first physical target is a **former-type CX20084 WM-D6C**, not the 2001 CX-069A
+new-type circuit.
 
 | Machine / board | Current status |
 |---|---|
-| WM-D6C / TC-D6C Ver. 1.1 new servo circuit | Primary reference target |
-| Older WM-D6C servo-circuit revisions | Not yet mapped |
+| WM-D6C serial `72795` | Primary physical unit |
+| PCB marking `C11-494-12` | Observed on the actual unit |
+| IC601 | Surface-mount CX20084 |
+| CX-069A boards | Planned post-Rev A variant only |
 | WM-D6 | Future variant candidate only |
 | WM-D3 / WM-D3C | Future variant candidate only |
 | TC-D5M and related Sony professional machines | Future variant candidates only |
@@ -121,13 +126,14 @@ The project boundary is larger than the CX20084 alone. The intended Rev A design
 
 | Original function / missing function | DSR-1 design intent |
 |---|---|
-| CX20084 / IC601 capstan-servo function | STM32G0B1 digital PI servo loop using timer input capture |
+| CX20084 / IC601 capstan-servo function | STM32G0C1KCU6 digital PI servo loop using timer input capture |
 | FG feedback path from motor / FG901 | Protected, conditioned MCU timer-capture input |
-| Motor correction output to Sony drive network | PWM + RC filter + NPN level-shift to Q601 (2SB1013 PNP) base |
+| Motor correction output to Sony drive network | PWM + RC filter + NPN level-shift to Q601 base; exact Q601 part/package pending physical confirmation |
 | RV601 base speed adjustment | Retained as measured analog input |
 | RV602 Speed Tune control | Retained as measured analog input |
 | RV603 Speed Tune range control | Retained as measured analog input |
 | S601 Speed Tune switch | Retained as digital input, polarity to be verified |
+| S801 VU/BATT switch and D801-D805 LEDs | `S801_BATT` enables MCU battery-gauge ownership; MCU drives LEDs only in BATT mode and releases them in VU/non-BATT mode |
 | CP304 / supporting power conversion | Replacement or support circuit pending Rev A power design |
 | CN301 external power vulnerability | Protected input and/or USB-C power path |
 | USB service interface absent in original | USB CDC / DFU / diagnostics / telemetry |
@@ -139,7 +145,7 @@ The original transport, heads, audio path, user controls, and mechanical adjustm
 
 ## Architecture Overview
 
-DSR-1 is designed around an STM32G0B1 microcontroller running register-level bare-metal C.
+DSR-1 is designed around an STM32G0C1KCU6 microcontroller running register-level bare-metal C.
 
 Planned/implemented firmware architecture:
 
@@ -149,7 +155,8 @@ Planned/implemented firmware architecture:
 - **Speed controls:** RV601/RV602/RV603 and S601 are retained and read by the MCU after voltage-safety verification.
 - **USB data/service:** USB CDC is intended to expose live tuning, telemetry, command/status reporting, and diagnostics.
 - **Firmware update:** USB DFU or other update path is intended to avoid requiring permanent SWD access after installation.
-- **USB-C PD / power:** USB-C power negotiation is a design requirement; implementation may use native STM32 UCPD or an external PD controller after schematic/pinout review.
+- **USB-C / power:** CC1/CC2 map to PA8/PA9. Variant A may use PD support; the battery build uses plain 5V USB-C into the Power Board charger.
+- **Battery indicator:** In the battery build, the MCU reads `VBAT_SENSE`, `CHG_STAT`, `PGOOD`, and `S801_BATT`; it drives `BATT_LED1-5` only while S801 is in BATT.
 - **Persistence:** Tuned constants are intended to be saved to flash with validation.
 - **Debugging:** SWD remains available during development.
 
@@ -170,9 +177,9 @@ Required before Rev A PCB finalization:
 5. Verify S601 Speed Tune switch logic polarity and voltage.
 6. Verify CN301 / battery / CP304 rail behavior under startup and play load.
 7. Define the USB-C data/service connector role, ESD protection, shield/ground strategy, and firmware mode behavior.
-8. Decide whether USB-C PD is implemented through STM32 UCPD or an external PD controller.
+8. Verify the S801 BATT-position sense, LED polarity/current limits, and CX10043 high-Z/release behavior before MCU LED ownership is finalized.
 9. Decide the final servo timebase strategy.
-10. Populate the KiCad schematic from measured interface requirements.
+10. Split and repopulate the KiCad schematic into the Power Board and Servo Control Board projects from measured interface requirements.
 11. Validate power rails, reverse-polarity protection, USB enumeration, DFU/update behavior, and servo loop behavior before real-machine installation.
 12. Publish measured speed, wow/flutter, power, and USB validation results before claiming original-equivalent or improved performance.
 
@@ -212,7 +219,7 @@ The preferred architecture should be selected by schematic feasibility, pin avai
 ```text
 wmd6c-servo/
 ├── hardware/        KiCad project, schematic work, future PCB/BOM/gerbers
-├── firmware/        Bare-metal STM32G0B1 firmware prototype
+├── firmware/        Bare-metal STM32G0 family firmware prototype
 ├── docs/            Theory, datasheet references, installation and validation docs
 └── tools/           Calibration and development utilities
 ```
@@ -223,7 +230,7 @@ Some paths and build commands are still being normalized as the project moves fr
 
 ## Firmware Development
 
-The firmware is written in C for the STM32G0B1 family, using CMSIS device headers and direct register access. No STM32 HAL, no RTOS, and no dynamic memory allocation are intended.
+The firmware is written in C for the STM32G0 family, using CMSIS device headers and direct register access. The hardware target is STM32G0C1KCU6; some firmware filenames and comments may still reflect the earlier STM32G0B1KBU6 prototype until the firmware migration is completed. No STM32 HAL, no RTOS, and no dynamic memory allocation are intended.
 
 Current firmware areas:
 
@@ -241,6 +248,7 @@ Firmware areas now required by project scope:
 - USB-C attach/power-role behavior must be specified.
 - If native STM32 UCPD is used, PD firmware must not compromise servo timing.
 - If an external PD controller is used, firmware must define any required monitoring/control interface.
+- Battery-gauge firmware must treat `S801_BATT` as the LED ownership enable and keep `BATT_LED1-5` released in VU/non-BATT modes.
 
 Current firmware caveats:
 
@@ -296,7 +304,7 @@ Most useful contributions right now:
 - WM-D6C board-revision identification and photographs.
 - Clear scans or notes that distinguish former/new servo circuit revisions.
 - Bench measurements of FG901, Q601 motor-control behavior, RV601/RV602/RV603, S601, CP304, CN301, and original power rails.
-- STM32G0B1 pinout and package review for servo, USB, UCPD, SWD, ADC, DAC, and timer conflicts.
+- STM32G0C1KCU6 pinout and package review for servo, USB, UCPD, SWD, ADC, PWM, and timer conflicts.
 - USB-C PD architecture review, including native UCPD versus external controller tradeoffs.
 - Firmware review focused on interrupt timing, timer capture, ADC safety, flash behavior, USB CDC isolation, and PD interaction.
 - KiCad schematic review once the Rev A sheets are populated.

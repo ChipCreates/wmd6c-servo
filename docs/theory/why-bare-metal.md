@@ -17,13 +17,13 @@ why the same principles should govern any firmware contributions or ports.
 
 **No STM32Cube HAL**: STMicroelectronics provides the STM32Cube Hardware Abstraction
 Layer — a large library that wraps every peripheral in a layer of callback-driven
-functions. `HAL_TIM_IC_Start_IT()`, `HAL_DAC_SetValue()`, `HAL_ADC_Start_DMA()`.
+functions. `HAL_TIM_IC_Start_IT()`, `HAL_TIM_PWM_Start()`, `HAL_ADC_Start_DMA()`.
 These functions are not used in the DSR-1 firmware. They do not appear in the source.
 Their header files are not included.
 
 **No STM32Cube LL (Low Layer)**: ST also provides a thinner abstraction called LL,
 which generates inline functions for register access. `LL_TIM_EnableCounter()`,
-`LL_DAC_ConvertData12RightAligned()`. These are also not used. They are wrappers
+`LL_TIM_OC_SetCompareCH1()`. These are also not used. They are wrappers
 around the same register writes the DSR-1 firmware does directly.
 
 **No RTOS**: No FreeRTOS, Zephyr, ChibiOS, or any other real-time operating system.
@@ -42,10 +42,10 @@ a person who understood what register they were writing and why.
 
 ### 1.2 What Is Included
 
-**CMSIS device headers**: The file `stm32g0b1xx.h` from ARM/ST's CMSIS (Cortex
-Microcontroller Software Interface Standard) is used. This file provides named
-constants for every register and bit field in the STM32G0B1: `TIM2->CCR1`,
-`RCC_CR_PLLON`, `DAC_DHR12R1_DACC1DHR`. These are documentation — they let the
+**CMSIS device headers**: ARM/ST's CMSIS (Cortex Microcontroller Software Interface
+Standard) headers provide named constants for every register and bit field in the
+selected STM32G0 device: `TIM2->CCR1`, `RCC_CR_PLLON`, `TIM3->CCR1`. These are
+documentation — they let the
 code say `TIM2->CR1 |= TIM_CR1_CEN` instead of `*((volatile uint32_t*)0x40000000)
 |= (1 << 0)`. The registers and addresses are identical; the names make the code
 readable. Using CMSIS headers is not an abstraction — it is notation.
@@ -74,8 +74,8 @@ The servo ISR runs every time the FG sensor produces a rising edge, approximatel
 2. Computes the FG period (current capture minus previous capture)
 3. Computes the error (period minus target)
 4. Updates the integral accumulator
-5. Computes the new DAC value
-6. Writes DAC1_DHR12R1
+5. Computes the new PWM/output value
+6. Writes TIM3->CCR1
 7. Clears the TIM2 interrupt flag
 
 This sequence takes approximately 20-30 clock cycles. At 64 MHz, that is 310-470
@@ -85,8 +85,8 @@ timing tables and the operations performed. The execution time does not vary wit
 system load, does not depend on what was happening in the main loop, and is not
 affected by any other interrupt as long as the TIM2 ISR has the highest priority.
 
-This determinism is what makes the servo loop work correctly. The DAC is updated
-within 470ns of every FG edge. The motor sees a corrected drive voltage within 470ns
+This determinism is what makes the servo loop work correctly. The TIM3 PWM compare
+value is updated within 470ns of every FG edge. The motor sees a corrected drive value within 470ns
 of every speed measurement. At a motor mechanical time constant of tens of
 milliseconds, this is effectively instantaneous response.
 
@@ -97,7 +97,7 @@ If the servo ISR used HAL functions instead of direct register writes:
 ```c
 // HAL version (not what the firmware uses):
 HAL_TIM_IC_GetCapturedValue(&htim2, TIM_CHANNEL_1);
-HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, output);
+__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, output);
 ```
 
 Each HAL function includes:
@@ -107,10 +107,9 @@ Each HAL function includes:
 - The actual register write
 - A state update
 
-The HAL function for `HAL_DAC_SetValue` is approximately 20 lines of C in the
-HAL source. It compiles to approximately 15-20 additional instructions beyond the
-single-instruction register write. At 64 MHz, that is 230-310 nanoseconds of
-overhead per HAL call. The ISR has two such calls (capture read + DAC write). The
+The HAL compare-update path compiles to additional instructions beyond the
+single-instruction register write. At 64 MHz, that is measurable overhead per HAL
+call. The ISR has two such calls (capture read + PWM compare write). The
 overhead totals 460-620 nanoseconds — comparable to the entire execution time of the
 bare-metal ISR.
 
@@ -154,8 +153,8 @@ interactions and priority inversion.
 
 ### 3.1 Current Footprint
 
-The bare-metal DSR-1 firmware occupies approximately 28KB of the STM32G0B1KBU6's
-128KB flash:
+The bare-metal DSR-1 firmware prototype occupies approximately 28KB. On the selected
+STM32G0C1KCU6 target, that leaves substantial margin in the 256KB flash:
 
 | Component | Flash size |
 |---|---|
@@ -175,14 +174,13 @@ The bare-metal DSR-1 firmware occupies approximately 28KB of the STM32G0B1KBU6's
 ### 3.2 What STM32Cube HAL Would Cost
 
 The STM32Cube HAL for the STM32G0 family is a large library. Enabling the HAL
-modules needed for this application (TIM, DAC, ADC, USB, DMA, GPIO, RCC) adds
+modules needed for this application (TIM, ADC, USB, DMA, GPIO, RCC) adds
 approximately:
 
 | HAL module | Approximate flash cost |
 |---|---|
 | HAL Core + RCC | ~8KB |
 | HAL TIM | ~12KB |
-| HAL DAC | ~3KB |
 | HAL ADC | ~8KB |
 | HAL DMA | ~4KB |
 | HAL GPIO | ~2KB |
@@ -206,12 +204,12 @@ larger device — which means a new PCB revision, new assembly, and new testing.
 
 ### 3.3 RAM Footprint
 
-The bare-metal DSR-1 firmware uses approximately 2KB of the STM32G0B1KBU6's 144KB
+The bare-metal DSR-1 firmware uses approximately 2KB of the STM32G0C1KCU6's 144KB
 SRAM:
 
 | Variable | Size |
 |---|---|
-| Servo state (period, integral, DAC) | 24 bytes |
+| Servo state (period, integral, PWM output) | 24 bytes |
 | ADC DMA buffer (3 × 16-bit) | 6 bytes |
 | USB CDC receive/transmit buffers | 512 bytes |
 | USB packet memory (in peripheral) | 256 bytes |
@@ -260,7 +258,7 @@ TIM2->CR1 = TIM_CR1_CEN;
 ```
 
 Each line corresponds to a specific register write. The comment explains the
-purpose. A reader with a copy of the STM32G0B1 reference manual (RM0444) can verify
+purpose. A reader with a copy of the STM32G0 reference manual (RM0444) can verify
 every line against the register descriptions. There are no hidden operations, no
 callback chains, no configuration state machines.
 
@@ -415,7 +413,7 @@ None of these require HAL, RTOS, or dynamic memory.
 
 ### 6.3 The Reference Manual Is the Authority
 
-The STM32G0B1 Reference Manual (RM0444) is the authoritative description of every
+The STM32G0 Reference Manual (RM0444) is the authoritative description of every
 peripheral register in the device. It is freely available at st.com. For every
 register write in the DSR-1 firmware, the corresponding section in RM0444 explains
 what that register does and what the valid values are.

@@ -2,8 +2,8 @@
 
 **Project:** DSR-1 / wmd6c-servo  
 **File:** `docs/hardware/rev-a-schematic-plan.md`  
-**Status:** Draft / pre-Rev A  
-**Scope:** Planned KiCad schematic structure, sheet responsibilities, design gates, measurement dependencies, and Rev A schematic acceptance criteria.
+**Status:** Legacy planning note / superseded by current two-board direction  
+**Scope:** Historical schematic-structure planning, design gates, measurement dependencies, and Rev A acceptance criteria. Current implementation is being manually split into a Power Board and Servo Control Board; treat any all-in-one sheet structure below as legacy context unless it agrees with `PROJECT_STATUS.md`.
 
 ---
 
@@ -52,7 +52,7 @@ docs/hardware/wmd6c-interface-contract.md
 docs/hardware/power-usb-c-architecture.md
 docs/hardware/timebase-decision.md
 docs/hardware/wmd6c-revision-compatibility.md
-docs/hardware/stm32g0b1-pin-allocation.md
+docs/stm32g0c1-pin-allocation.md
 
 docs/verification/00-rev-a-bringup-checklist.md
 docs/verification/01-wmd6c-preinstall-measurements.md
@@ -70,23 +70,18 @@ The schematic may begin before all measurements are complete, but any unmeasured
 
 ## 4. Proposed KiCad Sheet Structure
 
-Recommended schematic hierarchy:
+Current manufacturing direction:
 
 ```text
-DSR-1.kicad_sch
-├── 01_power_input_protection.kicad_sch
-├── 02_power_rails.kicad_sch
-├── 03_usb_c_data_pd.kicad_sch
-├── 04_mcu_stm32g0b1.kicad_sch
-├── 05_fg_input_conditioning.kicad_sch
-├── 06_motor_control_output.kicad_sch
-├── 07_speed_controls_adc.kicad_sch
-├── 08_timebase_reference.kicad_sch
-├── 09_sony_interface_connector.kicad_sch
-└── 10_testpoints_debug_boot.kicad_sch
+hardware/power-board/
+└── Power Board KiCad project
+
+hardware/servo-control-board/
+└── Servo Control Board KiCad project
 ```
 
-Sheet names may change, but responsibilities should remain separated.
+The committed `hardware/kicad/DSR-1` project is in-flight legacy schematic work and
+has not yet been updated to match the latest documentation.
 
 ---
 
@@ -187,7 +182,7 @@ Required blocks:
 | Power-good signals | Recommended |
 | Fault outputs | Recommended |
 | Bulk/local decoupling | Required |
-| Analog reference filtering | Required if ADC/DAC sensitive |
+| Analog reference filtering | Required if ADC/PWM-filter sensing is sensitive |
 
 Rules:
 
@@ -268,18 +263,18 @@ Required test points:
 
 ## 9. MCU Sheet
 
-### 9.1 `04_mcu_stm32g0b1.kicad_sch`
+### 9.1 `04_mcu_stm32g0c1.kicad_sch`
 
 Responsibilities:
 
-- STM32G0B1 MCU,
+- STM32G0C1KCU6 MCU,
 - decoupling,
 - reset,
 - BOOT0,
 - SWD,
 - clock/timebase pins,
 - all assigned I/O,
-- pin labels matching `stm32g0b1-pin-allocation.md`.
+- pin labels matching `docs/stm32g0c1-pin-allocation.md`.
 
 Required blocks:
 
@@ -373,8 +368,9 @@ Responsibilities:
 **Committed output architecture for Ver. 1.0 CX20084 boards:**
 
 PWM + RC filter + NPN level-shift (TIM3_CH1 PA6 → R7/C8 → Q_LS MMBT3904 →
-R9 pullup to B+1 → Q601 base). Q601 (2SB1013 PNP) emitter is at B+3 (10.8V);
-direct DAC drive cannot reach the required base voltage range.
+R9 pullup to B+1 → Q601 base). Q601 exact part/package and base operating range on
+the C11-494-12 SMD board remain pending bench verification. Direct DAC drive is not
+used.
 
 Ver. 1.1 CX-069A board motor output architecture is not yet characterized and
 is out of scope for Rev A.
@@ -629,7 +625,7 @@ The Rev A schematic is accepted when:
 
 ## 19. Open Questions
 
-1. Is STM32G0B1KBU6 sufficient, or does Rev A need a larger package?
+1. ~~Is STM32G0B1KBU6 sufficient, or does Rev A need a larger package?~~ **Resolved: STM32G0C1KCU6 UFQFPN32.**
 2. Is native UCPD feasible, or should Rev A use an external PD controller?
 3. Does USB-C replace CN301 or coexist with it?
 4. Does DSR-1 support battery-only operation?

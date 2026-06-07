@@ -1,24 +1,24 @@
-# DSR-1 Servo Module — KiCad 10 Schematic Guide
+# DSR-1 Servo Control Board — KiCad 10 Schematic Guide
 
-**Project:** `hardware/servo-module/` — WM-D6C Capstan Servo Replacement Module (DSR-1)
+**Project:** `hardware/servo-control-board/` — WM-D6C Capstan Servo Control Board (DSR-1)
 **Tool:** KiCad 10.x
-**Scope:** Servo module schematic only. Power daughter board has its own KiCad project.
+**Scope:** Servo Control Board schematic only. The Power Board has its own KiCad project.
 
-> This document is the working guide for translating the DSR-1 **servo module**
+> This document is the working guide for translating the DSR-1 **Servo Control Board**
 > design into a KiCad 10 schematic. Read each zone before drawing it. The signal
 > chain analysis, interface contract, and power architecture documents are the
 > authoritative sources for all component values — this document tells you *how*
 > to enter them in KiCad, not *why* they are what they are.
 >
-> **Structure:** the design is one flat **D-size** sheet — no hierarchy, no sub-sheets.
-> The KiCad project's sheet is already a single D page; its component set is still the
-> pre-battery design (AP63203, no charger), so the wall-variant power and servo entries
-> here are the changes to apply.
+> **Schematic status:** the committed `hardware/kicad/DSR-1` project is a legacy,
+> in-flight working file and is not yet synchronized with this documentation. Use this
+> guide as the intended Servo Control Board entry guide until the manual split is made.
 >
-> **Two KiCad projects.** The battery-integrated build uses a separate power daughter
-> board. That board's schematic lives in `hardware/power-board/` and is covered by
-> `kicad-power-board-guide.md`. This guide covers the servo module only — the board
-> that fits in the CP304 cavity in all three builds.
+> **Two KiCad projects.** The final manufacturing direction is a separate **Power
+> Board** and **Servo Control Board**. The Power Board schematic lives in
+> `hardware/power-board/` and is covered by `kicad-power-board-guide.md`. This guide
+> covers the Servo Control Board only — the board that fits in the CP304 cavity in all
+> three builds.
 
 ---
 
@@ -29,7 +29,7 @@ servo circuit families exist across that run:
 
 | Family | Servo IC | Motor drive | Years (approx.) | Governing manual |
 |---|---|---|---|---|
-| **Ver. 1.0** (primary) | CX20084 | Single Q601 (2SB1013 PNP) | 1984–mid 2001 | `fb4872.pdf` |
+| **Ver. 1.0** (primary) | CX20084 | Single Q601 path; exact device/package pending on the SMD target unit | 1984–mid 2001 | `fb4872.pdf` |
 | **Ver. 1.1** (planned variant) | CX-069A | Q601–Q605 (five transistors) | mid 2001–2002 | `sony_wm-d6c_tc-d6c_ver-1.1.pdf` |
 
 **Rev A targets Ver. 1.0 boards.** This covers the majority of surviving units.
@@ -43,10 +43,10 @@ Within Ver. 1.0, there are two PCB construction generations:
 | Early through-hole | 1984–~1994 | Through-hole PCB |
 | Later SMD | ~1994–2001 | SMD main board |
 
-Both sub-generations have the same CX20084-based servo circuit and the same DSR-1
-electrical interface. The difference is mechanical — harness routing and connector
-placement. The DSR-1 board does not change; installation harness documentation
-covers both sub-generations.
+Both sub-generations have the same CX20084-based servo function, but the actual target
+unit is the later surface-mount construction with PCB marking `C11-494-12`. Treat
+harness routing, pad geometry, and Q601 package/marking as pending physical mapping
+until installation documentation is written from photos and bench measurements.
 
 **To identify board family before installation:** open the machine and read the
 IC at position IC601. CX20084 = Ver. 1.0 (proceed with this guide). CX-069A =
@@ -88,10 +88,9 @@ Before opening KiCad:
 
 ## Single-Sheet Layout (D-size)
 
-The DSR-1 schematic is a **single flat sheet** on a **D-size** page (File → Page
-Settings → Page size **D**). There is no hierarchy, no root sheet, and no sub-sheet
-pins — the whole design (~90 components) fits on one D-sheet with headroom for the
-future Ver. 1.1 / CX-069A variant.
+The intended Servo Control Board schematic may remain a **single flat sheet** inside
+its own KiCad project. Do not confuse that with the older all-in-one project: power
+management and battery charging belong in the separate Power Board project.
 
 Organize the canvas into four visual **zones**, left-to-right by signal flow. Zones are
 just regions (optionally boxed with a graphic rectangle + text label); they carry no
@@ -99,11 +98,10 @@ electrical meaning:
 
 ```
 ┌─ Power ─────────────┐ ┌─ Microcontroller ─┐ ┌─ Signal Conditioning ─┐ ┌─ Connectors ─┐
-│ USB-C / barrel in   │ │ STM32G0C1KCU6     │ │ FG divider + clamp    │ │ J1 harness   │
-│ BQ24074 charge +    │ │ decoupling, boot, │ │ NPN motor drive       │ │ J2 SWD       │
-│ LiPo power-path     │ │ pin assignments   │ │ ADC clamps            │ │ J3 LED board │
-│ TPS63070 B+1        │ │                   │ │ VBAT sense divider    │ │ test pads    │
-│ MT3608 B+3, MCP1700 │ │                   │ │                       │ │              │
+│ Wall-input option   │ │ STM32G0C1KCU6     │ │ FG divider + clamp    │ │ J1 harness   │
+│ B+1 receive/drive   │ │ decoupling, boot, │ │ NPN motor drive       │ │ J2 SWD       │
+│ board-to-board link │ │ pin assignments   │ │ ADC clamps            │ │ J3 LED board │
+│ MT3608 B+3, MCP1700 │ │                   │ │ VBAT sense input      │ │ test pads    │
 └─────────────────────┘ └───────────────────┘ └───────────────────────┘ └──────────────┘
 ```
 
@@ -205,26 +203,26 @@ tip ───|◄──┴───────────────┴──
 
 ---
 
-### B. Charge, Battery & Power-Path — Power Daughter Board
+### B. Charge, Battery & Power-Path — Power Board
 
-> **These components are not on the servo module.** The entire battery-integrated
+> **These components are not on the Servo Control Board.** The entire battery-integrated
 > power subsystem — USB-C input, BQ24074 charger, cell connectors, DW01/FET protection,
-> and the TPS63070 boost that generates B+1 — lives on the **power daughter board**,
+> and the TPS63070 boost that generates B+1 — lives on the **Power Board**,
 > a separate KiCad project in `hardware/power-board/`.
 >
 > See **`kicad-power-board-guide.md`** for the full schematic entry of sub-zone B.
 >
-> What crosses from the daughter board to this servo module schematic as net labels
+> What crosses from the Power Board to this Servo Control Board schematic as net labels
 > on the board-to-board connector J_BBL (defined in the Connectors zone below):
 > `VBAT_SENSE` → PB0 (ADC_IN8), `CHG_STAT` → PB7 (GPIO), `PGOOD` → PB8 (GPIO).
-> `VBAT_SENSE_EN` (PB1) drives back to the daughter board to gate the sense divider.
+> `VBAT_SENSE_EN` (PB1) drives back to the Power Board to gate the sense divider.
 
 ---
 
 ### C. B+1 Regulator — TPS63070 Buck-Boost (wall variants; DNP for battery build)
 
 The single B+1 regulator for wall variants. In the battery build this sub-zone is
-**DNP** — B+1 is generated by the TPS63070 on the power daughter board and arrives
+**DNP** — B+1 is generated by the TPS63070 on the Power Board and arrives
 via the battery-terminal harness path. In wall builds this TPS63070 **replaces the
 AP63203 buck** so one part covers both: it bucks the 9V Variant A case and boosts a
 5V source if Variant B input sags below 6V.
@@ -265,7 +263,7 @@ Downstream of the `B+1` node; present in every build.
 - C_BOOST_IN 10µF 10V X5R; **C_BOOST_OUT 47µF 16V X5R** (not 22µF — DC-bias derating).
 - PWR_FLAG on `B+3`.
 - Schematic note: `SW node high dV/dt at 1.2 MHz — trace <3mm; ≥2mm clearance to all
-  FG/ADC/DAC traces.`
+  FG/ADC/PWM traces.`
 
 **U_LDO — MCP1700T-3302E/TT LDO (SOT-23-3), 6V → 3.3V**
 
@@ -284,19 +282,19 @@ Downstream of the `B+1` node; present in every build.
 | U1 IP2721 PD trigger | **DNP** (9V over-volts charger) | Populate | DNP |
 | D1 USBLC6 ESD | Populate | Populate | DNP |
 | J2 barrel + D2–D5 + F1 + D6 TVS | DNP | DNP | Populate |
-| BT1 3P LiPo + U_PROT DW01/FET + U_CHG BQ24074 (daughter board) | Populate | DNP | DNP |
+| BT1 3P LiPo + U_PROT DW01/FET + U_CHG BQ24074 (Power Board) | Populate | DNP | DNP |
 | U_BOOST MT3608, U_LDO MCP1700 | Populate | Populate | Populate |
 
 ---
 
 ### Net labels used in this zone
 
-- `VBUS` — USB 5V in (BQ24074 charger IN pin; battery build on daughter board)
+- `VBUS` — USB 5V in (BQ24074 charger IN pin; battery build on Power Board)
 - `9V_PD` — Variant A only (IP2721 → TPS63070 VIN)
 - `B+1_RAW` — Variant B bridge output → TPS63070 VIN
-- `V_SYS` — BQ24074 SYS pin output → TPS63070 VINx (battery build; daughter board); local
-- `VBAT` — pack / protection node (BQ24074 BAT, sense-divider tap); local on daughter board
-- `VBAT_SENSE` → the Microcontroller zone (PB0/ADC_IN8) — arrives via board-to-board link from daughter board
+- `V_SYS` — BQ24074 SYS pin output → TPS63070 VINx (battery build; Power Board); local
+- `VBAT` — pack / protection node (BQ24074 BAT, sense-divider tap); local on Power Board
+- `VBAT_SENSE` → the Microcontroller zone (PB0/ADC_IN8) — arrives via board-to-board link from Power Board
 - `CHG_STAT` → the Microcontroller zone (PB7) — BQ24074 CHG status; board-to-board link
 - `PGOOD` → the Microcontroller zone (PB8) — BQ24074 power-good; board-to-board link
 - `USB_DP`, `USB_DM`, `CC1`, `CC2` → the Microcontroller zone
@@ -368,11 +366,11 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 > **VDDIO2 confirmed absent** in GP variant. Pin 20 = PC6. No VDDIO2 decoupling
 > needed. (stm32g0c1cc.pdf Figure 4, GP version _KxU confirmed.)
 
-> **PA4 (DAC1_OUT1) is not used for motor drive.** Q601 (2SB1013 PNP) on
-> Ver. 1.0 boards has its emitter at B+3 (10.8V); the base operating range
-> exceeds the 3.3V DAC output range. Motor drive uses TIM3 PWM on PA6 through
-> the NPN level-shift stage on the Signal Conditioning zone. PA4 may be left unconnected with a
-> no-connect flag or reserved as a spare ADC/DAC pin.
+> **PA4 (DAC1_OUT1) is not used for motor drive.** Motor drive uses TIM3 PWM on PA6
+> through the NPN level-shift stage on the Signal Conditioning zone. Q601 exact
+> part/package and base-voltage range remain pending bench verification on the
+> C11-494-12 SMD board. PA4 may be left unconnected with a no-connect flag or reserved
+> as a spare ADC-capable pin.
 
 **Unused pins:** Place a No-Connect flag (`Q`) on every unused GPIO pin.
 
@@ -471,10 +469,11 @@ to PA0 without confirming the conditioned voltage is below 3.3V.`
 
 ### Motor Drive Output (PA6 → J1 Pin 2 → Q601 base)
 
-Q601 on WM-D6C Ver. 1.0 boards is a **2SB1013 PNP transistor** with emitter at
-B+3 (10.8V). The base must be pulled well below the emitter to turn it on. The
-STM32 3.3V PWM output cannot drive this base directly — a level-shift stage
-using a small-signal NPN (Q_LS) is required.
+Q601 is the off-board WM-D6C motor-control device driven from the former CX20084
+output node. On the actual C11-494-12 SMD board its exact package/marking and
+base-voltage range must be physically confirmed. The STM32 3.3V PWM output does not
+drive this node directly — a level-shift stage using a small-signal NPN (Q_LS) is
+the committed topology.
 
 **Boot-safe behavior:** At reset, TIM3 PWM defaults to 0% duty cycle. Q_LS is
 off. R9 pulls Q601's base toward B+1 (6V). Vbe = 6V − 10.8V = −4.8V — Q601
@@ -499,10 +498,11 @@ MOTOR_PWM (from the Microcontroller zone, PA6 TIM3_CH1, 15.6 kHz)
    Q601_BASE (net label → the Connectors zone, J1 pin 2)
 ```
 
-Q_LS is the MMBT3904 NPN on the DSR-1 board. Q601 (2SB1013) is on the WM-D6C
-main board — use a generic PNP symbol with value `2SB1013` and note `Off-board`.
+Q_LS is the MMBT3904 NPN on the DSR-1 board. Q601 is on the WM-D6C main board — use
+a generic off-board motor-control symbol and note `Q601 exact package/marking pending
+bench confirmation`.
 
-Schematic note: `Q601 (2SB1013 PNP) is on WM-D6C main board — NOT on DSR-1 PCB.
+Schematic note: `Q601 is on WM-D6C main board — NOT on DSR-1 PCB.
 Q601 emitter → B+3 via Q703/Q704 mode-switch chain. Q601 base operating range
 must be measured on bench to confirm R9 sizing. See signal-chain-analysis.md §2.`
 
@@ -562,14 +562,14 @@ before the 100Ω series resistor. Adjust ADC scaling in firmware to match.`
 
 ### Battery Sense (VBAT → ADC) — battery build
 
-> **VBAT is on the daughter board.** In the battery-integrated build, the raw pack
-> voltage (VBAT) lives on the daughter board's VBAT node. It arrives at the servo
-> module as `VBAT_SENSE` via the board-to-board link — a wire from the daughter
-> board's sense tap to PB0 on the servo module. The divider and sense-gate below
-> sit on the **servo module** (receiving end).
+> **VBAT is on the Power Board.** In the battery-integrated build, the raw pack
+> voltage (VBAT) lives on the Power Board's VBAT node. It arrives at the Servo Control
+> Board as `VBAT_SENSE` via the board-to-board link — a wire from the Power Board
+> board's sense tap to PB0 on the Servo Control Board. The divider and sense-gate below
+> sit on the **Servo Control Board** (receiving end).
 
 ```
-VBAT_SENSE (from daughter board board-to-board link)
+VBAT_SENSE (from Power Board board-to-board link)
     │
    [C_VS: 10nF C0G 0402] ──── GND     (at the VBAT_SENSE node)
     │
@@ -592,14 +592,16 @@ VBAT_SENSE (from daughter board board-to-board link)
   through R_VS2.
 - Schematic note: `Source impedance ~25kΩ — allow adequate ADC sample time (≥10µs
   sample time at 64MHz). LiPo OCV table in firmware; sloped 4.2V→3.0V curve gives
-  reliable SoC. VBAT arrives via board-to-board link from daughter board. See §7.8.`
+  reliable SoC. VBAT arrives via board-to-board link from the Power Board. See §7.8.`
 
 **Battery level indicator drive:** the five `BATT_LED1…5` lines route from the
 Microcontroller zone to J3 (Connectors zone) and on to the WM-D6C LED board. Optional
 small series resistors per line may go here; the existing 180Ω limiters (R814–818) live
-on the LED board. CHG_STAT and PGOOD (PB7/PB8) drive the charge animation — segments
-march upward while PGOOD is high and CHG_STAT is low (charging); hold full when
-CHG_STAT goes high (done).
+on the LED board. `S801_BATT` is the MCU enable flag: drive these lines only while
+S801 is in BATT, and release/high-Z them in VU/non-BATT modes so the MCU does not
+contend with the CX10043 circuitry. CHG_STAT and PGOOD (PB7/PB8) drive the charge
+animation — segments march upward while PGOOD is high and CHG_STAT is low (charging);
+hold full when CHG_STAT goes high (done).
 
 ### Net labels used in this zone
 
@@ -630,12 +632,12 @@ or equivalent 8-pin 1.25mm JST SH footprint.
 
 | J1 Pin | Net Label | Signal | Direction |
 |---|---|---|---|
-| 1 | `FG_RAW` | FG901 optical sensor output | Machine → Module |
-| 2 | `Q601_BASE` | Motor drive to Q601 base | Module → Machine |
-| 3 | `MOTOR_EN` | MOTOR_EN net (IC601 pin 7 pad) | Machine → Module |
-| 4 | `RV601` | RV601 wiper (base speed trim) | Machine → Module |
-| 5 | `RV602` | RV602 wiper (Speed Tune slider) | Machine → Module |
-| 6 | `RV603` | RV603 wiper (Speed Tune range) | Machine → Module |
+| 1 | `FG_RAW` | FG901 optical sensor output | machine → Servo Control Board |
+| 2 | `Q601_BASE` | Motor drive to Q601 base | Servo Control Board → machine |
+| 3 | `MOTOR_EN` | MOTOR_EN net (IC601 pin 7 pad) | machine → Servo Control Board |
+| 4 | `RV601` | RV601 wiper (base speed trim) | machine → Servo Control Board |
+| 5 | `RV602` | RV602 wiper (Speed Tune slider) | machine → Servo Control Board |
+| 6 | `RV603` | RV603 wiper (Speed Tune range) | machine → Servo Control Board |
 | 7 | `B+1` power symbol | 6V supply rail | Shared |
 | 8 | GND power symbol | Chassis ground | Shared |
 
@@ -689,38 +691,38 @@ header under the installed board; keep accessible during Rev A development.`
 
 | J3 Pin | Net | Signal | Direction |
 |---|---|---|---|
-| 1 | `BATT_LED1` | LED D801 drive | Module → Machine |
-| 2 | `BATT_LED2` | LED D802 drive | Module → Machine |
-| 3 | `BATT_LED3` | LED D803 drive | Module → Machine |
-| 4 | `BATT_LED4` | LED D804 drive | Module → Machine |
-| 5 | `BATT_LED5` | LED D805 drive | Module → Machine |
-| 6 | `S801_BATT` | S801 BATT-position sense | Machine → Module |
+| 1 | `BATT_LED1` | LED D801 drive | Servo Control Board → machine |
+| 2 | `BATT_LED2` | LED D802 drive | Servo Control Board → machine |
+| 3 | `BATT_LED3` | LED D803 drive | Servo Control Board → machine |
+| 4 | `BATT_LED4` | LED D804 drive | Servo Control Board → machine |
+| 5 | `BATT_LED5` | LED D805 drive | Servo Control Board → machine |
+| 6 | `S801_BATT` | S801 BATT-position sense | machine → Servo Control Board |
 | 7 | GND | Common / return | Shared |
 
-> Schematic note: `⚠ Bench-confirm before wiring J3 (power-supply-design.md §7.7):
+> Schematic note: `⚠ Bench-confirm before wiring J3 (power-supply-design.md §7.8):
 > (1) how S801's BATT position reroutes D801–D805 and whether the CX10043 outputs go
 > high-impedance there (so the STM32 drives them without contention); (2) LED common
-> polarity through the on-board 180Ω limiters, to set drive direction. The stock
-> single-LED brightness path (Q801) is left disconnected once the STM32 owns the bar.`
+> polarity through the on-board 180Ω limiters, to set drive direction. `S801_BATT`
+> gates ownership: MCU outputs are released/high-Z in VU/non-BATT modes.`
 
 ### J_BBL — Board-to-Board Link (battery build only)
 
-A small polarised connector carrying the signals between the power daughter board and
-this servo module. **DNP on wall-only builds.** Use a latching, foolproof connector
+A small polarised connector carrying the signals between the Power Board and this
+Servo Control Board. **DNP on wall-only builds.** Use a latching, foolproof connector
 rated for ≥2A continuous on the power conductors — JST-PH or Molex PicoBlade are
 suitable.
 
 | J_BBL Pin | Net | Dir | Description |
 |---|---|---|---|
 | 1 | GND | Shared | Common ground return |
-| 2 | `VBAT_SENSE` | DB → Module | LiPo pack voltage sense (33kΩ/100kΩ divider; see Signal zone) |
-| 3 | `VBAT_SENSE_EN` | Module → DB | Gate control for daughter board sense divider (PB1 GPIO) |
-| 4 | `CHG_STAT` | DB → Module | BQ24074 CHG status — low while charging (PB7 GPIO) |
-| 5 | `PGOOD` | DB → Module | BQ24074 power-good status (PB8 GPIO) |
-| 6 | USB_D− *(optional)* | Bidirectional | CDC tuning, if USB-C is on daughter board |
-| 7 | USB_D+ *(optional)* | Bidirectional | CDC tuning, if USB-C is on daughter board |
+| 2 | `VBAT_SENSE` | Power Board → Servo Control Board | LiPo pack voltage sense (33kΩ/100kΩ divider; see Signal zone) |
+| 3 | `VBAT_SENSE_EN` | Servo Control Board → Power Board | Gate control for Power Board sense divider (PB1 GPIO) |
+| 4 | `CHG_STAT` | Power Board → Servo Control Board | BQ24074 CHG status — low while charging (PB7 GPIO) |
+| 5 | `PGOOD` | Power Board → Servo Control Board | BQ24074 power-good status (PB8 GPIO) |
+| 6 | USB_D− *(optional)* | Bidirectional | CDC tuning, if USB-C is on Power Board |
+| 7 | USB_D+ *(optional)* | Bidirectional | CDC tuning, if USB-C is on Power Board |
 
-Schematic note: `J_BBL: board-to-board link to power daughter board (battery build).
+Schematic note: `J_BBL: board-to-board link to Power Board (battery build).
 DNP for Variant A and Variant B wall builds. B+1 and GND are NOT on this connector —
 they travel via the battery-terminal injection point on the WM-D6C main board and the
 CP304 harness. USB D+/D- pins populate only if CDC tuning routes through the daughter
@@ -738,7 +740,7 @@ Add `Device:TestPoint` for each of:
 | TP2 | `B+3` | Motor supply check |
 | TP3 | `FG_RAW` | FG oscilloscope probe point |
 | TP4 | `Q601_BASE` | Motor drive output check |
-| TP5 | `DEBUG_TX` | UART debug / PA9 |
+| TP5 | `DEBUG_TX` | UART debug / PB6 |
 | TP6 | GND | Scope ground reference |
 
 ---
@@ -831,7 +833,7 @@ kicad-cli sch export pdf hardware/kicad/DSR-1/DSR-1.kicad_sch -o dist/DSR-1-sche
 After ERC passes, update the PCB (Tools → Update PCB from Schematic) and begin
 placement in this priority order:
 
-1. STM32 decoupling caps within 0.5mm of VDD/VDDA/VDDIO2 pins
+1. STM32 decoupling caps within 0.5mm of the combined VDD/VDDA pin
 2. MT3608 switching loop (VIN cap → L1 → SW → D_BOOST → VOUT cap) as compact as possible; SW node trace ≤3mm
 3. USB differential pair: matched length, 90Ω differential impedance, ≤25mm, routed away from MT3608 SW node
 4. B+3 motor drive traces: minimum 0.5mm width for 500mA
@@ -849,4 +851,4 @@ See `signal-chain-analysis.md §10` for full layout rule derivations.
 *v0.6: merged the battery appendix inline — battery/charge/power-path/TPS63070 now live in the Power zone, and the indicator pins/sense/J3 in the MCU, Signal, and Connectors zones; single cohesive guide, no addendum.*
 *v0.5: flattened to a single D-size sheet — hierarchy, root sheet, and sheet pins removed; zones replace sheets; added Distribution & Printing.*
 *v0.7: chemistry swap LFP → LiPo; charger CN3058E → BQ24074 (DPPM power-path, R_ISET=1.1kΩ/0.8A, R_ILIM=800Ω/2A); protection HY2112-CB → DW01+FS8205; two-board architecture noted; **NOTE: v0.7 incorrectly renamed G0C1 → G0B1 throughout — reverted in v0.8.** CHG_STAT/PGOOD nets; VBAT_SENSE divider 22k→33k; LiPo OCV note; §7.8 cross-reference.*
-*v0.8: two-project split — servo module guide only; Section B replaced with pointer to kicad-power-board-guide.md; J_BBL board-to-board connector added to Connectors zone; TPS63070 sub-zone C marked DNP for battery build; **MCU corrected back to STM32G0C1KCU6** (verified against repo schematic STM32G0C1 and decoupling.kicad_sch, symbol MCU_ST_STM32G0:STM32G0C1KCUx, U5); DS reference updated; BAT54 → BAT54S (dual SOT-23, as placed in Signal conditioning.kicad_sch); intro updated for two-project structure.*
+*v0.8: two-project split — Servo Control Board guide only; Section B replaced with pointer to kicad-power-board-guide.md; J_BBL board-to-board connector added to Connectors zone; TPS63070 sub-zone C marked DNP for battery build; **MCU corrected back to STM32G0C1KCU6** (verified against repo schematic STM32G0C1 and decoupling.kicad_sch, symbol MCU_ST_STM32G0:STM32G0C1KCUx, U5); DS reference updated; BAT54 → BAT54S (dual SOT-23, as placed in Signal conditioning.kicad_sch); intro updated for two-project structure.*

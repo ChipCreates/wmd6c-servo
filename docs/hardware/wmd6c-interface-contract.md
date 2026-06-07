@@ -3,7 +3,7 @@
 **Project:** DSR-1 / wmd6c-servo  
 **File:** `docs/hardware/wmd6c-interface-contract.md`  
 **Status:** Draft / pre-Rev A  
-**Purpose:** Define the electrical, power, USB-C, mechanical, and service interface between the Sony WM-D6C/TC-D6C and the DSR-1 module.
+**Purpose:** Define the electrical, power, USB-C, mechanical, and service interface between the Sony WM-D6C/TC-D6C and the DSR-1 Power Board / Servo Control Board subsystem.
 
 ---
 
@@ -18,7 +18,7 @@ DSR-1 is not being scoped as a servo-only daughterboard. The Rev A design must t
 3. **USB-C data/service interface**
 4. **USB-C PD or USB-C power-role strategy**
 
-The project must not proceed from concept to PCB layout by assumption. Every signal that crosses the boundary between the Sony machine and the DSR-1 module must be identified, measured, documented, and justified against the source material and bench data.
+The project must not proceed from concept to PCB layout by assumption. Every signal that crosses the boundary between the Sony machine and the DSR-1 boards must be identified, measured, documented, and justified against the source material and bench data.
 
 This file answers five questions for every interface signal:
 
@@ -40,7 +40,7 @@ This document is not a tutorial and not a theory document. It is a design-contro
    - Used for the CX20084 servo circuit schematic, component values, board layout, adjustment procedures, and tape speed calibration procedure.
    - This is the governing servo-circuit reference for all CX20084 boards, including the primary test unit (serial 72795, ~1987).
 
-2. **STMicroelectronics STM32G0B1xB/xC/xE Datasheet, DS13560 Rev 6, February 2026**
+2. **STMicroelectronics STM32G0C1KCU6 / STM32G0 family documentation**
    - Used for MCU electrical limits, ADC constraints, timer capability, PWM output, USB, UCPD, package limitations, and operating conditions.
 
 3. **Bench measurements from physical WM-D6C units**
@@ -58,7 +58,7 @@ If sources conflict:
 
 1. Bench measurement on the actual target unit.
 2. Service manual appropriate to the confirmed board revision.
-3. STM32G0B1 datasheet.
+3. STM32G0C1KCU6 package/device documentation.
 4. DSR-1 design assumptions.
 
 Assumptions must never be treated as measured facts.
@@ -93,8 +93,8 @@ Rev A targets CX20084 boards. This covers the majority of surviving and
 collector-held units across the full production run prior to the 2001 servo
 circuit change.
 
-Primary test unit: serial 72795, ~1987, early through-hole construction,
-CX20084 confirmed, rounded amorphous 35711 head confirmed.
+Primary test unit: serial 72795, observed PCB marking C11-494-12, surface-mount
+CX20084 confirmed at IC601, rounded amorphous 35711 head confirmed.
 
 ### 4.2 Planned Variants
 
@@ -274,9 +274,10 @@ The original servo controls motor speed by applying a correction signal into the
 
 DSR-1 uses a PWM + RC filter + NPN level-shift output stage (TIM3 CH1 on PA6).
 
-Q601 on WM-D6C serial 72795 is a 2SB1013 PNP transistor with its emitter at B+3
-(10.8V). The base operating range is well above 3.3V, ruling out direct DAC drive.
-The NPN level-shift topology (Q_LS MMBT3904, R7–R9) is the committed output design.
+Q601 on WM-D6C serial 72795 is on the surface-mount C11-494-12 board. Its exact
+package/marking and base operating range are pending physical confirmation. Direct
+DAC drive is not used; the NPN level-shift topology (Q_LS MMBT3904, R7–R9) is the
+committed output design.
 
 Bench measurement of the Q601 base voltage during playback is still required to
 confirm R9 sizing and the PWM duty-cycle-to-speed mapping.
@@ -431,7 +432,7 @@ USB-C power and PD behavior are in scope. DSR-1 may ultimately use one of these 
 
 | Architecture | Description |
 |---|---|
-| Native STM32 UCPD | STM32G0B1 handles USB-C attach/PD functions directly |
+| Native STM32 UCPD | STM32G0C1 handles USB-C attach/PD functions directly |
 | External PD controller | Dedicated PD trigger/controller negotiates power and presents a simpler rail to DSR-1 |
 | Hybrid protected input | USB-C data/service is required while external power strategy remains protected barrel/lab input for early Rev A |
 | Dual-path | USB-C and protected barrel input coexist with a defined mux/protection strategy |
@@ -520,7 +521,7 @@ Required decisions:
 
 ### 13.5 Open Questions
 
-- Is the selected STM32G0B1 package pinout sufficient for servo, ADC, DAC/PWM, USB FS, UCPD, BOOT0, and SWD simultaneously?
+- Is the selected STM32G0C1KCU6 package pinout sufficient for servo, ADC, PWM, USB FS, UCPD, BOOT0, and SWD simultaneously? **Resolved: yes; see `docs/stm32g0c1-pin-allocation.md`.**
 - Should Rev A use native UCPD or an external PD controller?
 - Should USB-C power be required for normal operation, or should battery/barrel operation remain independent?
 - Should connecting USB for diagnostics while the machine is otherwise powered be supported?
@@ -537,7 +538,7 @@ Required decisions:
 
 ### 14.2 Function
 
-Ground is not just a return conductor. It is the reference for FG measurement, ADC readings, DAC/PWM output, USB signaling, PD behavior, power conversion, and motor noise behavior.
+Ground is not just a return conductor. It is the reference for FG measurement, ADC readings, PWM output, USB signaling, PD behavior, power conversion, and motor noise behavior.
 
 ### 14.3 Required Bench Checks
 
@@ -560,7 +561,7 @@ Ground is not just a return conductor. It is the reference for FG measurement, A
 
 ## 15. MCU-Side Electrical Constraints
 
-The STM32G0B1 interface must remain within datasheet limits.
+The STM32G0C1KCU6 interface must remain within datasheet limits.
 
 ### 15.1 ADC Inputs
 
@@ -594,7 +595,7 @@ Rules:
 - Use defined pull states.
 - Use hysteresis or comparator conditioning if edges are slow or noisy.
 
-### 15.3 DAC / PWM Output
+### 15.3 PWM Output
 
 Affected signals:
 
@@ -603,8 +604,8 @@ Affected signals:
 
 Rules:
 
-- DAC output may only be used directly if the Sony control node is within safe voltage/current range.
-- PWM output must be filtered and shielded from audio-sensitive paths if used.
+- Direct DAC output is not used for motor drive.
+- PWM output must be filtered and shielded from audio-sensitive paths.
 - Output stage must have a known safe state during reset and boot.
 
 ### 15.4 USB / UCPD Pins
@@ -619,7 +620,7 @@ Affected signals:
 
 Rules:
 
-- Verify all USB and UCPD pins against the exact selected STM32G0B1 package.
+- Verify all USB and UCPD pins against the exact selected STM32G0C1KCU6 package.
 - Do not assume all family features are available on the chosen package pins.
 - USB and UCPD routing must be reflected in the PCB constraints.
 - USB service must not consume pins required for safe servo operation unless the pinout decision is explicit.
@@ -712,10 +713,10 @@ The DSR-1 Rev A interface is not accepted until all items below are complete.
 
 ## 18. Open Engineering Questions
 
-1. Which exact servo-circuit revision is present in serial-numbered unit 72795?
+1. ~~Which exact servo-circuit revision is present in serial-numbered unit 72795?~~ **Resolved: CX20084 former-type board, observed PCB marking C11-494-12.**
 2. What is the actual FG901 waveform at correct tape speed?
 3. What is the actual Q601 / motor-control operating voltage?
-4. ~~Can the STM32 DAC safely drive the motor-control point?~~ **Resolved: No. Q601 (2SB1013) emitter is at B+3 (10.8V). PWM + NPN level-shift is required for all Ver. 1.0 boards.**
+4. ~~Can the STM32 DAC safely drive the motor-control point?~~ **Resolved: No. Direct DAC drive is not used; PWM + NPN level-shift is the committed topology.**
 5. Are RV601/RV602/RV603 wipers safe for direct ADC input?
 6. What is the actual logic behavior of S601?
 7. What power rails must DSR-1 generate versus merely sense?

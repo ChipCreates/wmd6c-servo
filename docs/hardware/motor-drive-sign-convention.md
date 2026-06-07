@@ -39,12 +39,12 @@ The polarity depends on the real behavior of the output stage on the target boar
 
 ```
 TIM3_CH1 (PA6) ── R7/C8 RC filter ──► Q_LS (MMBT3904 NPN) base
-Q_LS collector ── R9 (100k to B+1) ──► Q601 (2SB1013 PNP) base
-Q601 emitter at B+3 (10.8 V); collector drives the motor network
+Q_LS collector ── R9 (100k to B+1) ──► Q601 base
+Q601 exact package/marking and base/emitter operating range pending on C11-494-12
 ```
 
 A first-principles trace (higher PWM → more Q_LS base drive → Q_LS collector pulls
-Q601 base toward GND → larger Q601 V_EB → more collector current → faster) supports
+Q601 base toward GND → more drive in the working PNP model → faster) supports
 the `servo.c` narrative (**high PWM = fast**), which would make the current
 subtraction the *wrong* sign. But this depends on the exact bias network, where R9
 returns to (B+1), the motor-drive network topology on the Sony board, and the

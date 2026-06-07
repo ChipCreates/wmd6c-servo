@@ -16,7 +16,7 @@ it does.
 
 ## 1. The Problem With Floating Point on Cortex-M0+
 
-The STM32G0B1KBU6's Cortex-M0+ core is an extremely capable 32-bit processor, but
+The selected STM32G0C1KCU6's Cortex-M0+ core is an extremely capable 32-bit processor, but
 it has no hardware floating-point unit (FPU). This is a deliberate design choice for
 a low-power microcontroller — a hardware FPU adds significant silicon area and power
 consumption that is not justified for most embedded applications.
@@ -209,7 +209,7 @@ The `t` command prints the current values alongside their float equivalents:
 ```
 FG period:  25612 ticks (2499.1 Hz, error: +12)
 Integral:   -847
-DAC output: 2034 / 4095
+PWM/output: 2034 / 4095
 Kp: 9830 (0.1500)   Ki: 524 (0.0080)
 RV601: 2048  RV602: 1923  RV603: 2100
 ```

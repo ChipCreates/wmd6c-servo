@@ -1,6 +1,9 @@
 # DSR-1 Firmware
 
-Bare-metal C firmware for the WM-D6C Servo Replacement Module. Runs on the STM32G0B1KBU6 at 64 MHz. No HAL, no RTOS, no dynamic memory allocation.
+Bare-metal C firmware for the WM-D6C DSR-1 Servo Control Board. The project
+hardware target is STM32G0C1KCU6 at 64 MHz; this firmware tree still carries some
+legacy STM32G0B1 build filenames until the firmware migration is completed. No HAL,
+no RTOS, no dynamic memory allocation.
 
 ---
 
@@ -20,8 +23,8 @@ Build files live in `firmware/build/`:
 | File | Responsibility |
 |------|---------------|
 | `Makefile` | `arm-none-eabi-gcc` build, flash/DFU targets |
-| `STM32G0B1KBUx_FLASH.ld` | Linker script — 126 KB firmware region, 2 KB settings sector reserved |
-| `startup_stm32g0b1xx.s` | ST-provided CMSIS startup (stack init, `.data` copy, `.bss` zero) |
+| `STM32G0B1KBUx_FLASH.ld` | Legacy prototype linker script — to be replaced for STM32G0C1KCU6 |
+| `startup_stm32g0b1xx.s` | Legacy prototype CMSIS startup — to be replaced for STM32G0C1KCU6 |
 
 ---
 
@@ -100,8 +103,9 @@ Alternatively, use the `f+` / `f-` USB CDC commands to tune in real time without
 ### Motor Output Stage
 
 DSR-1 uses the **PWM + RC filter + NPN level-shift** output stage exclusively.
-Q601 (2SB1013 PNP) on WM-D6C Ver. 1.0 boards has its emitter at B+3 (10.8V);
-the base operating range exceeds the STM32's 3.3V output capability.
+On the primary WM-D6C serial 72795 unit, Q601 is on the surface-mount
+`C11-494-12` board and its exact package/marking plus base operating range remain
+pending bench verification. Direct DAC drive is not used.
 
 TIM3 channel 1 on PA6 produces the PWM signal. There is no `SERVO_OPTION_B`
 define — the firmware is committed to this single output topology.
@@ -135,7 +139,8 @@ FG:25612 Hz:2499 Tgt:25600 Err:+12 Int:-847 PWM:2034 Kp:9830(0.150) Ki:524(0.008
 
 ## Firmware Update (DFU)
 
-The STM32G0B1KBU6 contains a factory-programmed USB DFU bootloader. To enter DFU mode:
+The intended STM32G0C1KCU6 target contains a factory-programmed USB DFU bootloader.
+To enter DFU mode:
 
 1. Hold BOOT0 test point (TP1) to VDD
 2. Connect USB-C cable

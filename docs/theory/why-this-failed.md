@@ -158,7 +158,7 @@ The DSR-1 module addresses this failure mode at three levels:
 
 ### Level 1: Replace the destroyed component
 
-The CX20084 is replaced by the STM32G0B1KBU6 microcontroller running a digital PI
+The CX20084 is replaced by the STM32G0C1KCU6 microcontroller running a digital PI
 servo loop that performs the same speed control function — in fact, more accurately
 than the original. This restores the machine to full operational specification.
 
@@ -241,10 +241,10 @@ Complete these checks before installing the module:
    with white vinegar on a cotton swab, then clean with isopropyl alcohol. Check
    that leakage has not tracked onto the main board.
 
-2. **Test Q601**: The 2SB1013 PNP motor drive transistor (IC601 pin 15 driver) may
-   have been damaged in the same reverse polarity event. Test in diode mode:
-   base-to-emitter and base-to-collector should both read 0.6-0.7V. A zero reading
-   or short indicates failure — replace with a PNP transistor of equivalent rating.
+2. **Test Q601**: The motor-drive device connected to IC601 pin 15 may have been
+   damaged in the same reverse-polarity event. First identify its SMD package/marking
+   and pinout on the C11-494-12 board, then test it in diode mode. A zero reading or
+   short indicates failure — replace only with an electrically and mechanically suitable part.
 
 3. **Replace the capstan belt**: At this age the belt needs replacement regardless
    of the electronic fault. Do it now while the machine is open.

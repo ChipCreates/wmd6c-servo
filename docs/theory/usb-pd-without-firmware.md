@@ -143,7 +143,7 @@ microcontroller involvement.
 
 The conventional approach to USB PD in an embedded system is to use a dedicated PD
 controller IC (FUSB302, HUSB238) or the MCU's built-in UCPD peripheral (which the
-STM32G0B1KBU6 has) and implement the PD protocol stack in firmware. The STM32's
+STM32G0C1KCU6 has) and implement the PD protocol stack in firmware. The STM32's
 UCPD peripheral can send and receive BMC-encoded PD messages, perform CRC checking,
 and handle all the protocol states defined in the USB PD specification.
 
@@ -276,8 +276,8 @@ STM32 initiates a controlled motor shutdown before the supply fully collapses.
 
 ### 4.1 Why the STM32 Has UCPD Hardware at All
 
-The STM32G0B1KBU6 contains two complete UCPD (USB Type-C Power Delivery) controllers
-(UCPD1 and UCPD2). UCPD1 connects to PA8 (CC1) and PB15 (CC2). This hardware can
+The selected STM32G0C1KCU6 exposes UCPD support for the selected USB-C pins.
+UCPD1 connects to PA8 (CC1) and PA9 (CC2) in the accepted pin allocation. This hardware can
 implement the full USB PD protocol stack in firmware, send and receive PD messages,
 negotiate PDOs, implement USB PD 3.0 features, and act as either a PD source or sink.
 
@@ -331,7 +331,7 @@ specification's Rd resistors for sink devices). This is required for the charger
 to recognise that a sink device is connected.
 
 In Variant A, the CC lines are connected to the IP2721 for power negotiation. They
-are also connected to the STM32 UCPD1 pins (PA8, PB15) for monitoring. The IP2721's
+are also connected to the STM32 UCPD1 pins (PA8, PA9) for monitoring. The IP2721's
 internal Rd resistors are sufficient — no external CC resistors are needed. The
 STM32 UCPD pins are configured as high-impedance inputs during normal operation,
 presenting negligible load on the CC lines.
@@ -436,7 +436,7 @@ implement aggressive auto-off.
 
 ### 6.1 What UCPD1 Can Do When Enabled
 
-The STM32G0B1's UCPD1 peripheral can be fully programmed in a future firmware
+The STM32G0C1's UCPD1 peripheral can be fully programmed in a future firmware
 revision to take over PD negotiation from the IP2721, or to work alongside it for
 enhanced monitoring and control. The UCPD peripheral handles:
 

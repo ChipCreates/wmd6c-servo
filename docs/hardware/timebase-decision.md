@@ -120,7 +120,7 @@ USB-related functions include:
 
 ### 5.1 USB Clocking
 
-USB 2.0 Full Speed has its own timing requirements. The STM32G0B1 family supports USB FS, and firmware may use internal clocking and clock recovery features where appropriate.
+USB 2.0 Full Speed has its own timing requirements. The selected STM32G0C1KCU6 supports USB FS, and firmware may use internal clocking and clock recovery features where appropriate.
 
 The USB clock strategy must answer:
 
@@ -177,11 +177,11 @@ The original machine's identity is closely tied to its quartz-lock speed behavio
 - Can a divided Sony reference be safely exposed to DSR-1?
 - Does retaining the Sony reference simplify or complicate installation?
 - Does use of the Sony reference preserve more original design character?
-- Does it consume MCU pins needed for USB-C / UCPD / ADC / DAC?
+- Does it consume MCU pins needed for USB-C / UCPD / ADC / PWM?
 
 ---
 
-## 7. STM32G0B1 Clock Options
+## 7. STM32G0C1 Clock Options
 
 ### 7.1 HSI16 + PLL
 
@@ -340,12 +340,12 @@ Potential pin consumers:
 | UCPD | CC1 / CC2 pins |
 | SWD | SWDIO / SWDCLK |
 | FG input | Timer input-capture pin |
-| Motor DAC | DAC output pin |
+| Motor PWM | PWM output pin |
 | Optional PWM | Timer output pin |
 | RV601/RV602/RV603 | ADC inputs |
 | S601 | GPIO input |
 
-The selected STM32G0B1 package must be checked before the schematic is considered stable.
+The selected STM32G0C1KCU6 package must be checked before the schematic is considered stable.
 
 Rules:
 
@@ -495,7 +495,7 @@ Preferred wording for documentation:
 2. What wow/flutter target should DSR-1 claim?
 3. Is the original Sony X701 reference available and healthy in the target unit?
 4. Can a Sony-derived reference be routed to the STM32 safely?
-5. Does the selected STM32G0B1 package have enough pins for external clock plus USB/UCPD plus servo I/O?
+5. Does the selected STM32G0C1KCU6 package have enough pins for external clock plus USB/UCPD plus servo I/O?
 6. Is an external oscillator mechanically and electrically feasible in the available board space?
 7. Does USB connection improve, worsen, or change clock behavior?
 8. Should USB service mode be allowed during playback?
@@ -510,7 +510,7 @@ The timebase decision is not accepted until:
 
 | Requirement | Status |
 |---|---|
-| Exact STM32G0B1 package pinout reviewed | Pending |
+| Exact STM32G0C1KCU6 package pinout reviewed | Complete; see `docs/stm32g0c1-pin-allocation.md` |
 | USB FS clocking plan selected | Pending |
 | UCPD/PD clocking implications reviewed | Pending |
 | Servo timer clock source selected | Pending |

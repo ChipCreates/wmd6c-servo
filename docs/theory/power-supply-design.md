@@ -2,7 +2,7 @@
 
 ## Purpose of This Document
 
-This document explains every aspect of the DSR-1 module's power supply architecture
+This document explains every aspect of the DSR-1 power supply architecture
 — why each design decision was made, how each component was chosen, how the circuits
 work quantitatively, and how they relate specifically to the requirements of the
 Sony WM-D6C. It is written for the engineer who wants to understand, verify, or
@@ -101,19 +101,19 @@ The DSR-1 produces all three supply rails (B+1, B+3, and 3.3V) from a single B+1
 node. A TPS63070 buck-boost generates B+1 (6.0V) in every build; what differs is
 *where that regulator physically lives* and which input front end feeds it:
 
-- **Battery-integrated (primary)** — a **two-board** design. A dedicated **power
-  daughter board**, mounted behind the battery bay, carries the entire power
+- **Battery-integrated (primary)** — a **two-board** design. A dedicated **Power
+  Board**, mounted behind the battery bay, carries the entire power
   subsystem: USB-C 5V input, the BQ24074 power-path charger, the 3-cell LiPo pack,
   DW01 + dual-FET pack protection, and the TPS63070 boost that produces B+1. The
-  daughter board injects its regulated 6.0V **at the original battery-terminal node**
+  Power Board injects its regulated 6.0V **at the original battery-terminal node**
   on the main board (the contacts the AA cartridge used to feed), so the stock S901
-  power switch remains the machine's real on/off control. The servo module in the
+  power switch remains the machine's real on/off control. The Servo Control Board in the
   CP304 cavity *receives* B+1 through its harness and no longer generates it — its
   power-input zone is unpopulated in this build (Section 7).
-- **Variant A (wall-only)** — single module. A 9V USB-C PD contract, which the
-  module's on-board TPS63070 *bucks* down to B+1, with no cells fitted (Section 5).
-- **Variant B (wall-only)** — single module. The original barrel jack with polarity
-  correction, presenting 5–9V that the module's on-board TPS63070 bucks or boosts to
+- **Variant A (wall-only)** — single Servo Control Board. A 9V USB-C PD contract, which the
+  board's on-board TPS63070 *bucks* down to B+1, with no cells fitted (Section 5).
+- **Variant B (wall-only)** — single Servo Control Board. The original barrel jack with polarity
+  correction, presenting 5–9V that the board's on-board TPS63070 bucks or boosts to
   B+1, with no cells fitted (Section 6).
 
 The crucial architectural point is that the B+1 regulator is a **buck-boost that
@@ -121,7 +121,7 @@ crosses through unity automatically** — it bucks the 9V case and boosts the
 battery/5V cases without any reconfiguration — so the same converter, divider, and
 layout serve every front end. Everything *downstream* of B+1 is likewise identical in
 every build; the wall variants drive B+1 out through the harness, while the battery
-build drives B+1 in at the machine's battery terminals and the module consumes it.
+build drives B+1 in at the machine's battery terminals and the Servo Control Board consumes it.
 
 ```
 WALL VARIANTS (single module, B+1 generated on-module, driven out via harness):
@@ -135,20 +135,20 @@ WALL VARIANTS (single module, B+1 generated on-module, driven out via harness):
                                                         ├──[MT3608]──► B+3 (10.8V) ──► Motor
                                                         └──[MCP1700]─► 3.3V ──► STM32
 
-BATTERY BUILD (two boards; B+1 generated on the daughter board, injected at battery terminals):
-  ── Power daughter board (behind battery bay) ──────────────────────────────────┐
+BATTERY BUILD (two boards; B+1 generated on the Power Board, injected at battery terminals):
+  ── Power Board (behind battery bay) ───────────────────────────────────────────┐
   USB-C 5V ─► BQ24074 power-path ─┬─► SYS ─► [TPS63070 boost] ─► B+1 (6.0V) ──────┼──► main-board
                                   └─► BAT ─► 3P LiPo pack ─► [DW01 + dual-FET]      │   battery terminals
                                             (3.7V, 3000mAh) ◄── charged in place    │   (─► S901 ─► B+1 net)
   ───────────────────────────────────────────────────────────────────────────────┘
-        B+1 propagates through the machine's B+1 net to the CP304 harness ─► servo module
-        Servo module: receives B+1 (power-input zone unpopulated)
+        B+1 propagates through the machine's B+1 net to the CP304 harness ─► Servo Control Board
+        Servo Control Board: receives B+1 (power-input zone unpopulated)
                         ├──[MT3608]──► B+3 (10.8V) ──► Motor
                         └──[MCP1700]─► 3.3V ──► STM32
 ```
 
 The elegance of this architecture is that the entire machine — audio circuits,
-servo logic, motor, and the DSR-1 module itself — runs from a single protected,
+servo logic, motor, and the DSR-1 boards themselves — runs from a single protected,
 regulated B+1 rail no matter which input path produced it. In the battery-integrated
 configuration, the pack's internal-resistance variation (the effect that made the
 original servo work harder as the original AA cells discharged) is hidden behind the
@@ -161,13 +161,13 @@ empty, exactly as the MT3608 holds B+3 constant against B+1 variation.
 
 ### 3.1 Why a Boost Converter Is Still Needed
 
-When the module is powered from a USB-C PD source at 9V (Variant A), one might
+When the Servo Control Board is powered from a USB-C PD source at 9V (Variant A), one might
 wonder why we don't simply use 9V directly for the motor. The answer is that the
 motor circuit in the WM-D6C — Q601, Q703, Q704, and M901 — was designed for a
-10.8V supply. The Q601 PNP transistor's emitter is connected to the B+3 rail. The
-servo loop's DAC output controls Q601's base to modulate motor current. The servo
-algorithm's DAC operating range (DAC_MIN to DAC_MAX centered on DAC_CENTER) was
-calibrated around the assumption that B+3 is 10.8V. At 9V, the motor would run
+10.8V supply. The servo loop's PWM/filtered output controls Q601's base node to
+modulate motor current. The firmware output range (`DAC_MIN` to `DAC_MAX` centered
+on `DAC_CENTER`, legacy names retained for PWM) is calibrated around the assumption
+that B+3 is 10.8V. At 9V, the motor would run
 slower for the same base drive, changing the loop gain and requiring different PI
 coefficients. Rather than complicate the firmware and the calibration, it is simpler
 and more correct to maintain the original 10.8V motor supply.
@@ -770,7 +770,7 @@ The TVS clamps it.
 *Electrostatic discharge*: The barrel jack CN301 is on the machine's panel — a
 user-accessible connector. ESD events from a statically charged user are possible.
 The SMBJ7.0A provides a low-impedance clamp path for ESD energy, protecting the
-module's electronics.
+DSR-1 electronics.
 
 **TVS clamping voltage**: The SMBJ7.0A clamping voltage (maximum voltage during
 a 1A pulse) is 12V. This means during a high-energy transient, the voltage at the
@@ -815,20 +815,20 @@ This is the primary DSR-1 configuration: a LiPo pack is the runtime source, and 
 both charges it in place and runs the machine at the same time. Unlike the wall
 variants, the battery build is split across **two boards**:
 
-- A **power daughter board**, mounted *behind the battery bay* (not inside it), which
+- A **Power Board**, mounted *behind the battery bay* (not inside it), which
   carries the whole power subsystem — USB-C 5V input, the BQ24074 power-path charger,
   the LiPo pack connections, DW01 + dual-FET pack protection, and the TPS63070 boost
   that produces B+1.
-- The **servo module** in the CP304 cavity, which in this build *receives* B+1 and
+- The **Servo Control Board** in the CP304 cavity, which in this build *receives* B+1 and
   does not generate it. Its power-input zone (the on-module TPS63070 and front-end
   parts used by Variants A/B) is left unpopulated.
 
-The daughter board injects its regulated 6.0V at the **original battery-terminal node**
+The Power Board injects its regulated 6.0V at the **original battery-terminal node**
 on the main board — the contacts the four-AA cartridge used to feed. That 6.0V then
 propagates through the machine's own B+1 net (through S901, the power switch) and
-reaches the servo module via the existing CP304 harness, exactly as battery power
+reaches the Servo Control Board via the existing CP304 harness, exactly as battery power
 always did. Two consequences follow directly: the stock **S901 power switch keeps
-working** as the machine's real on/off control, and the servo module needs no power
+working** as the machine's real on/off control, and the Servo Control Board needs no power
 front end of its own.
 
 One point worth stating plainly: in this configuration there is **no USB PD**. The
@@ -866,10 +866,10 @@ resting voltage before they are first paralleled, to avoid cell-to-cell inrush a
 moment of connection. After the first equalisation they track. The on-cell PCMs do
 *not* prevent this inrush — they protect the external load/charge path, not two cells
 meeting each other — so balance-first is a mandatory assembly step. The 3P junction
-(three positives bussed, three negatives bussed) is formed on the daughter board,
+(three positives bussed, three negatives bussed) is formed on the Power Board,
 where the cells plug in.
 
-**Service disconnect.** The cells plug into the daughter board; pulling the three
+**Service disconnect.** The cells plug into the Power Board; pulling the three
 cell connectors removes the pack for service. This restores the convenient
 "removable pack" behaviour of the original cartridge without the AA holder (which
 does not fit the cavity once cells of this length are stacked).
@@ -889,7 +889,7 @@ and does this natively:
   out on inrush while plugged in.
 - A **programmable input current limit** (ILIM) protects a weak USB source, and
   **thermal regulation** folds back charge current if the IC heats up — useful on the
-  small daughter board.
+  small Power Board.
 - When USB is removed, SYS hands off to the battery seamlessly (the B+1 bulk
   capacitor covers the microsecond transition).
 
@@ -912,7 +912,7 @@ covers with margin.
 
 **Supporting connections.** The TS pin must be set into its valid window with a fixed
 resistor pair (the 803040 cells expose no thermistor) or wired to a 10kΩ NTC against
-the pack if temperature qualification is wanted. The CHG and PGOOD status outputs are
+the pack if temperature qualification is wanted. The CHG_STAT and PGOOD status outputs are
 read by the STM32 (routed across the board-to-board link, Section 7.6) to drive the
 charging animation on the LED fuel gauge.
 
@@ -920,7 +920,7 @@ charging animation on the LED fuel gauge.
 
 The 3P pack needs over-charge, over-discharge, and over-current protection on the
 logical cell. Use a **DW01** protection IC driving a dual N-channel FET (FS8205-class)
-in series between the pack and the rest of the daughter board.
+in series between the pack and the rest of the Power Board.
 
 For LiPo this is the correct part: the DW01's thresholds (over-charge 4.25V,
 over-discharge ~2.4V) are the Li-ion/LiPo values that match a 4.2V-float cell.
@@ -934,12 +934,12 @@ other.
 
 ### 7.4 The B+1 Regulator in Boost Mode — SYS → 6.0V
 
-On the daughter board the B+1 regulator is the **same TPS63070 buck-boost** used by
+On the Power Board the B+1 regulator is the **same TPS63070 buck-boost** used by
 the wall variants (Section 5.2), here running in boost mode because the BQ24074 SYS
 rail sits below 6.0V (≈4.6–4.9V on USB, tracking the pack at 3.0–4.2V on battery).
 The divider (R_upper = 649 kΩ, R_lower = 100 kΩ, 0.8V reference) and layout are
 identical to the wall builds — the only difference is that in the battery build this
-regulator lives on the daughter board rather than the servo module.
+regulator lives on the Power Board rather than the Servo Control Board.
 
 **Worst-case input current**, whole machine ~4W on B+1, 90% efficiency, pack near its
 3.0V floor:
@@ -959,12 +959,12 @@ D ≈ 1 − V_SYS / V_OUT = 1 − 3.7 / 6.0 = 0.383
 
 ### 7.5 6V Injection at the Battery Terminals, and S901
 
-The daughter board's 6.0V output is wired to the main board at the **original
+The Power Board's 6.0V output is wired to the main board at the **original
 battery-positive terminal location** (the corroded/leaked stock spring contacts are
 removed — see the installation notes — and the daughter-board feed replaces them).
 Because the stock wiring runs battery → S901 → B+1 net, injecting on the battery side
 of S901 keeps the front-panel power switch fully functional: it still switches the
-whole machine on and off, including the servo module fed downstream through the CP304
+whole machine on and off, including the Servo Control Board fed downstream through the CP304
 harness.
 
 A series Schottky (1N5819-class) at the injection point provides reverse protection
@@ -974,23 +974,23 @@ within the machine's operating specification.
 The 6V output run now carries the full machine current — including the motor draw
 reflected back through the MT3608, which peaks above 1.5A. This path is no longer the
 millimetres of the original battery-spring-to-board connection; it runs from the
-daughter board behind the bay to the injection point. Size the conductor for the
+Power Board behind the bay to the injection point. Size the conductor for the
 current and keep it short.
 
 ### 7.6 The Board-to-Board Interface
 
-Because the pack and B+1 generation moved off the servo module, a small set of
-conductors links the daughter board to the rest of the machine:
+Because the pack and B+1 generation moved off the Servo Control Board, a small set of
+conductors links the Power Board to the rest of the machine:
 
 | Conductor | Direction | Purpose |
 |---|---|---|
-| B+1 (6.0V) | Daughter → main-board battery terminal | Machine + module supply, through S901 |
+| B+1 (6.0V) | Power Board → main-board battery terminal | Machine + module supply, through S901 |
 | GND | Shared | Common return |
-| VBAT_SENSE | Daughter → servo module ADC | Pack voltage for the fuel gauge (Section 7.8) |
-| CHG / PGOOD | Daughter → servo module GPIO | Charger status for the LED animation |
-| USB D+/D− (optional) | Daughter ↔ servo module | If USB CDC tuning is routed from the daughter board's USB-C; otherwise a separate bench header on the module |
+| VBAT_SENSE | Power Board → Servo Control Board ADC | Pack voltage for the fuel gauge (Section 7.8) |
+| CHG_STAT / PGOOD | Power Board → Servo Control Board GPIO | Charger status for the LED animation |
+| USB D+/D− (optional) | Power Board ↔ Servo Control Board | If USB CDC tuning is routed from the Power Board's USB-C; otherwise a separate bench header on the Servo Control Board |
 
-The servo module's J1 pin 7 (B+1) consequently flips from an **output** (it drove B+1
+The Servo Control Board's J1 pin 7 (B+1) consequently flips from an **output** (it drove B+1
 in the wall variants) to an **input** in the battery build — it now only receives B+1.
 A Schottky there can be retained as input reverse-protection or omitted, since its
 original anti-back-feed purpose no longer applies.
@@ -998,19 +998,19 @@ original anti-back-feed purpose no longer applies.
 ### 7.7 The Complete Battery Path
 
 ```
-USB-C (5V VBUS)  ── on power daughter board ──────────────────────────────────────┐
+USB-C (5V VBUS)  ── on Power Board ───────────────────────────────────────────────┐
    │                                                                                │
    └─► BQ24074  IN ──► SYS ──────────────────────────────► [TPS63070 boost] ─► B+1 │
         (power-path)    │  (deck priority via DPPM)              (D≈0.38)    (6.0V) │
         R_ISET≈1.1k     │                                                       │   │
         R_ILIM≈800Ω     └─► BAT ─► 3× 803040 LiPo (3P, 3.7V, 3000mAh)           │   │
-        CHG/PGOOD ───────────────► [DW01 + FS8205 dual-FET protection]          │   │
+        CHG_STAT/PGOOD ──────────► [DW01 + FS8205 dual-FET protection]          │   │
                                     (cells balance-matched before join)         │   │
    ─────────────────────────────────────────────────────────────────────────────┘ │
                                                                                     │
    B+1 ─► main-board battery terminal ─► S901 ─► machine B+1 net ─► CP304 harness ──┘
                                                                           │
-                                                          ── servo module (B+1 input) ──
+                                                          ── Servo Control Board (B+1 input) ──
                                                           ├──[MT3608]──► B+3 (10.8V) ──► Motor M901
                                                           └──[MCP1700]─► 3.3V ──► STM32
 ```
@@ -1044,52 +1044,54 @@ BATT brightness tracked the machine's main rail, which *was* the raw 4×AA pack 
 fresh, sagging as the cells depleted. The DSR-1 turns that rail into a regulated,
 constant 6.0V B+1. With S801 on BATT, Q801 now sees a constant 6.0V and holds D801 at
 full brightness regardless of the pack's real charge. The true state of charge has
-moved to the VBAT node on the daughter board, which the indicator circuit no longer
+moved to the VBAT node on the Power Board, which the indicator circuit no longer
 sees.
 
-**Architecture.** The STM32 (on the servo module) reads VBAT through the VBAT_SENSE
-conductor (Section 7.6), estimates state of charge, and drives the five LED nodes as a
-bar in BATT mode. It must not contend with the CX10043's peak-meter drive, so the
-takeover is gated by sensing the S801 BATT position on a GPIO:
+**Architecture.** The STM32 (on the Servo Control Board) reads VBAT through the
+VBAT_SENSE conductor (Section 7.6), estimates state of charge, and drives the five LED
+nodes as a bar only in BATT mode. `S801_BATT` is the MCU enable flag. The firmware must
+not contend with the CX10043's VU/peak-meter drive, so the LED outputs are driven only
+when `S801_BATT` is asserted and are released/high-Z in VU or non-BATT modes:
 
 ```
-VBAT (daughter board) ──► VBAT_SENSE ──[22k]──┬── ADC_VBAT (STM32)
-                                            [100k]
+VBAT (Power Board) ──► VBAT_SENSE ──[33k]──┬── ADC_VBAT (STM32)
+                                          [100k]
                                               │
                                              GND
 
-S801 BATT pole ──► GPIO (mode sense)
+S801 BATT pole ──► S801_BATT GPIO (enable flag)
 
 STM32 GPIO/PWM ──[Rs]──►│├─ D801 ┐
-                ─[Rs]──►│├─ D802 │   (driven only when S801 = BATT;
-                ─[Rs]──►│├─ D803 │    released to CX10043 otherwise)
+                ─[Rs]──►│├─ D802 │   (driven only when S801_BATT is asserted;
+                ─[Rs]──►│├─ D803 │    released/high-Z to CX10043 otherwise)
                 ─[Rs]──►│├─ D804 │
                 ─[Rs]──►│├─ D805 ┘
 ```
 
-**VBAT sense divider.** R_top = 22 kΩ, R_bot = 100 kΩ, ratio 0.82. At the 4.2V LiPo
-peak this presents ~3.45V to the ADC — above the 3.3V VDDA ceiling, so for LiPo either
-raise R_top (e.g. 33 kΩ → ~3.05V at 4.2V) or accept clamping above full; at the 3.0V
-floor a 33k/100k divider presents ~2.26V. A 10nF cap at the ADC node sets the sampling
-time constant. Gate the divider's ground leg with a GPIO-controlled small-signal N-FET
-so it draws nothing except during a measurement.
+**VBAT sense divider.** R_top = 33 kΩ, R_bot = 100 kΩ, ratio 100/133 ≈ 0.752. At the
+4.2V LiPo peak this presents ~3.16V to the ADC, below the 3.3V VDDA ceiling with
+margin; at the 3.0V floor it presents ~2.26V. A 10nF cap at the ADC node sets the
+sampling time constant. Gate the divider's ground leg with a GPIO-controlled
+small-signal N-FET so it draws nothing except during a measurement.
 
 **LED interface.** Drive each LED node from a GPIO through a series resistor, or — to
-preserve the original 180Ω limiters and avoid five extra pins — through small Schottky
-diodes into the existing D801–D805 anodes so the STM32 can source them in BATT mode
-while CX10043 is idle. Brightness is set by GPIO PWM, so the bar can also be dimmed for
+preserve the original 180Ω limiters — through small Schottky diodes into the existing
+D801–D805 anodes so the STM32 can source them in BATT mode while CX10043 is idle.
+`S801_BATT` gates ownership: when the switch is not in BATT, the MCU outputs must be
+released/high-Z. Brightness is set by GPIO PWM, so the bar can also be dimmed for
 night use.
 
 **Firmware.** State of charge comes from a **LiPo open-circuit-voltage lookup table**
 with light filtering and a fixed IR-drop offset for the known load. The LiPo discharge
 curve (4.2V → 3.0V) is usefully sloped, so voltage-to-SoC mapping is reliable — easier
 than the flat LFP curve the earlier design had to work around. SoC% → number of lit
-segments (1–5). Reading the BQ24074's CHG/PGOOD status lets the firmware animate
+segments (1–5). Reading the BQ24074's CHG_STAT/PGOOD status lets the firmware animate
 segments upward while charging, hold steady-full when charge terminates, and flash the
 bottom segment below ~15%.
 
 **Bench-confirm items.** Two things to characterise before finalising the LED
-interface: (1) how S801's BATT position reroutes the LED nodes, and whether the
+interface: (1) how S801's BATT position reroutes the LED nodes, the `S801_BATT`
+polarity seen by the MCU, and whether the
 CX10043 LED outputs go high-impedance in that position (so the STM32 can drive them
 without contention); and (2) the LED forward characteristics through the existing
 180Ω limiters, to size the GPIO drive or Schottky-injection resistors. The Q801
@@ -1105,7 +1107,7 @@ specific order determined by the time constants of each converter:
 1. **B+1 appears first** (approximately 1-5ms after input voltage application)
    — produced by the TPS63070 B+1 regulator, fed through the fitted front end (the
    diode bridge and polyfuse in Variant B, the PD path in Variant A, or the BQ24074
-   power-path on the daughter board in the battery build). The TPS63070's own
+   power-path on the Power Board in the battery build). The TPS63070's own
    soft-start sets the B+1 rise time. In the battery build the BQ24074's power-path
    keeps SYS supplied from the pack the instant USB is absent, so there is no
    source-handoff gap at power-on.
@@ -1123,7 +1125,7 @@ specific order determined by the time constants of each converter:
    fully regulated and the motor can be driven.
 
 The motor (M901) is never driven before the servo loop is running because the Q601
-base pullup resistors hold Q601 off until the DAC or PWM output is explicitly
+base pullup resistors hold Q601 off until the PWM output path is explicitly
 configured by firmware. This means B+3 can be present before the servo loop runs
 without causing uncontrolled motor operation.
 

@@ -125,9 +125,9 @@ No “works fine” notes. Record numbers.
 | 5 | SWD and firmware flash | No | USB/service |
 | 6 | USB-C data validation | No | PD / VBUS testing |
 | 7 | USB-C PD / VBUS validation | No | Output enable testing |
-| 8 | Safe-state validation | No | ADC/DAC/FG tests |
+| 8 | Safe-state validation | No | ADC/PWM/FG tests |
 | 9 | ADC input validation | No | Speed-control connection |
-| 10 | DAC/PWM output validation | No | Motor-control connection |
+| 10 | PWM output validation | No | Motor-control connection |
 | 11 | FG input validation | No | Servo simulation |
 | 12 | Servo loop simulation | No | Sony preinstall work |
 | 13 | Power-fault testing | No | Sony connection |
@@ -216,7 +216,7 @@ Inspect under magnification:
 | PD controller, if present | Orientation and bridges |
 | Regulators | Orientation and thermal pad |
 | Protection devices | Orientation, correct placement |
-| DAC/PWM output path | Incorrect values, shorts |
+| PWM output path | Incorrect values, shorts |
 | FG input path | Incorrect values, shorts |
 | ADC input network | Incorrect values, shorts |
 | SWD/BOOT pads | Accessibility |
@@ -475,29 +475,13 @@ Firmware should report raw ADC values over USB.
 
 ---
 
-## 16. Stage 10 — DAC / PWM Output Validation
+## 16. Stage 10 — PWM Output Validation
 
 No Sony machine connected.
 
 Use dummy load and oscilloscope.
 
-### 16.1 DAC Output
-
-If DAC is used:
-
-| Test | Pass condition |
-|---|---|
-| Reset state | Safe |
-| Minimum command | Expected voltage |
-| Center command | Expected voltage |
-| Maximum command | Expected voltage |
-| Clamp behavior | Works |
-| USB command update | No glitch |
-| Flash write | Holds safe behavior |
-
-### 16.2 PWM Output
-
-If PWM is used:
+### 16.1 PWM Output
 
 | Test | Pass condition |
 |---|---|
@@ -507,6 +491,8 @@ If PWM is used:
 | Level shift | Correct output range |
 | Reset state | Safe |
 | EMI/noise baseline | Acceptable before Sony install |
+| USB command update | No glitch |
+| Flash write | Holds safe behavior |
 
 Pass condition:
 

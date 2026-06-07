@@ -1,7 +1,7 @@
 # STM32G0C1 Pin Allocation
 
 **Project:** DSR-1 / wmd6c-servo  
-**File:** `docs/stm32g0b1-pin-allocation.md` (filename retained; consider renaming to `stm32g0c1-pin-allocation.md`)  
+**File:** `docs/stm32g0c1-pin-allocation.md`  
 **Status:** Accepted — Rev A baseline  
 **Scope:** Finalized STM32G0C1KCU6 device selection, the complete 32-pin allocation, alternate-function/peripheral mapping, and the resolved package / PD / timebase decisions.
 
@@ -29,13 +29,13 @@ must match it.
 STM32G0C1KCU6   (UFQFPN32, 256 KB flash)
 ```
 
-This is the **accepted Rev A part**, superseding the earlier STM32G0C1KCU6 candidate.
+This is the **accepted Rev A part**, superseding the earlier STM32G0B1KBU6 candidate.
 
 ### 2.1 What changed from the KBU6 candidate
 
 | Field | Old candidate | Finalized |
 |---|---|---|
-| Part | STM32G0C1KCU6 | **STM32G0C1KCU6** |
+| Part | STM32G0B1KBU6 | **STM32G0C1KCU6** |
 | Flash | 128 KB (B) | **256 KB (C)** — headroom for USB-CDC telemetry, indicator firmware, future variant |
 | Package | UFQFPN32 (K) | UFQFPN32 (K) — unchanged |
 | Suffix | KBU6 | **KCU6** |
@@ -128,26 +128,31 @@ section; verify any uncertain channel against the STM32G0C1 datasheet AF table.
 | 14 | PA7 | `SPEED_TUNE_SW` | GPIO in | In | Hi-Z | S601 |
 | 15 | PB0 | `VBAT_SENSE` | ADC_IN8 | In | Hi-Z | pack voltage (battery) |
 | 16 | PB1 | `VBAT_SENSE_EN` | GPIO out | Out | low (off) | sense-divider gate FET (battery) |
-| 17 | PB2 | `BATT_LED1` | GPIO / TIM | Out | low | indicator seg 1 (battery) |
+| 17 | PB2 | `BATT_LED1` | GPIO / TIM | Out | Hi-Z/released | D801 fuel-gauge drive; output only when `S801_BATT` is active |
 | 18 | PA8 | `CC1` | UCPD1_CC1 / DBCC1 | I/O | — | USB-C CC (native UCPD) |
 | 19 | PA9 | `CC2` | UCPD1_CC2 | I/O | — | USB-C CC |
-| 20 | PC6 | `S801_BATT` | GPIO in (pull) | In | Hi-Z | BATT-mode sense (battery) |
+| 20 | PC6 | `S801_BATT` | GPIO in (pull) | In | Hi-Z | BATT-position enable sense from S801 |
 | 21 | PA10 | — | spare GPIO | — | Hi-Z | free |
 | 22 | PA11 [PA9] | `USB_DM` | USB FS | I/O | — | via USBLC6 ESD |
 | 23 | PA12 [PA10] | `USB_DP` | USB FS | I/O | — | via USBLC6 ESD |
 | 24 | PA13 | `SWDIO` | SWD (AF0) | I/O | SWD | reserve permanently |
 | 25 | PA14-BOOT0 | `SWDCLK` | SWD / BOOT0 (AF0) | I/O | SWD | reserve; defined BOOT0 access |
-| 26 | PA15 | `BATT_LED2` | GPIO / TIM | Out | low | indicator seg 2 (battery) |
-| 27 | PB3 | `BATT_LED3` | GPIO / TIM | Out | low | indicator seg 3 (battery) |
-| 28 | PB4 | `BATT_LED4` | GPIO / TIM | Out | low | indicator seg 4 (battery) |
-| 29 | PB5 | `BATT_LED5` | GPIO / TIM | Out | low | indicator seg 5 (battery) |
+| 26 | PA15 | `BATT_LED2` | GPIO / TIM | Out | Hi-Z/released | D802 fuel-gauge drive; output only when `S801_BATT` is active |
+| 27 | PB3 | `BATT_LED3` | GPIO / TIM | Out | Hi-Z/released | D803 fuel-gauge drive; output only when `S801_BATT` is active |
+| 28 | PB4 | `BATT_LED4` | GPIO / TIM | Out | Hi-Z/released | D804 fuel-gauge drive; output only when `S801_BATT` is active |
+| 29 | PB5 | `BATT_LED5` | GPIO / TIM | Out | Hi-Z/released | D805 fuel-gauge drive; output only when `S801_BATT` is active |
 | 30 | PB6 | `DEBUG_TX` | USART1_TX (AF0) | Out | Hi-Z | service debug |
-| 31 | PB7 | `CHRG_SENSE` | GPIO in | In | Hi-Z | charger CHRG (optional, battery) |
-| 32 | PB8 | `DONE_SENSE` | GPIO in | In | Hi-Z | charger DONE (optional, battery) |
+| 31 | PB7 | `CHG_STAT` | GPIO in | In | Hi-Z | BQ24074 CHG status, low while charging |
+| 32 | PB8 | `PGOOD` | GPIO in | In | Hi-Z | BQ24074 power-good status |
 | EP | VSS | GND | exposed pad | — | — | via array to ground plane |
 
 **Spares:** PB9 (1), PA10 (21), and the LSE pair PC14/PC15 (2/3) are unallocated.
 LED segment pins on timer channels (PB2/PA15/PB3/PB4/PB5) can PWM-dim the bar.
+
+**Battery/VU switch ownership:** `S801_BATT` is the MCU enable flag for battery
+indicator ownership. Firmware must drive `BATT_LED1` through `BATT_LED5` only while
+`S801_BATT` is asserted. In VU or non-BATT modes those pins must remain released or
+high-Z so the MCU does not contend with the original CX10043/VU circuitry.
 
 ## 5. Servo-Critical Pins
 
@@ -408,7 +413,7 @@ All gates are satisfied; the MCU/package is **accepted** for Rev A.
 | Motor PWM pin verified | ✅ PA6 / TIM3_CH1 |
 | ADC pins verified | ✅ PA1/PA2/PA3 + PB0 |
 | S601 GPIO verified | ✅ PA7 |
-| VBUS/power-sense pins assigned | ✅ VBAT_SENSE PB0; CHRG/DONE PB7/PB8 |
+| VBUS/power-sense pins assigned | ✅ VBAT_SENSE PB0; CHG_STAT/PGOOD PB7/PB8 |
 | Battery-indicator pins assigned | ✅ BATT_LED1–5, S801_BATT, VBAT_SENSE_EN |
 | External timebase reserved/rejected | ✅ HSI + FG reference; LSE pins free |
 | External PD controller | ✅ none (UCPD + IP2721 trigger) |
@@ -452,7 +457,7 @@ Final table format:
 6. External PD controller? **No.** Variant A uses the IP2721 fixed trigger off-MCU; the battery build runs at 5 V and needs no PD.
 7. External timebase required? **No** — HSI for the MCU; FG provides the speed reference. LSE/HSE pins left free.
 8. HSE pins free? **Yes, unused.**
-9. Rail-sense count? **One ADC (VBAT_SENSE, PB0) plus CHRG/DONE status GPIOs.**
+9. Rail-sense count? **One ADC (VBAT_SENSE, PB0) plus CHG_STAT/PGOOD status GPIOs.**
 10. ~~DAC vs PWM solder-jumper?~~ Resolved: PWM only.
 
 ## 15. Acceptance Criteria — Met
@@ -465,12 +470,12 @@ Final table format:
 | USB-C data pins assigned | ✅ PA11/PA12 |
 | PD strategy reflected in pins | ✅ UCPD PA8/PA9; IP2721 (Variant A) |
 | Servo-critical pins assigned | ✅ FG PA0, PWM PA6, wipers PA1–3, S601 PA7 |
-| Power-sense/fault pins assigned | ✅ VBAT_SENSE PB0, CHRG/DONE PB7/PB8 |
+| Power-sense/fault pins assigned | ✅ VBAT_SENSE PB0, CHG_STAT/PGOOD PB7/PB8 |
 | Battery-indicator pins assigned | ✅ BATT_LED1–5, S801_BATT, VBAT_SENSE_EN |
 | SWD/BOOT recovery preserved | ✅ PA13/PA14, NRST |
 | Timebase resolved | ✅ HSI + FG reference |
 | KiCad symbol matches part | ✅ STM32G0C1KCUx |
-| Schematic labels match this doc | ⚠ pending the v0.6 single-sheet guide reaching the repo |
+| Schematic labels match this doc | ⚠ pending manual KiCad split/update from the legacy in-flight project |
 | Firmware `config.h` matches this doc | ⚠ to update |
 
 ## 16. Design Rule

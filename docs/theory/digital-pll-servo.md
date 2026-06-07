@@ -156,25 +156,28 @@ int32_t output = DAC_CENTER
                - ((KP_Q16 * error)    >> 16)
                - ((KI_Q16 * integral) >> 16);
 
-// Clamp to DAC range
+// Clamp to output range; DAC_* names are retained in firmware for compatibility
 if (output < DAC_MIN) output = DAC_MIN;
 if (output > DAC_MAX) output = DAC_MAX;
 
-DAC1->DHR12R1 = (uint32_t)output;
+TIM3->CCR1 = (uint32_t)output;
 ```
 
-The subtraction in the output calculation reflects the **PNP motor drive
-convention**: Q601 is a PNP transistor whose base requires a **lower voltage** to
-conduct **more** (faster motor). Therefore:
+The subtraction in the output calculation reflects the current firmware sign
+convention. The final PWM-to-speed sign must still be confirmed by the
+motor-drive-characterization procedure on the actual C11-494-12 board. Under the
+working PNP model, Q601 requires a **lower base voltage** to conduct **more**
+(faster motor). Therefore:
 
 - Positive error (too slow) → subtract positive proportional and integral terms
-  → output decreases → lower DAC voltage → Q601 conducts more → motor speeds up ✓
+  → output decreases → lower filtered control voltage → Q601 conducts more → motor speeds up
 
 - Negative error (too fast) → subtract negative proportional and integral terms
-  → output increases → higher DAC voltage → Q601 conducts less → motor slows down ✓
+  → output increases → higher filtered control voltage → Q601 conducts less → motor slows down
 
-DAC_CENTER (2048, mid-scale of the 12-bit DAC) is the operating point around which
-corrections are applied. The DAC_MIN and DAC_MAX clamps prevent the output from
+`DAC_CENTER` (2048, mid-scale PWM duty in the current firmware naming) is the
+operating point around which corrections are applied. `DAC_MIN` and `DAC_MAX` are
+PWM output clamps retained under their older names; they prevent the output from
 driving the motor to a full stop or full speed during large transients.
 
 ### 3.4 Anti-Windup
@@ -278,9 +281,10 @@ identical to the original machine.
 
 ## 6. The Motor Drive Output
 
-Q601 (2SB1013 PNP) on WM-D6C serial 72795 has its emitter at B+3 (10.8V). The
-base operating range is well above the STM32's 3.3V output capability. DSR-1 uses
-a PWM + RC filter + NPN level-shift stage exclusively.
+Q601 on WM-D6C serial 72795 is on the surface-mount C11-494-12 board. Its exact
+package/marking and base operating range remain pending bench verification. DSR-1
+uses a PWM + RC filter + NPN level-shift stage exclusively; direct DAC drive is not
+used.
 
 ### 6.1 PWM with RC Filter and NPN Level Shift
 
@@ -320,7 +324,7 @@ The original analog phase detector's resolution is limited by the noise floor of
 analog circuitry.
 
 **The internal state is observable.** The USB CDC telemetry output provides real-
-time visibility into the measured period, error, integral accumulator, DAC value,
+time visibility into the measured period, error, integral accumulator, PWM/output value,
 and all pot readings. Diagnosing a poorly-performing servo requires only a USB cable
 and a terminal application. The original circuit requires an oscilloscope and
 specialised knowledge to observe its internal state.

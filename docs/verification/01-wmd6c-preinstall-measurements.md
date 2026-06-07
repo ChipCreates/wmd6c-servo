@@ -366,7 +366,7 @@ Record:
 Questions:
 
 - What voltage range must DSR-1 reproduce?
-- Is the control node above STM32 DAC range?
+- Is the control node above the STM32's safe direct-drive range?
 - Does the node expect voltage drive, current drive, or high impedance?
 - What is the safe inactive state?
 - What happens during Stop?

@@ -2,7 +2,7 @@
 
 ## Purpose of This Document
 
-When the DSR-1 module replaces IC601 (CX20084), it eliminates the original inner
+When the DSR-1 Servo Control Board replaces IC601 (CX20084), it eliminates the original inner
 servo loop entirely. However, the WM-D6C's original servo architecture was a
 **two-loop system**, not one. The second loop — the crystal phase comparator outer
 loop — involves IC701 (MSM58141RS) on the Auto-Off board. This document answers the
@@ -120,7 +120,7 @@ use other outputs of the divider chain and are independent of the phase comparat
 ## 3. What Happens When IC601 Is Removed
 
 When the CX20084 is removed from its footprint on the Main Board and the DSR-1
-module is installed to drive Q601 directly:
+Servo Control Board is installed to drive Q601 directly:
 
 ### 3.1 IC601 Pin 9 Net — FG Pulses to IC701
 
@@ -150,7 +150,7 @@ C605 will charge or discharge to whatever DC level IC701 pin 5 settles at, throu
 R715. The resulting voltage sits on the Auto-Off board at the C605/R715 junction,
 floating to some indeterminate level referenced to the Auto-Off board's GND.
 
-**Effect on DSR-1**: None. This net has no connection to J1. The DSR-1 module's
+**Effect on DSR-1**: None. This net has no connection to J1. The Servo Control Board's
 Q601_BASE output (J1 pin 2) drives Q601's base directly and does not share any
 node with the R715/C605 net.
 
@@ -173,7 +173,7 @@ No path exists from this network to:
     - Q601 base
     - FG901 signal
     - Any STM32 pin
-    - B+1, B+3, or GND of the DSR-1 module
+    - B+1, B+3, or GND of the Servo Control Board
 ```
 
 The outer loop is open at both ends. It cannot inject signals into the DSR-1
@@ -222,7 +222,7 @@ comparator section and continues to operate normally.
 **Auto-off timing**: The auto-off circuit on the same board uses IC701 divider
 outputs for its timing reference. Q701 and Q702 (the auto-off transistors) and
 their associated logic remain functional. The auto-off signal that drives the
-MOTOR_EN net (J1 pin 3 on the DSR-1 module) is produced by this circuit and
+MOTOR_EN net (J1 pin 3 on the Servo Control Board) is produced by this circuit and
 continues to work correctly.
 
 **Crystal oscillator**: X701 and its associated inverter buffer chain within IC701

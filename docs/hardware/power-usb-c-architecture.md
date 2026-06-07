@@ -18,7 +18,7 @@ DSR-1 is not a servo-only daughterboard. Rev A must treat the following as first
 3. **USB-C data/service access**
 4. **USB-C PD or USB-C power-role strategy**
 
-The power and USB-C design must be developed with the same discipline as the servo design. It must be grounded in the Sony WM-D6C/TC-D6C service manual, the STM32G0B1 datasheet, and bench measurements from real hardware.
+The power and USB-C design must be developed with the same discipline as the servo design. It must be grounded in the Sony WM-D6C/TC-D6C service manual, the selected STM32G0C1KCU6 device/package documentation, and bench measurements from real hardware.
 
 This file answers:
 
@@ -58,8 +58,8 @@ The power and USB-C design is governed by:
 1. **Sony WM-D6C / TC-D6C Service Manual, Ver. 1.1, 2001.06**
    - Used for CN301, CP304, battery/external power behavior, service test conditions, board references, and the original system context.
 
-2. **STMicroelectronics STM32G0B1xB/xC/xE Datasheet, DS13560 Rev 6, February 2026**
-   - Used for USB FS, UCPD, GPIO, ADC, DAC, clock, flash, power, reset, operating-voltage, and package/pinout constraints.
+2. **STMicroelectronics STM32G0C1KCU6 / STM32G0 family documentation**
+   - Used for USB FS, UCPD, GPIO, ADC, PWM timer, clock, flash, power, reset, operating-voltage, and package/pinout constraints.
 
 3. **Bench measurements**
    - Required for actual rail voltages, current draw, startup surges, motor load behavior, CN301 behavior, CP304 behavior, USB-connected ground effects, and power-fault validation.
@@ -195,7 +195,7 @@ USB service must not compromise servo timing. The servo ISR has priority over al
 
 ### 6.2 USB Firmware Update
 
-The firmware update path should avoid requiring permanent SWD access after the module is installed.
+The firmware update path should avoid requiring permanent SWD access after the DSR-1 boards are installed.
 
 Possible update paths:
 
@@ -221,7 +221,7 @@ Possible PD architectures:
 
 | Architecture | Description |
 |---|---|
-| Native STM32 UCPD | STM32G0B1 handles CC/PD behavior directly |
+| Native STM32 UCPD | STM32G0C1 handles CC/PD behavior directly |
 | External PD controller | Dedicated controller negotiates power and provides a ready rail/status |
 | Staged hybrid | Rev A includes USB-C data and pads/options for PD architecture validation |
 | Dual-path | USB-C service plus separate protected external power path |
@@ -232,7 +232,7 @@ The architecture must be selected by pinout feasibility, firmware complexity, re
 
 ## 7. Native STM32 UCPD Option
 
-The STM32G0B1 family includes USB Type-C / PD capability, but family-level capability is not the same as a completed design.
+The selected STM32G0C1KCU6 includes USB Type-C / PD capability, but family-level capability is not the same as a completed design.
 
 ### 7.1 Advantages
 
@@ -246,7 +246,7 @@ The STM32G0B1 family includes USB Type-C / PD capability, but family-level capab
 
 | Risk | Why it matters |
 |---|---|
-| Pin pressure | Servo, ADC, DAC/PWM, USB, UCPD, SWD, BOOT0, and optional clock pins all compete |
+| Pin pressure | Servo, ADC, PWM output, USB, UCPD, SWD, BOOT0, and optional clock pins all compete |
 | Firmware complexity | PD handling must not interfere with real-time servo timing |
 | Validation burden | PD fault states must be tested thoroughly |
 | Boot-state behavior | PD negotiation during reset must leave motor path safe |

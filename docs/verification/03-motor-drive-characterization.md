@@ -15,7 +15,8 @@ The DSR-1 servo loop can only control tape speed safely if its output stage matc
 
 For **Ver. 1.0 CX20084 boards**, the output stage is already committed:
 PWM + RC filter + NPN level-shift (TIM3_CH1 PA6 → Q_LS MMBT3904 → Q601 base).
-Q601 (2SB1013 PNP) has emitter at B+3 (10.8V); direct DAC drive is not possible.
+Q601 exact part/package and base operating range on the C11-494-12 SMD board remain
+pending physical confirmation. Direct DAC drive is not used.
 
 This procedure now answers:
 
@@ -24,7 +25,8 @@ This procedure now answers:
 - What happens during Stop, Play startup, steady Play, and Speed Tune movement?
 - How much current does the motor path require? (Needed for power protection sizing)
 - What is the servo loop sign? (Confirm firmware PI convention)
-- What clamp values are appropriate for DAC_MIN and DAC_MAX?
+- What clamp values are appropriate for the firmware output limits (`DAC_MIN` and
+  `DAC_MAX`, retained names for PWM compatibility)?
 
 ---
 
@@ -181,7 +183,7 @@ Capture startup transient.
 Questions:
 
 - Does startup demand a large correction?
-- Does the node exceed STM32 DAC range?
+- Does the node exceed the STM32's safe direct-drive range?
 - Is a soft-start needed?
 - Does the motor current surge affect DSR-1 power design?
 - Does DSR-1 need to delay servo lock until FG is stable?
@@ -285,7 +287,8 @@ The measurements in this procedure are used to:
    voltage matches the expected safe-off condition (base at or near B+1, Q601
    firmly off). Adjust R9 if needed.
 
-2. **Confirm DAC_MIN and DAC_MAX.** The clamp values in `config.h` must keep
+2. **Confirm output clamps.** The `DAC_MIN` and `DAC_MAX` names in `config.h` are
+   retained for firmware compatibility, but they limit PWM duty. The clamp values must keep
    the motor within safe operating range. Measure the base voltage corresponding
    to maximum safe drive and minimum safe drive, then back-calculate the required
    PWM clamp values.
@@ -379,7 +382,7 @@ Motor-drive characterization is accepted when:
 | Output voltage range defined | Pending |
 | Safe inactive state defined | Pending |
 | R9 sizing confirmed from measured base voltage | Pending |
-| DAC_MIN / DAC_MAX clamp values derived | Pending |
+| PWM output clamp values (`DAC_MIN` / `DAC_MAX` names) derived | Pending |
 | PI sign convention confirmed | Pending |
 | Dummy-load output test plan written | Pending |
 | Firmware implications documented | Pending |

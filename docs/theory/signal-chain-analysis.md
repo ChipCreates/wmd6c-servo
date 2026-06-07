@@ -3,8 +3,8 @@
 ## Purpose of This Document
 
 This document traces every signal that passes between the WM-D6C machine and the
-DSR-1 module — from its source in the original circuitry, through each conditioning
-stage on the module board, to the STM32 pin that receives or drives it, and back
+DSR-1 Servo Control Board — from its source in the original circuitry, through each conditioning
+stage on the Servo Control Board, to the STM32 pin that receives or drives it, and back
 out through the motor drive chain to the load. For each signal it explains the
 voltage levels involved, the purpose of every component in the conditioning network,
 the protection mechanisms, and the failure modes each mechanism guards against.
@@ -16,18 +16,18 @@ connected. This document explains *why*.
 
 ## Interface Overview
 
-All signals between the DSR-1 module and the WM-D6C main board pass through the
+All signals between the DSR-1 Servo Control Board and the WM-D6C main board pass through the
 eight-position JST PH J1 connector. The signals are:
 
 | J1 Pin | Net | Direction | Nature |
 |---|---|---|---|
-| 1 | FG_RAW | Machine → Module | Digital pulse train, machine voltage levels |
-| 2 | Q601_BASE | Module → Machine | Analog motor drive, machine voltage levels |
-| 3 | MOTOR_EN | Machine → Module | Digital logic level, machine voltage levels |
-| 4 | RV601_WIPER | Machine → Module | Analog DC, machine voltage levels |
-| 5 | RV602_WIPER | Machine → Module | Analog DC, machine voltage levels |
-| 6 | RV603_WIPER | Machine → Module | Analog DC, machine voltage levels |
-| 7 | B+1 / VBATT | Machine ↔ Module | DC power rail, 6V (module drives it in wall variants; receives it in the two-board battery build) |
+| 1 | FG_RAW | machine → Servo Control Board | Digital pulse train, machine voltage levels |
+| 2 | Q601_BASE | Servo Control Board → machine | Analog motor drive, machine voltage levels |
+| 3 | MOTOR_EN | machine → Servo Control Board | Digital logic level, machine voltage levels |
+| 4 | RV601_WIPER | machine → Servo Control Board | Analog DC, machine voltage levels |
+| 5 | RV602_WIPER | machine → Servo Control Board | Analog DC, machine voltage levels |
+| 6 | RV603_WIPER | machine → Servo Control Board | Analog DC, machine voltage levels |
+| 7 | B+1 / VBATT | machine ↔ Servo Control Board | DC power rail, 6V (Servo Control Board drives it in wall variants; receives it in the two-board battery build) |
 | 8 | GND | Shared | Common ground reference |
 
 The fundamental electrical challenge is that all signals on the machine side operate
@@ -204,7 +204,7 @@ to modular arithmetic.
 
 ---
 
-## 2. Motor Drive Path (PA4 → J1 Pin 2: Q601_BASE)
+## 2. Motor Drive Path (PA6 → J1 Pin 2: Q601_BASE)
 
 This signal travels in the opposite direction — from the STM32 to the motor drive
 transistor Q601 in the WM-D6C.
@@ -221,10 +221,11 @@ B+3 rail (10.8V from MT3608 boost) ──→ Q704 collector/emitter ──→ M9
                                         Q601 base ←── DSR-1 output (J1 pin 2)
 ```
 
-Q601 (2SB733) is a PNP bipolar transistor in a TO-92 package. Its emitter connects
-to the B+3 motor supply through the Q703/Q704 mode-switching circuit. Its collector
-drives one terminal of M901. The motor current — and therefore motor speed — is
-controlled by the base current, which is controlled by the base voltage.
+Q601 is the off-board WM-D6C motor-control device driven from the former CX20084
+output node. The primary unit is the surface-mount C11-494-12 board, so the exact
+Q601 package/marking and pinout must be physically confirmed before installation.
+The working electrical model is a PNP-style motor-current control path whose base
+drive is controlled by the former IC601 output node.
 
 **PNP transistor convention**: Q601 conducts when its base is at a lower voltage
 than its emitter. More precisely, it conducts when the base-emitter junction is
@@ -235,61 +236,19 @@ Pulling the base toward the emitter voltage (10.8V) turns Q601 off. Pulling the
 base further down (toward 9V or less) increases base current and drives Q601 harder,
 increasing motor current and speed.
 
-The critical question for the DSR-1 output stage is: **what voltage range does the
-Q601 base actually operate in during normal playback?** This depends on the original
-CX20084 circuit's operating point, which is not specified in the service manual and
-must be measured on the actual unit.
+The critical bench question is: **what voltage range does the Q601 base actually
+operate in during normal playback?** This confirms R9 sizing, safe-off margin, and
+the PWM-duty-to-speed sign on the actual unit.
 
-### 2.2 Option A — Direct DAC Drive
+### 2.2 Direct DAC Drive — Rejected
 
-**Used when:** Measured Q601 base voltage range is within 0V to 3.3V.
+PA4/DAC1_OUT1 is not used for motor drive. The Rev A design uses TIM3 PWM on PA6
+through an RC filter and NPN level-shift stage. PA4 may remain no-connect or spare.
 
-```
-PA4 (DAC1_OUT1)
-    │
-   [R5: 10kΩ series]
-    │
-    ├──[R6: 100kΩ pullup to VDD 3.3V]
-    │
-   J1 Pin 2 → Q601 Base
-```
+### 2.3 Committed PWM + NPN Level-Shift Drive
 
-The STM32 12-bit DAC on PA4 produces an analog output voltage ranging from 0V to
-3.3V in 4096 steps (approximately 0.8mV per step). At the operating point
-(DAC_CENTER = 2048, output ≈ 1.65V), Q601 conducts at the level needed to maintain
-correct motor speed.
-
-**R5 (10kΩ series resistor)** limits the current into the Q601 base, protecting
-both the DAC output and Q601's base-emitter junction from excessive current. It also
-forms a low-pass filter with the Q601 base-emitter capacitance (~10pF), preventing
-the DAC's output from switching at frequencies that could excite motor resonances.
-The RC time constant is approximately 10kΩ × 10pF = 100ns — fast enough for servo
-response but filtered against high-frequency noise.
-
-**R6 (100kΩ pullup to VDD)** serves a critical safety function: at power-on, before
-the DAC is initialised, R6 holds the Q601 base at 3.3V (VDD). Because Q601's
-emitter is at B+3 (10.8V), holding the base at 3.3V means the base-emitter voltage
-is 3.3V - 10.8V = -7.5V — the transistor is firmly off. This guarantees the motor
-does not run uncontrolled during the STM32 boot sequence.
-
-Once the DAC is initialised and the servo loop starts, the DAC output overrides R6.
-At DAC_CENTER (1.65V output), the 10kΩ/100kΩ divider produces approximately
-1.65V × (10kΩ is between the two), but R6's effect is small compared to the DAC's
-low output impedance. The effective base drive voltage is approximately the DAC
-output minus the small drop across R5.
-
-**DAC output impedance and Q601 base current**: The STM32 DAC has an output
-impedance of approximately 12kΩ (output buffer off) or very low (output buffer on).
-With the output buffer enabled, the DAC can source or sink the base current through
-R5 without significant voltage error. The Q601 base current at normal operating point
-is in the microamp range — the R5 voltage drop is negligible.
-
-### 2.3 Option B — NPN Level-Shift Drive
-
-**Used when:** Measured Q601 base voltage range exceeds 3.3V.
-
-This configuration is needed when the Q601 operating point requires a base voltage
-above what the STM32's 3.3V DAC can directly produce.
+This configuration is the committed Rev A output topology. Bench measurement still
+confirms R9 sizing and the duty-cycle-to-speed sign.
 
 ```
 PA6 (TIM3_CH1 PWM)
@@ -356,7 +315,7 @@ division between R9 (pulling toward B+1) and Q_LS (pulling toward GND). The serv
 loop adjusts the PWM duty cycle to set this intermediate voltage to whatever value
 produces the correct motor speed.
 
-**Boot safety with Option B**: The TIM3 PWM output is in its reset state (output
+**Boot safety**: The TIM3 PWM output is in its reset state (output
 low, 0% duty cycle) until the firmware initialises it. With 0% duty cycle, the RC
 node is at 0V, Q_LS is off, and R9 pulls Q601's base toward B+1 — motor is off.
 Safe.
@@ -364,13 +323,13 @@ Safe.
 ### 2.4 The Forward Motor Drive Path Summary
 
 ```
-STM32 servo output (PA4 DAC or PA6 PWM)
+STM32 servo output (PA6 PWM)
     │
-    [R5/R6 (Option A) or R7/C8/Q_LS/R8/R9 (Option B)]
+    [R7/C8/Q_LS/R8/R9]
     │
 J1 Pin 2 → Q601 base (on WM-D6C main board)
     │
-    [Q601 2SB733 PNP — base-emitter forward biased when base < emitter]
+    [Q601 motor-control device — exact package/marking pending physical confirmation]
     │
 Q601 collector → M901 capstan motor (one terminal)
     │
@@ -378,10 +337,10 @@ M901 other terminal ← Q703/Q704 switching → B+3 (10.8V from DSR-1 MT3608 boo
 ```
 
 The complete forward signal path from the servo algorithm's output value to actual
-motor current spans three boards (DSR-1 module, WM-D6C main board, the motor
-itself) and two signal conversion stages (digital-to-analog at the DAC or PWM
-filter, and voltage-to-current at the Q601 base-emitter junction). The servo loop's
-job is to adjust the first stage — the DAC value or PWM duty cycle — to achieve
+motor current spans the Servo Control Board, WM-D6C main board, and the motor
+itself, with two signal conversion stages: PWM-to-filtered-control voltage on the
+Servo Control Board, and voltage-to-current at the Q601 base node. The servo loop's
+job is to adjust the first stage — the PWM duty cycle — to achieve
 the motor speed that produces the target FG period.
 
 ---
@@ -605,7 +564,7 @@ the need for an external pull-down resistor, saving board space.
 
 ---
 
-## 6. USB Data Path (PA11/PA12 and PA8/PB15)
+## 6. USB Data Path (PA11/PA12 and PA8/PA9)
 
 ### 6.1 USB D+ and D− (PA12 and PA11)
 
@@ -630,9 +589,9 @@ pair on the PCB, with 90Ω differential impedance. Traces must be kept short (un
 trace lengths or impedances degrades the USB eye diagram and can cause enumeration
 failures.
 
-### 6.2 USB PD CC Lines (PA8 and PB15 — Variant A only)
+### 6.2 USB-C CC Lines (PA8 and PA9 — Variant A only)
 
-The CC1 and CC2 lines of the USB-C connector connect to PA8 (UCPD1_CC1) and PB15
+The CC1 and CC2 lines of the USB-C connector connect to PA8 (UCPD1_CC1) and PA9
 (UCPD1_CC2) of the STM32. These lines carry the USB Power Delivery signalling that
 negotiates the 9V supply contract with the USB charger.
 
@@ -652,43 +611,43 @@ The CC lines require no level shifting — they operate at USB PD signal levels
 
 ### 7.1 B+1 Rail (J1 Pin 7)
 
-J1 pin 7 connects the servo module to the WM-D6C's main 6V B+1 supply rail. Its
+J1 pin 7 connects the Servo Control Board to the WM-D6C's main 6V B+1 supply rail. Its
 direction depends on the build:
 
-- **Wall variants (A and B):** the rail is *driven by the module* — the module's
+- **Wall variants (A and B):** the rail is *driven by the Servo Control Board* — the board's
   regulated TPS63070 output is fed into the machine through this pin, powering all the
   machine's circuits. J1 pin 7 is an **output**.
-- **Battery build (two-board):** B+1 is generated on the **power daughter board**
+- **Battery build (two-board):** B+1 is generated on the **Power Board**
   (behind the battery bay) and injected at the machine's original battery-terminal
   node, ahead of the S901 power switch. It propagates through the machine's B+1 net
-  and reaches the servo module through this same pin. J1 pin 7 is therefore an
-  **input** in this build — the module receives B+1 and its own power-input zone is
+  and reaches the Servo Control Board through this same pin. J1 pin 7 is therefore an
+  **input** in this build — the board receives B+1 and its own power-input zone is
   unpopulated. Because injection is on the battery side of S901, the front-panel power
   switch still commands the whole machine.
 
 The batteries are never wired to J1 pin 7 directly: their raw 3.7V would be far below
-the 6V the rail expects. The daughter board's charger, protection, and boost convert
+the 6V the rail expects. The Power Board's charger, protection, and boost convert
 the pack to a regulated 6.0V first (see Power Supply Design §7).
 
-**Protection**: A 1N5819 Schottky diode in series at J1 pin 7 (on the module board)
+**Protection**: A 1N5819 Schottky diode in series at J1 pin 7 (on the Servo Control Board)
 prevents reverse current flow in the event of a power-sequencing issue. The 0.3V
-forward drop at operating current means the module sees approximately 5.7V on B+1
+forward drop at operating current means the Servo Control Board sees approximately 5.7V on B+1
 instead of 6.0V — within operating specification. In the battery build, where J1 pin 7
 is input-only, this Schottky may be retained as input reverse-protection or omitted,
-since its original anti-back-feed purpose (module driving the rail out) no longer
+since its original anti-back-feed purpose (Servo Control Board driving the rail out) no longer
 applies.
 
 **Battery-build board-to-board link.** Moving the pack and B+1 generation onto the
-daughter board adds a small interface between the daughter board and the servo module,
+Power Board adds a small interface between the Power Board and the Servo Control Board,
 separate from the J1 machine harness: B+1 and GND (the power path, via the battery
 terminals), **VBAT_SENSE** (pack voltage to an STM32 ADC, for the fuel gauge — see
-§14.4), the BQ24074 **CHG/PGOOD** status lines (to an STM32 GPIO, for the charge
+§14.4), the BQ24074 **CHG_STAT/PGOOD** status lines (to an STM32 GPIO, for the charge
 animation), and optionally the **USB D+/D−** pair if USB-CDC tuning is routed from the
-daughter board's USB-C rather than a separate bench header on the module.
+Power Board's USB-C rather than a separate bench header on the Servo Control Board.
 
 ### 7.2 GND (J1 Pin 8)
 
-J1 pin 8 connects the module GND plane to the WM-D6C chassis ground. All voltage
+J1 pin 8 connects the Servo Control Board GND plane to the WM-D6C chassis ground. All voltage
 measurements and signal levels described in this document are referenced to this
 common ground.
 
@@ -698,7 +657,7 @@ of all bypass capacitors, and to the return path of the MT3608 boost converter.
 A dedicated GND polygon pour on the board bottom layer provides this low-impedance
 connection. High-current paths (motor supply return, boost converter switching
 return) should not share traces with the analog signal return paths (ADC inputs,
-DAC output reference).
+filtered PWM/control-output reference).
 
 ---
 
@@ -707,15 +666,14 @@ DAC output reference).
 | Signal | Source | Source Level | Conditioning | STM32 Pin | Safe Range |
 |---|---|---|---|---|---|
 | FG_RAW | FG901 open-collector + pull-up | 0 to ~6V swing | R3/R4 divider, BAT54 clamp, C7 filter | PA0 / TIM2_CH1 | 0 to 3.0V after conditioning |
-| Q601_BASE (A) | STM32 DAC | 0 to 3.3V | R5 series, R6 pullup | PA4 / DAC1_OUT | N/A (output) |
-| Q601_BASE (B) | STM32 PWM+RC+NPN | 0 to 3.3V PWM → level shifted | R7, C8 RC, Q_LS NPN, R8, R9 | PA6 / TIM3_CH1 | N/A (output) |
+| Q601_BASE | STM32 PWM+RC+NPN | 0 to 3.3V PWM → level shifted | R7, C8 RC, Q_LS NPN, R8, R9 | PA6 / TIM3_CH1 | N/A (output) |
 | MOTOR_EN | IC601 pin 7 / R605 | 0 to ~4.4V | R10/R11 divider | PA5 / GPIO | 0 to 3.03V after divider |
 | RV601_WIPER | 47kΩ pot wiper | 0 to ~6V (measure) | 100Ω + BAT54 clamp | PA1 / ADC_IN1 | Must be ≤3.3V — verify |
 | RV602_WIPER | 20kΩ pot wiper | 0 to ~6V (measure) | 100Ω + BAT54 clamp | PA2 / ADC_IN2 | Must be ≤3.3V — verify |
 | RV603_WIPER | 47kΩ pot wiper | 0 to ~6V (measure) | 100Ω + BAT54 clamp | PA3 / ADC_IN3 | Must be ≤3.3V — verify |
 | S601 | Slide switch | 0 to 3.3V (rewired) | None — direct | PA7 / GPIO | 0 to 3.3V |
 | USB D+/D− | USB-C connector | USB 2.0 FS levels | USBLC6-2SC6Y ESD | PA12/PA11 | Handled by USB PHY |
-| CC1/CC2 | USB-C connector | USB PD BMC levels | Direct | PA8/PB15 / UCPD | 0 to 1.1V |
+| CC1/CC2 | USB-C connector | USB PD BMC levels | Direct | PA8/PA9 / UCPD | 0 to 1.1V |
 | B+1 | Battery / converter | 6V DC | Schottky diode | J1 pin 7 → VIN | 5.5V to 6.5V |
 
 ---
@@ -755,10 +713,10 @@ When reviewing the KiCad schematic, use this document to verify:
 
 ### 10.1 The Interference Problem on a Mixed-Signal Board
 
-The DSR-1 module places two fundamentally incompatible electrical environments on
+In wall-input variants, the Servo Control Board places two fundamentally different electrical environments on
 the same small PCB: a switching power converter (MT3608, switching at 1.2 MHz,
-handling currents up to 500mA) and a precision analog measurement system (12-bit
-ADC reading pot wipers, 12-bit DAC driving a motor, FG pulse timing sensitive to
+handling currents up to 500mA) and a precision measurement/control system (12-bit
+ADC reading pot wipers, PWM motor control, FG pulse timing sensitive to
 nanosecond-level jitter). On a larger board these would be separated by distance
 and ground plane partitioning. On a 30×22mm board they are millimetres apart and
 share a common power supply and ground structure.
@@ -877,14 +835,10 @@ before it reaches the ADC reference. The ADC reference in the 32-pin package is
 internally connected to VDDA — this decoupling is therefore the primary determinant
 of ADC noise floor.
 
-**DAC output noise**: The DAC output on PA4 drives Q601's base through R5 (10kΩ).
-This high impedance means the output node is relatively susceptible to noise pickup.
-The Q601 base-emitter capacitance (~10pF) forms a low-pass filter with R5 with a
-corner frequency of 1 / (2π × 10kΩ × 10pF) = 1.6 MHz. This provides approximately
-3dB of attenuation at the MT3608 switching frequency — marginal. If DAC output
-noise causes motor speed jitter, the solution is to add a 100pF C0G capacitor from
-the DAC output node (between R5 and Q601 base) to GND, reducing the RC corner
-frequency to 160kHz and providing 17dB of attenuation at 1.2 MHz.
+**PWM/control-node noise**: The motor output is generated by PA6 PWM through R7/C8
+and the Q_LS level-shift stage. Keep the RC node and Q601_BASE trace away from the
+MT3608 switching loop and USB differential pair. If bench measurements show ripple
+or motor-speed jitter, adjust the RC filter and layout before changing firmware gains.
 
 ### 10.4 Layout Rules Derived From Noise Analysis
 
@@ -897,16 +851,15 @@ vias on both sides. Maximum length 3mm. Minimum clearance to any signal trace 2m
 Do not route signal traces under the inductor L1.
 
 **Rule 2 — Analog Signal Zone**: All analog signal traces (FG conditioning, ADC
-inputs, DAC output) must be routed in a dedicated zone on the PCB that does not
+inputs, filtered PWM/control output) must be routed in a dedicated zone on the PCB that does not
 overlap with the switching converter circuitry. Place the MT3608 and its associated
 components in one corner of the board, and the signal conditioning network and STM32
 analog pins in the opposite region.
 
-**Rule 3 — Decoupling Capacitor Placement**: VDD decoupling capacitors (100nF × 4)
-must be placed within 0.5mm of their respective STM32 VDD pins. VDDA decoupling
-(100nF + 1µF) must be placed within 0.5mm of pin 5. VDDIO2 decoupling (100nF +
-4.7µF) must be within 1mm of pin 18. Capacitors placed further away have their
-bypass effectiveness reduced by the inductance of the connecting trace.
+**Rule 3 — Decoupling Capacitor Placement**: The STM32G0C1KCU6 UFQFPN32 GP package
+has combined VDD/VDDA and VSS/VSSA pins and no separate VDDIO2 pin. Place the
+combined VDD/VDDA decoupling network within 0.5mm of pin 4. Capacitors placed further
+away have their bypass effectiveness reduced by the inductance of the connecting trace.
 
 **Rule 4 — Ground Pour Connectivity**: All decoupling capacitor GND connections
 must return directly to the exposed VSS pad of the STM32 via the bottom copper
@@ -977,7 +930,8 @@ the FG pulse period starts very long and decreases toward TARGET_PERIOD.
 At the very start of spin-up, the motor may be running at only 10% of correct
 speed. The FG period is then approximately 256,000 ticks (25× TARGET_PERIOD). This
 is a very large positive error. The proportional and integral terms both drive the
-DAC output toward DAC_MIN (maximum motor drive), which is the correct response.
+PWM/output value toward the maximum-drive clamp (`DAC_MIN` in current firmware
+naming), which is the intended response under the current sign convention.
 
 **Integral accumulator during spin-up**: The integral term accumulates the sum of
 all errors. During a 300ms spin-up with an average error of +200,000 ticks running
@@ -989,15 +943,15 @@ Integral = 200,000 ticks × 2500 Hz × 0.3s = 150,000,000 tick-periods
 
 With KI_Q16 = 524, the integral term contributes:
 ```
-KI contribution = (524 × 150,000,000) >> 16 = 1,196,289 DAC counts
+KI contribution = (524 × 150,000,000) >> 16 = 1,196,289 output counts
 ```
 
-This far exceeds the DAC range of 0-4095. Without the anti-windup clamp, the
+This far exceeds the 12-bit output range of 0-4095. Without the anti-windup clamp, the
 integral would take a very long time to unwind after the motor reaches speed, causing
 severe overshoot and oscillation. The INTEGRAL_LIMIT clamp prevents this —
 recommended value is TARGET_PERIOD × 50 = 1,280,000, which limits the maximum
-integral contribution to approximately 10,000 DAC counts — still larger than the
-DAC range, but the DAC output clamp handles this. The integral will unwind within
+integral contribution to approximately 10,000 output counts — still larger than the
+PWM/output range, but the output clamp handles this. The integral will unwind within
 approximately 2-3 FG periods (1-2ms) after the motor reaches speed, giving a
 clean, non-oscillating lock.
 
@@ -1005,7 +959,7 @@ clean, non-oscillating lock.
 maximum motor drive — it cannot control the speed, only observe it. The transition
 from open-loop spin-up to closed-loop speed regulation happens naturally as the
 error decreases to a range where the proportional term's output falls within the
-DAC range. There is no explicit mode switch — the PI algorithm handles it
+PWM/output range. There is no explicit mode switch — the PI algorithm handles it
 continuously. This is one of the advantages of a PI servo over the original PLL
 implementation, which had a distinct capture/lock sequence.
 
@@ -1161,25 +1115,13 @@ small, correlated speed error — all three pots apparently moved slightly. At 2
 VDDA accuracy and a 200-tick trim range, the worst-case correlated error is
 ±4 ticks = ±0.016% speed shift. This is within specification.
 
-### 12.4 DAC Output Accuracy
+### 12.4 PWM Output Resolution
 
-The 12-bit DAC on PA4 produces an output voltage from 0V to VREF+ (= VDDA ≈ 3.3V)
-in 4096 steps. Each step is approximately 3.3V / 4096 = 0.806mV.
-
-The DAC output buffer is enabled to drive the 10kΩ R5 load. With buffer enabled,
-the output impedance is very low (< 1Ω from the datasheet) and the output voltage
-error is dominated by the DAC's DNL (Differential Non-Linearity) and INL (Integral
-Non-Linearity) specifications, both specified as ±1 LSB typical in DS13560 Rev 6,
-Table 66.
-
-A ±1 LSB DAC error represents a ±0.806mV uncertainty on the Q601 base drive voltage.
-Through R5 (10kΩ), this produces a base current uncertainty of ±80nA — negligible
-compared to the normal operating base current of several microamperes. The DAC
-accuracy is not a limiting factor in motor drive precision.
-
-**DAC settling time**: DS13560 Rev 6 specifies the DAC settling time (full scale,
-12-bit) as approximately 3µs. The servo ISR writes a new DAC value every 400µs —
-the DAC fully settles between updates with 133× margin.
+Motor drive is TIM3 PWM on PA6, filtered by R7/C8 and level-shifted by Q_LS. The
+firmware currently keeps the older `DAC_*` names for its 12-bit output constants,
+but the hardware output is PWM duty cycle. A 12-bit duty value gives 4096 command
+steps before the analog RC filter and Q601 transfer curve. Final usable resolution,
+clamps, and sign must be confirmed by the motor-drive characterization procedure.
 
 ---
 
@@ -1195,7 +1137,7 @@ the ground plane. If a high-current switching return path shares ground with a
 sensitive analog measurement reference, the voltage created by the switching current
 appears as noise in the analog measurement.
 
-For the DSR-1 module, the problematic currents are:
+For the Servo Control Board, the problematic currents are:
 
 **MT3608 switching current**: The inductor charges and discharges with a triangular
 current waveform of approximately 200mA peak-to-peak at 1.2 MHz. The return current
@@ -1203,7 +1145,7 @@ flows from the MT3608 GND pin back to the input capacitor negative terminal. Thi
 path must be kept separate from the analog ground paths.
 
 **Motor rail return current**: The motor draws 100-200mA from the B+3 rail. This
-current returns through the module's GND plane to the J1 pin 8 harness connection.
+current returns through the Servo Control Board GND plane to the J1 pin 8 harness connection.
 This is a relatively steady DC current with switching transients when the motor
 mode changes.
 
@@ -1258,8 +1200,8 @@ solder joint.
 
 ### 13.4 Decoupling Capacitor Placement and Return Routing
 
-Each decoupling capacitor has a power terminal (connected to VDD, VDDA, or VDDIO2)
-and a GND terminal. The GND terminal connection to the GND pour must be as short
+Each decoupling capacitor has a power terminal connected to the combined VDD/VDDA
+domain and a GND terminal. The GND terminal connection to the GND pour must be as short
 as possible, and the GND pour return path from that terminal to the STM32 exposed
 pad must not cross the MT3608 switching return path.
 
@@ -1268,9 +1210,8 @@ pad must not cross the MT3608 switching return path.
   directly into GND pour
 - 100nF VDDA cap: placed within 0.5mm of VDDA pin 5, GND terminal via into GND
   pour between the cap and the STM32 body, not on the far side
-- 4.7µF VDDIO2 cap: within 1mm of pin 18. This bulk cap stabilises the VDDIO2
-  domain during USB PHY operation, which draws brief current spikes on USB
-  signalling transitions
+- no VDDIO2 capacitor: the selected GP package ties that domain internally and does
+  not expose a separate VDDIO2 pin
 
 ### 13.5 MT3608 Ground Isolation
 
@@ -1336,9 +1277,8 @@ levels) exists at any intermediate point.
 **t = 0 to ~1ms**: Supply rails ramp up. The MCP1700 LDO output rises from 0V to
 3.3V with a slew rate limited by the output capacitor (10µF). During this ramp:
 - All STM32 pins are in reset state (outputs floating, inputs high-impedance)
-- PA4 (DAC output) is floating — R6 pulls Q601 base toward VDD which is also ramping
-- The motor remains off because Q601 base is following VDD upward while emitter is
-  at B+3 (10.8V), maintaining reverse bias
+- PA6 (PWM output) is high-impedance until configured
+- The motor remains off because R9 pulls Q601_BASE toward the planned safe-off node
 
 **t = ~1ms**: STM32 VDD reaches the POR (Power-On Reset) threshold (~1.6V). The
 internal reset circuit releases. The STM32 begins executing from the reset vector
@@ -1347,17 +1287,15 @@ in flash.
 **t = ~1ms to ~1.5ms**: Clock initialisation. HSI16 starts (~1µs), PLL locks
 (~200µs). System clock transitions from HSI16 to 64 MHz PLL output.
 
-**t = ~1.5ms**: Peripheral initialisation begins. GPIO, TIM2, DAC, ADC, USB CDC
+**t = ~1.5ms**: Peripheral initialisation begins. GPIO, TIM2, TIM3 PWM, ADC, USB CDC
 are configured in sequence. During GPIO initialisation:
-- PA4 is configured as DAC output. The DAC is initialised with DAC_CENTER (2048)
-  before the output is enabled — this ensures the first value driven is the
-  midpoint, not zero.
+- PA4 remains unused/no-connect for motor drive.
 - PA5 is configured as GPIO input — motor enable monitoring begins immediately.
-- PA6 is configured as TIM3 PWM with 0% duty cycle (Option B default) — Q_LS base
+- PA6 is configured as TIM3 PWM with 0% duty cycle — Q_LS base
   is held low, motor remains off.
 
 **t = ~2ms**: All peripherals initialised. Servo loop enters its first execution.
-The first FG period measurement is taken. The DAC output is set based on the first
+The first FG period measurement is taken. The PWM/output value is set based on the first
 control calculation.
 
 **t = ~2ms to ~300ms**: Motor spin-up phase. The servo drives the motor at maximum
@@ -1367,9 +1305,8 @@ value toward TARGET_PERIOD.
 **t = ~300ms**: Motor reaches operating speed. FG period settles to TARGET_PERIOD ±
 servo error. Speed lock is achieved.
 
-The motor is never uncontrolled at any point in this sequence. Either R6 (Option A)
-or R9 (Option B) hold Q601 off until the firmware explicitly enables motor drive
-through the DAC or PWM.
+The motor is never uncontrolled at any point in this sequence. R9 holds Q601_BASE in
+the safe-off state until the firmware explicitly enables motor drive through PWM.
 
 ### 14.2 Power-Off Sequence
 
@@ -1385,8 +1322,7 @@ reached for approximately 2ms. During this window, the servo loop continues runn
 and the motor is still being driven.
 
 **t = ~2ms**: BOR threshold reached. STM32 enters reset. All GPIO outputs go to
-high-impedance. R6 (Option A) or R9 (Option B) pull Q601 base toward its safe
-state — motor drive is removed.
+high-impedance. R9 pulls Q601 base toward its safe state — motor drive is removed.
 
 **Motor coasting**: M901 continues to rotate due to flywheel inertia for
 approximately 1-2 seconds after motor drive is removed. This is normal and harmless.
@@ -1402,7 +1338,7 @@ When the USB-C cable is connected or disconnected while the machine is in a runn
 state, the UCPD peripheral generates an interrupt. The firmware should handle the
 disconnect interrupt by:
 
-1. Setting the DAC output to DAC_MIN (maximum motor drive off) immediately
+1. Setting the PWM/output value to the measured safe-off clamp immediately
 2. Disabling the MT3608 boost enable pin (if implemented — this prevents the motor
    rail from being driven from a supply that may become unstable)
 3. Setting a flag that holds the servo disabled until a new PD contract is confirmed
@@ -1423,9 +1359,9 @@ response. The STM32 will not begin executing until VDD reaches the POR threshold
 which occurs after B+1 has largely stabilised. No special handling is required.
 
 **Low battery detection**: In the two-board battery build, B+1 is held at a regulated
-6.0V by the daughter board's TPS63070 until the pack is nearly empty, so B+1 does *not*
+6.0V by the Power Board's TPS63070 until the pack is nearly empty, so B+1 does *not*
 sag with the cells the way the original raw-AA rail did. State of charge is instead
-sensed on the daughter board's VBAT node and reported to the STM32 over the VBAT_SENSE
+sensed on the Power Board's VBAT node and reported to the STM32 over the VBAT_SENSE
 line (see the indicator note below). When the pack reaches its floor, the DW01 + FET
 pack protection (and the cells' own PCMs) disconnect it; B+1 then collapses, the
 MCP1700 drops out below ~3.5V input, and at approximately 2.8V supply the STM32 BOR
@@ -1436,12 +1372,14 @@ driven by IC801/CX10043, BATT selected by S801) originally indicated from the ma
 main rail. In the two-board battery design that rail is a regulated, constant 6.0V B+1,
 so the stock battery indication (a single-LED brightness drive via Q801) is pinned at
 full and no longer reflects the cells. The true state of charge lives on the VBAT node
-*on the power daughter board*, which the stock indicator circuit cannot see. The DSR-1
+*on the Power Board*, which the stock indicator circuit cannot see. The DSR-1
 therefore re-references it: the STM32 reads VBAT through the **VBAT_SENSE** board-to-
 board conductor, estimates state of charge from a LiPo open-circuit-voltage table, and
-drives the LED bar directly as a true 1–5 segment fuel gauge while S801 is in BATT —
-animating it from the BQ24074 CHG/PGOOD status while charging. See Power Supply Design
-§7.8 for the divider, LED interface, and firmware mapping.
+drives the LED bar directly as a true 1–5 segment fuel gauge only while `S801_BATT`
+is asserted. In VU/non-BATT modes the MCU LED outputs must be released/high-Z so they
+do not contend with the CX10043 circuitry. Charge animation comes from the BQ24074
+CHG_STAT/PGOOD status. See Power Supply Design §7.8 for the divider, LED interface,
+and firmware mapping.
 
 ---
 
