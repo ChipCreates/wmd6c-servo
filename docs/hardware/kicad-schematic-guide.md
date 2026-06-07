@@ -1,6 +1,6 @@
 # DSR-1 Servo Control Board — KiCad 10 Schematic Guide
 
-**Project:** `hardware/servo-control-board/` — WM-D6C Capstan Servo Control Board (DSR-1)
+**Project:** `hardware/kicad/DSR-1/` — WM-D6C Capstan Servo Control Board (DSR-1)
 **Tool:** KiCad 10.x
 **Scope:** Servo Control Board schematic only. The Power Board has its own KiCad project.
 
@@ -10,15 +10,15 @@
 > authoritative sources for all component values — this document tells you *how*
 > to enter them in KiCad, not *why* they are what they are.
 >
-> **Schematic status:** the committed `hardware/kicad/DSR-1` project is a legacy,
-> in-flight working file and is not yet synchronized with this documentation. Use this
-> guide as the intended Servo Control Board entry guide until the manual split is made.
+> **Schematic status:** the repository now carries two KiCad projects:
+> `hardware/kicad/DSR-1` for the Servo Control Board and
+> `hardware/kicad/Power-Board/wm-d6c-power-board` for the Power Board. Use this
+> guide as the Servo Control Board entry guide and the cross-board net contract.
 >
 > **Two KiCad projects.** The final manufacturing direction is a separate **Power
 > Board** and **Servo Control Board**. The Power Board schematic lives in
-> `hardware/power-board/` and is covered by `kicad-power-board-guide.md`. This guide
-> covers the Servo Control Board only — the board that fits in the CP304 cavity in all
-> three builds.
+> `hardware/kicad/Power-Board/wm-d6c-power-board/`. This guide covers the Servo
+> Control Board only — the board that fits in the CP304 cavity in all three builds.
 
 ---
 
@@ -88,13 +88,15 @@ Before opening KiCad:
 
 ## Single-Sheet Layout (D-size)
 
-The intended Servo Control Board schematic may remain a **single flat sheet** inside
-its own KiCad project. Do not confuse that with the older all-in-one project: power
-management and battery charging belong in the separate Power Board project.
+Each KiCad project has exactly **one flat schematic sheet**. The Servo Control Board
+is one D-size sheet in `hardware/kicad/DSR-1/`; the Power Board is one sheet in
+`hardware/kicad/Power-Board/wm-d6c-power-board/`. Do not confuse that with the older
+all-in-one project: power management and battery charging belong in the separate
+Power Board project.
 
 Organize the canvas into four visual **zones**, left-to-right by signal flow. Zones are
-just regions (optionally boxed with a graphic rectangle + text label); they carry no
-electrical meaning:
+just same-sheet regions (optionally boxed with a graphic rectangle + text label);
+they are not KiCad sheets and carry no electrical meaning:
 
 ```
 ┌─ Power ─────────────┐ ┌─ Microcontroller ─┐ ┌─ Signal Conditioning ─┐ ┌─ Connectors ─┐
@@ -115,7 +117,7 @@ how to enter them.
 
 On a single sheet, connectivity is trivial — **a net label connects to every identical
 label anywhere on the sheet.** There are no hierarchical labels, sheet pins, or global
-labels to manage (those exist only to cross sheet boundaries).
+labels to manage; do not use multi-sheet hierarchy for either project.
 
 - **Net labels (`L`)** — name any net you want to join by name instead of a drawn wire
   (`FG_IN`, `MOTOR_PWM`, `VBAT_SENSE`, `BATT_LED1`, …). Same name = same net. Use them
@@ -155,8 +157,12 @@ and **Variant B** (wall, barrel, no cells).
 **J_USB — USB-C mid-mount receptacle** (battery build + Variant A; DNP for Variant B)
 
 - Symbol: search `USB_C` in the KiCad Connector library or use a custom symbol.
-- VBUS → `VBUS` net (feeds the BQ24074 charger IN pin at 5V in the battery build) and, in
-  Variant A, the IP2721 input.
+- VBUS → `VBUS` net. In the battery Power Board this must remain the plain USB-C
+  5V sink rail feeding the BQ24074 charger IN pin; in Variant A it is the IP2721
+  input and may rise above 5V after PD negotiation.
+- `VBUS`/USB +5V is not USB-C PD by itself. It is the default Type-C VBUS rail
+  available to a sink after attach. Treat it as PD only if a PD controller or UCPD
+  stack actively negotiates a contract on CC1/CC2.
 - D+/D− → `USB_DP_RAW`, `USB_DM_RAW`; CC1, CC2 → `CC1`, `CC2`; GND/Shield → GND.
 
 **U1 — IP2721 USB PD Trigger (TSSOP-16)** — Variant A only
@@ -208,9 +214,7 @@ tip ───|◄──┴───────────────┴──
 > **These components are not on the Servo Control Board.** The entire battery-integrated
 > power subsystem — USB-C input, BQ24074 charger, cell connectors, DW01/FET protection,
 > and the TPS63070 boost that generates B+1 — lives on the **Power Board**,
-> a separate KiCad project in `hardware/power-board/`.
->
-> See **`kicad-power-board-guide.md`** for the full schematic entry of sub-zone B.
+> a separate KiCad project in `hardware/kicad/Power-Board/wm-d6c-power-board/`.
 >
 > What crosses from the Power Board to this Servo Control Board schematic as net labels
 > on the board-to-board connector J_BBL (defined in the Connectors zone below):
@@ -289,7 +293,9 @@ Downstream of the `B+1` node; present in every build.
 
 ### Net labels used in this zone
 
-- `VBUS` — USB 5V in (BQ24074 charger IN pin; battery build on Power Board)
+- `VBUS` — USB-C connector bus. In the battery build this is a plain 5V sink rail
+  into the BQ24074 charger IN pin; in Variant A it is the IP2721 input and may rise
+  above 5V after PD negotiation.
 - `9V_PD` — Variant A only (IP2721 → TPS63070 VIN)
 - `B+1_RAW` — Variant B bridge output → TPS63070 VIN
 - `V_SYS` — BQ24074 SYS pin output → TPS63070 VINx (battery build; Power Board); local
@@ -605,11 +611,11 @@ hold full when CHG_STAT goes high (done).
 
 ### Net labels used in this zone
 
-**Inputs (from other sheets):**
+**Inputs (from other same-sheet zones):**
 - `MOTOR_PWM` ← the Microcontroller zone (PA6)
 - `FG_RAW`, `MOTOR_EN`, `RV601`, `RV602`, `RV603` ← the Connectors zone
 
-**Outputs (to other sheets):**
+**Outputs (to other same-sheet zones):**
 - `FG_IN` → the Microcontroller zone (PA0)
 - `RV601_WIPER`, `RV602_WIPER`, `RV603_WIPER` → the Microcontroller zone
 - `MOTOR_EN_MON` → the Microcontroller zone
@@ -769,7 +775,7 @@ Before running ERC, verify every symbol has:
 
 ## ERC — Expected Errors and Resolutions
 
-Run Inspect → Electrical Rules Checker after completing all sheets.
+Run Inspect → Electrical Rules Checker after completing the single schematic sheet.
 
 | Error | Cause | Resolution |
 |---|---|---|
@@ -844,11 +850,12 @@ See `signal-chain-analysis.md §10` for full layout rule derivations.
 
 ---
 
-*Document version: 0.8 — Matches DSR-1 hardware Rev A*
-*Replaces: initial draft (v0.1) — corrected motor drive topology, full production run scope added, sheet filenames aligned with actual KiCad project*
+*Document version: 0.9 — Matches DSR-1 hardware Rev A*
+*Replaces: initial draft (v0.1) — corrected motor drive topology, full production run scope added, schematic filenames aligned with actual KiCad project*
 *v0.3 adds: battery-integrated charge-in-place (CN3058E + power-path), TPS63070 buck-boost B+1 regulator, and STM32-driven battery level indicator (CX10043 re-reference). Per power-supply-design.md §5.2, §7.*
-*v0.4: consolidated power onto a single Power sheet (was Power Input Zone + Power Management); sheets renumbered to 5 total (MCU→3, Signal→4, Connectors→5).*
+*v0.4: consolidated power into one Power zone (was split between separate power sections); legacy multi-sheet numbering removed in later flat-sheet revisions.*
 *v0.6: merged the battery appendix inline — battery/charge/power-path/TPS63070 now live in the Power zone, and the indicator pins/sense/J3 in the MCU, Signal, and Connectors zones; single cohesive guide, no addendum.*
 *v0.5: flattened to a single D-size sheet — hierarchy, root sheet, and sheet pins removed; zones replace sheets; added Distribution & Printing.*
 *v0.7: chemistry swap LFP → LiPo; charger CN3058E → BQ24074 (DPPM power-path, R_ISET=1.1kΩ/0.8A, R_ILIM=800Ω/2A); protection HY2112-CB → DW01+FS8205; two-board architecture noted; **NOTE: v0.7 incorrectly renamed G0C1 → G0B1 throughout — reverted in v0.8.** CHG_STAT/PGOOD nets; VBAT_SENSE divider 22k→33k; LiPo OCV note; §7.8 cross-reference.*
-*v0.8: two-project split — Servo Control Board guide only; Section B replaced with pointer to kicad-power-board-guide.md; J_BBL board-to-board connector added to Connectors zone; TPS63070 sub-zone C marked DNP for battery build; **MCU corrected back to STM32G0C1KCU6** (verified against repo schematic STM32G0C1 and decoupling.kicad_sch, symbol MCU_ST_STM32G0:STM32G0C1KCUx, U5); DS reference updated; BAT54 → BAT54S (dual SOT-23, as placed in Signal conditioning.kicad_sch); intro updated for two-project structure.*
+*v0.8: two-project split — Servo Control Board guide only; Section B replaced with Power Board project pointer; J_BBL board-to-board connector added to Connectors zone; TPS63070 sub-zone C marked DNP for battery build; **MCU corrected back to STM32G0C1KCU6** (verified against repo schematic STM32G0C1 and decoupling.kicad_sch, symbol MCU_ST_STM32G0:STM32G0C1KCUx, U5); DS reference updated; BAT54 → BAT54S (dual SOT-23, as placed in Signal conditioning.kicad_sch); intro updated for two-project structure.*
+*v0.9: updated Servo/Power Board KiCad project paths; clarified that each project has one flat schematic sheet; clarified that `VBUS`/USB +5V is the default Type-C sink rail, not USB-C PD, and that `9V_PD` is Variant A only after IP2721 negotiation.*
