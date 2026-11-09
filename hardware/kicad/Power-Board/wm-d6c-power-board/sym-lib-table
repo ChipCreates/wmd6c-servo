@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "PowerBoard") (type "KiCad") (uri "${KIPRJMOD}/wm-d6c-power-board.kicad_sym") (options "") (descr ""))
+)

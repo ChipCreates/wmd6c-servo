@@ -155,7 +155,7 @@ Planned/implemented firmware architecture:
 - **Speed controls:** RV601/RV602/RV603 and S601 are retained and read by the MCU after voltage-safety verification.
 - **USB data/service:** USB CDC is intended to expose live tuning, telemetry, command/status reporting, and diagnostics.
 - **Firmware update:** USB DFU or other update path is intended to avoid requiring permanent SWD access after installation.
-- **USB-C / power:** CC1/CC2 map to PA8/PA9. Variant A may use PD support; the battery build uses plain 5V USB-C into the Power Board charger.
+- **USB-C / power:** 5 V sink, no PD. CC1 uses the STM32's UCPD1 (PA8, with PA9 dead-battery pin tied to it); CC2 has an external 5.1 kΩ Rd and is read by ADC on PA4. The battery build uses plain 5V USB-C into the Power Board charger.
 - **Battery indicator:** In the battery build, the MCU reads `VBAT_SENSE`, `CHG_STAT`, `PGOOD`, and `S801_BATT`; it drives `BATT_LED1-5` only while S801 is in BATT.
 - **Persistence:** Tuned constants are intended to be saved to flash with validation.
 - **Debugging:** SWD remains available during development.
@@ -230,7 +230,7 @@ Some paths and build commands are still being normalized as the project moves fr
 
 ## Firmware Development
 
-The firmware is written in C for the STM32G0 family, using CMSIS device headers and direct register access. The hardware target is STM32G0C1KCU6; some firmware filenames and comments may still reflect the earlier STM32G0B1KBU6 prototype until the firmware migration is completed. No STM32 HAL, no RTOS, and no dynamic memory allocation are intended.
+The firmware is written in C for the STM32G0 family, using CMSIS device headers and direct register access. The firmware builds for the STM32G0C1KCU6 hardware target (256 KB flash, 144 KB RAM). No STM32 HAL, no RTOS, and no dynamic memory allocation are intended.
 
 Current firmware areas:
 

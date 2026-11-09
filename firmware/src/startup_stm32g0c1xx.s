@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file      startup_stm32g0b1xx.s
+  * @file      startup_stm32g0c1xx.s
   * @author    MCD Application Team
-  * @brief     STM32G0b1xx devices vector table GCC toolchain.
+  * @brief     STM32G0c1xx devices vector table GCC toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -176,6 +176,7 @@ g_pfnVectors:
   .word USART2_LPUART2_IRQHandler         /* USART2 & LPUART2             */
   .word USART3_4_5_6_LPUART1_IRQHandler   /* USART3, USART4, USART5, USART6, LPUART1   */
   .word CEC_IRQHandler                    /* CEC                          */
+  .word AES_RNG_IRQHandler                /* AES and RNG                  */
 
   .size g_pfnVectors, .-g_pfnVectors
 
@@ -294,3 +295,6 @@ g_pfnVectors:
 
   .weak      CEC_IRQHandler
   .thumb_set CEC_IRQHandler,Default_Handler
+
+  .weak      AES_RNG_IRQHandler
+  .thumb_set AES_RNG_IRQHandler,Default_Handler

@@ -243,7 +243,7 @@ the PWM-duty-to-speed sign on the actual unit.
 ### 2.2 Direct DAC Drive — Rejected
 
 PA4/DAC1_OUT1 is not used for motor drive. The Rev A design uses TIM3 PWM on PA6
-through an RC filter and NPN level-shift stage. PA4 may remain no-connect or spare.
+through an RC filter and NPN level-shift stage. PA4 is used as the USB-C CC2 ADC sense input.
 
 ### 2.3 Committed PWM + NPN Level-Shift Drive
 
@@ -579,7 +579,7 @@ means it has negligible effect on the USB 2.0 signal integrity at 12 Mbit/s.
 
 The USB signals are driven directly by the STM32's internal USB Full Speed
 transceiver — no external resistors or components are needed. The STM32G0C1
-datasheet (DS13560 Rev 6, Table 80) confirms the internal matching impedance of
+datasheet (DS13564 Rev 5, Table 80) confirms the internal matching impedance of
 36Ω on the output driver, satisfying the USB 2.0 specification's 45Ω line impedance
 requirement.
 
@@ -590,6 +590,10 @@ trace lengths or impedances degrades the USB eye diagram and can cause enumerati
 failures.
 
 ### 6.2 USB-C CC Lines (PA8 and PA9 — Variant A only)
+
+> **Rev A correction (2026-11-09):** on the UFQFPN32 package PA9 is UCPD1_DBCC1, not
+> UCPD1_CC2. Rev A is a 5 V sink without PD: CC1 → PA8 with PA9 tied to it (STM32 Rd),
+> CC2 → external 5.1 kΩ Rd + PA4 ADC. The Variant A text below is historical.
 
 The CC1 and CC2 lines of the USB-C connector connect to PA8 (UCPD1_CC1) and PA9
 (UCPD1_CC2) of the STM32. These lines carry the USB Power Delivery signalling that
@@ -673,7 +677,7 @@ filtered PWM/control-output reference).
 | RV603_WIPER | 47kΩ pot wiper | 0 to ~6V (measure) | 100Ω + BAT54 clamp | PA3 / ADC_IN3 | Must be ≤3.3V — verify |
 | S601 | Slide switch | 0 to 3.3V (rewired) | None — direct | PA7 / GPIO | 0 to 3.3V |
 | USB D+/D− | USB-C connector | USB 2.0 FS levels | USBLC6-2SC6Y ESD | PA12/PA11 | Handled by USB PHY |
-| CC1/CC2 | USB-C connector | USB PD BMC levels | Direct | PA8/PA9 / UCPD | 0 to 1.1V |
+| CC1/CC2 | USB-C connector | Type-C Rp levels | Direct | CC1: PA8+PA9 / UCPD1; CC2: PA4 / ADC | 0 to ~1.7V |
 | B+1 | Battery / converter | 6V DC | Schottky diode | J1 pin 7 → VIN | 5.5V to 6.5V |
 
 ---
@@ -1021,7 +1025,7 @@ tune response is essentially instantaneous from the user's perspective.
 ### 12.1 The Source Impedance Problem
 
 The STM32G0C1 ADC has an internal sample-and-hold capacitor CADC of approximately
-5pF (specified in DS13560 Rev 6, Figure 29 and surrounding text). To achieve full
+5pF (specified in DS13564 Rev 5, Figure 29 and surrounding text). To achieve full
 12-bit accuracy, the source must be able to charge this capacitor to within 0.5 LSB
 during the sampling time.
 
@@ -1048,7 +1052,7 @@ required charging time. Full 12-bit accuracy is achievable even with the highest
 pot source impedances.
 
 **However**, the STM32G0C1 datasheet specifies a maximum external source impedance
-of 10kΩ for full ADC accuracy (DS13560 Rev 6, Section 5.3.18). The pot wipers
+of 10kΩ for full ADC accuracy (DS13564 Rev 5, Section 5.3.18). The pot wipers
 can present source impedances up to 23.5kΩ — more than twice this limit. At high
 source impedances, parasitic effects (leakage currents, input capacitance variation)
 degrade accuracy beyond what the sampling time alone determines.
@@ -1289,7 +1293,7 @@ in flash.
 
 **t = ~1.5ms**: Peripheral initialisation begins. GPIO, TIM2, TIM3 PWM, ADC, USB CDC
 are configured in sequence. During GPIO initialisation:
-- PA4 remains unused/no-connect for motor drive.
+- PA4 is configured as an analog input (USB-C CC2 sense); it is not used for motor drive.
 - PA5 is configured as GPIO input — motor enable monitoring begins immediately.
 - PA6 is configured as TIM3 PWM with 0% duty cycle — Q_LS base
   is held low, motor remains off.

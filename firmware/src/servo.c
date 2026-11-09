@@ -2,7 +2,7 @@
  * servo.c — DSR-1 Capstan Servo
  *
  * WM-D6C Servo Replacement Module (DSR-1)
- * Hardware: STM32G0B1KBU6, bare-metal, no HAL, no RTOS
+ * Hardware: STM32G0C1KCU6, bare-metal, no HAL, no RTOS
  *
  * Peripherals owned by this file:
  *   TIM2   — free-running 32-bit counter at 64 MHz, CH1 input capture on PA0

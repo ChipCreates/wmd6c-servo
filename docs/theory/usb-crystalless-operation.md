@@ -57,7 +57,7 @@ replacement board.
 
 The selected STM32G0C1KCU6 contains an internal 48 MHz RC oscillator called HSI48 (High
 Speed Internal 48 MHz). This is a dedicated oscillator for USB, separate from the
-HSI16 that drives the system PLL. From DS13560 Rev 6, Table 45:
+HSI16 that drives the system PLL. From DS13564 Rev 5, Table 45:
 
 | Parameter | Value |
 |---|---|
@@ -124,9 +124,9 @@ quantisation error is approximately ±900 ppm worst case.
 
 ST Application Note AN4879 confirms that crystal-less USB device operation using
 the CRS and SOF reference achieves reliable enumeration and sustained operation.
-DS13560 Rev 6, Section 3.24 explicitly states: "The synchronization for this
+DS13564 Rev 5, Section 3.26 explicitly states: "The synchronization for this
 oscillator can be taken from the USB data stream itself (SOF signalization) which
-allows crystal-less operation in USB device mode."
+allows crystal less operation in USB device mode."
 
 ### 2.4 The Chicken-and-Egg Problem and Its Solution
 

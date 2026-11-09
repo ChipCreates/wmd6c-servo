@@ -2,7 +2,7 @@
  * usb_cdc.c — DSR-1 USB CDC Virtual COM Port
  *
  * WM-D6C Servo Replacement Module (DSR-1)
- * Hardware: STM32G0B1KBU6, bare-metal, no HAL, no RTOS
+ * Hardware: STM32G0C1KCU6, bare-metal, no HAL, no RTOS
  *
  * Implements a minimal USB CDC ACM (Abstract Control Model) device that
  * enumerates as a virtual COM port on Windows, macOS, and Linux without
@@ -21,7 +21,7 @@
  *   The USB interrupt runs at priority 1 (below TIM2 servo at priority 0).
  *   USB activity cannot delay servo execution. See why-bare-metal.md §5.1.
  *
- * STM32G0B1 USB IP (second generation — USB_DRD_FS):
+ * STM32G0C1 USB IP (second generation — USB_DRD_FS):
  *   This device uses the second-generation ST USB device IP. The PMA is
  *   accessed linearly (1:1, no stride doubling). Buffer descriptor table
  *   (BDT) entries use 32-bit TXBD/RXBD fields: upper 16 bits = buffer
@@ -47,7 +47,7 @@
  *   System clock (64 MHz) is completely independent of HSI48.
  *   See usb-crystalless-operation.md for full derivation.
  *
- * NOTE: This file implements only the USB CDC data path. The STM32G0B1
+ * NOTE: This file implements only the USB CDC data path. The STM32G0C1
  * factory DFU bootloader handles firmware update — no DFU code here.
  */
 
@@ -282,13 +282,17 @@ void usb_cdc_init(void)
     CRS->CR = CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
 
     /* ---- USB clock source: HSI48 ---- */
-    RCC->CCIPR = (RCC->CCIPR & ~RCC_CCIPR_CLK48SEL) | (3U << RCC_CCIPR_CLK48SEL_Pos);
+    /* CCIPR2.USBSEL = 00 selects HSI48 on STM32G0C1 (RM0444 RCC_CCIPR2). */
+    RCC->CCIPR2 &= ~RCC_CCIPR2_USBSEL;
 
     /* ---- GPIO: PA11 (USB D-), PA12 (USB D+) — AF10 for USB_DRD_FS ---- */
     RCC->IOPENR |= RCC_IOPENR_GPIOAEN;
     GPIOA->MODER = (GPIOA->MODER & ~((3U << (11*2)) | (3U << (12*2))))
                  | (2U << (11*2)) | (2U << (12*2));
-    /* AF10 for PA11/PA12 on STM32G0B1 (USB FS) — DS13560 Table 12 */
+    /* AF10 for PA11/PA12 (USB FS).
+     * VERIFY against the STM32G0C1 datasheet AF table: G0 GPIO has AF0–AF7
+     * only, and USB_DM/USB_DP are additional functions enabled by the USB
+     * peripheral itself, so this AF write is likely unnecessary. */
     GPIOA->AFR[1] = (GPIOA->AFR[1] & ~((0xFU << ((11-8)*4)) | (0xFU << ((12-8)*4))))
                   | (10U << ((11-8)*4)) | (10U << ((12-8)*4));
 
@@ -301,8 +305,8 @@ void usb_cdc_init(void)
     USB_DRD_FS->CNTR = 0;                          /* Release reset            */
     USB_DRD_FS->ISTR = 0;                          /* Clear any pending flags  */
 
-    /* Buffer descriptor table at PMA byte offset 0 */
-    USB_DRD_FS->BTABLE = 0;
+    /* No BTABLE register on the G0 USB_DRD IP: the buffer descriptor table
+     * is fixed at PMA offset 0. */
 
     /* Enable USB reset and CTR (correct transfer) interrupts */
     USB_DRD_FS->CNTR = USB_CNTR_RESETM | USB_CNTR_CTRM;
@@ -591,6 +595,9 @@ static uint32_t ticks_to_hz(uint32_t ticks)
     return 64000000UL / ticks;
 }
 
+/* Append a NUL-terminated string at *ptr and advance ptr. */
+#define APPEND(ptr, s) do { const char *_s = (s); while (*_s) *(ptr)++ = (uint8_t)*_s++; } while (0)
+
 static void send_telemetry(void)
 {
     static uint8_t buf[128];
@@ -607,18 +614,17 @@ static void send_telemetry(void)
     uint16_t rv2   = g_adc_raw[ADC_IDX_RV602];
     uint16_t rv3   = g_adc_raw[ADC_IDX_RV603];
 
-    #define APPEND(s) do { const char *_s = s; while (*_s) *p++ = (uint8_t)*_s++; } while(0)
-    APPEND("FG:"); p = fmt_u32(p, fg);
-    APPEND(" Hz:"); p = fmt_u32(p, ticks_to_hz(fg));
-    APPEND(" Tgt:"); p = fmt_u32(p, tgt);
-    APPEND(" Err:"); p = fmt_i32(p, err);
-    APPEND(" Int:"); p = fmt_i32(p, integ);
-    APPEND(" DAC:"); p = fmt_u32(p, dac);
-    APPEND(" Kp:"); p = fmt_q16(p, kp);
-    APPEND(" Ki:"); p = fmt_q16(p, ki);
-    APPEND(" RV1:"); p = fmt_u32(p, rv1);
-    APPEND(" RV2:"); p = fmt_u32(p, rv2);
-    APPEND(" RV3:"); p = fmt_u32(p, rv3);
+    APPEND(p, "FG:"); p = fmt_u32(p, fg);
+    APPEND(p, " Hz:"); p = fmt_u32(p, ticks_to_hz(fg));
+    APPEND(p, " Tgt:"); p = fmt_u32(p, tgt);
+    APPEND(p, " Err:"); p = fmt_i32(p, err);
+    APPEND(p, " Int:"); p = fmt_i32(p, integ);
+    APPEND(p, " DAC:"); p = fmt_u32(p, dac);
+    APPEND(p, " Kp:"); p = fmt_q16(p, kp);
+    APPEND(p, " Ki:"); p = fmt_q16(p, ki);
+    APPEND(p, " RV1:"); p = fmt_u32(p, rv1);
+    APPEND(p, " RV2:"); p = fmt_u32(p, rv2);
+    APPEND(p, " RV3:"); p = fmt_u32(p, rv3);
     *p++ = '\r'; *p++ = '\n';
 
     usb_cdc_tx(buf, (uint16_t)(p - buf));
@@ -644,34 +650,34 @@ static void dispatch_command(uint8_t c)
                 int32_t kp = g_kp_q16 + KP_Q16_STEP;
                 if (kp > KP_Q16_MAX) kp = KP_Q16_MAX;
                 g_kp_q16 = kp;
-                APPEND("Kp+\r\n");
+                APPEND(rp, "Kp+\r\n");
             } else if (c == '-') {
                 int32_t kp = g_kp_q16 - KP_Q16_STEP;
                 if (kp < KP_Q16_MIN) kp = KP_Q16_MIN;
                 g_kp_q16 = kp;
-                APPEND("Kp-\r\n");
+                APPEND(rp, "Kp-\r\n");
             }
         } else if (prefix == 'i') {
             if (c == '+') {
                 int32_t ki = g_ki_q16 + KI_Q16_STEP;
                 if (ki > KI_Q16_MAX) ki = KI_Q16_MAX;
                 g_ki_q16 = ki;
-                APPEND("Ki+\r\n");
+                APPEND(rp, "Ki+\r\n");
             } else if (c == '-') {
                 int32_t ki = g_ki_q16 - KI_Q16_STEP;
                 if (ki < KI_Q16_MIN) ki = KI_Q16_MIN;
                 g_ki_q16 = ki;
-                APPEND("Ki-\r\n");
+                APPEND(rp, "Ki-\r\n");
             }
         } else if (prefix == 'f') {
             if (c == '+') {
                 uint32_t t = g_target_period;
                 if (t < ADJUSTED_TARGET_MAX) servo_set_target_period(t + 1);
-                APPEND("f+\r\n");
+                APPEND(rp, "f+\r\n");
             } else if (c == '-') {
                 uint32_t t = g_target_period;
                 if (t > ADJUSTED_TARGET_MIN) servo_set_target_period(t - 1);
-                APPEND("f-\r\n");
+                APPEND(rp, "f-\r\n");
             }
         }
 
@@ -692,7 +698,7 @@ static void dispatch_command(uint8_t c)
 
     case 'T':
         telem_continuous ^= 1;
-        APPEND(telem_continuous ? "Telem ON\r\n" : "Telem OFF\r\n");
+        APPEND(rp, telem_continuous ? "Telem ON\r\n" : "Telem OFF\r\n");
         usb_cdc_tx(response, (uint16_t)(rp - response));
         break;
 
@@ -700,9 +706,9 @@ static void dispatch_command(uint8_t c)
     {
         FlashResult res = flash_save();
         if (res == FLASH_OK) {
-            APPEND("Saved\r\n");
+            APPEND(rp, "Saved\r\n");
         } else {
-            APPEND("Save ERR\r\n");
+            APPEND(rp, "Save ERR\r\n");
         }
         usb_cdc_tx(response, (uint16_t)(rp - response));
         break;
@@ -710,7 +716,7 @@ static void dispatch_command(uint8_t c)
 
     case 'r':
         flash_reset_defaults();
-        APPEND("Defaults\r\n");
+        APPEND(rp, "Defaults\r\n");
         usb_cdc_tx(response, (uint16_t)(rp - response));
         break;
 

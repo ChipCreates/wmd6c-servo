@@ -2,7 +2,7 @@
  * main.c — DSR-1 Startup, Clock Initialisation, and Main Loop
  *
  * WM-D6C Servo Replacement Module (DSR-1)
- * Hardware: STM32G0B1KBU6, bare-metal, no HAL, no RTOS
+ * Hardware: STM32G0C1KCU6, bare-metal, no HAL, no RTOS
  *
  * Boot sequence (total time to servo loop: ~2ms):
  *
@@ -47,7 +47,7 @@
  * Passed explicitly to usb_cdc_set_boot_status() after USB init so the CDC
  * layer can report it as a banner when the host first connects. */
 
-/* Called by startup_stm32g0b1xx.s before main(). Clock setup is handled
+/* Called by startup_stm32g0c1xx.s before main(). Clock setup is handled
  * entirely by clock_init() below, so this can be a no-op. */
 void SystemInit(void) {}
 

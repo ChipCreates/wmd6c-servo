@@ -170,19 +170,19 @@
 /* =========================================================================
  * SECTION 8 — FLASH SETTINGS STORAGE
  *
- * Settings are stored in the last 4 KB sector of the 128 KB flash.
- * This sector is preserved across firmware updates (DFU does not erase it).
+ * Settings are stored in the last 2 KB page of the 256 KB flash.
+ * This page is preserved across firmware updates (DFU does not erase it).
  *
- * STM32G0B1KBU6 flash: 128 KB = 0x08000000–0x0801FFFF
- * Last 2 KB page (page 63): 0x0801F800–0x0801FFFF
- * Code region (126 KB):     0x08000000–0x0801F7FF  (linker FLASH region)
+ * STM32G0C1KCU6 flash: 256 KB = 0x08000000–0x0803FFFF (dual-bank, 2 × 128 KB)
+ * Last 2 KB page (bank 2, page 63): 0x0803F800–0x0803FFFF
+ * Code region (254 KB):     0x08000000–0x0803F7FF  (linker FLASH region)
  *
  * SETTINGS_MAGIC: sentinel value written at start of settings block.
  * On power-on, if the magic value is present and the checksum passes,
  * saved constants are loaded. Otherwise defaults from this file are used.
  * ========================================================================= */
 
-#define FLASH_SETTINGS_ADDR     0x0801F800UL
+#define FLASH_SETTINGS_ADDR     0x0803F800UL
 #define SETTINGS_MAGIC          0x44535231UL   /* ASCII "DSR1" */
 
 /* =========================================================================

@@ -1,8 +1,7 @@
 # DSR-1 Renode Simulation
 
-Renode-based simulation for the DSR-1 firmware. The simulation platform still
-models the earlier STM32G0B1 prototype until the firmware tree is migrated to the
-STM32G0C1KCU6 hardware target.
+Renode-based simulation for the DSR-1 firmware, modelling the STM32G0C1KCU6
+hardware target (256 KB flash, 144 KB RAM).
 Run from the **workspace root** (`d:/Projects/wmd6c-servo`).
 
 ## Prerequisites
@@ -212,9 +211,10 @@ likely sources of a silent hardware failure.
 
 ## Platform file
 
-`platform/stm32g0b1kbu6.repl` is derived from Renode's upstream
-`platforms/cpus/stm32g0.repl` with three corrections for the G0B1 die:
+`platform/stm32g0c1kcu6.repl` is derived from Renode's upstream
+`platforms/cpus/stm32g0.repl` with these corrections for the G0C1 die:
 
+- **Flash 256 KB** (the firmware reads its settings page at 0x0803F800)
 - **RAM 144 KB** (upstream has 48 KB for smaller G0 variants)
 - **Cortex-M0+** CPU type (upstream says cortex-m0)
 - **64 MHz systick** (matching DSR-1 clock_init PLL target; upstream uses 72 MHz)

@@ -2,7 +2,7 @@
  * adc.c — DSR-1 Speed Trim Potentiometer ADC Scan
  *
  * WM-D6C Servo Replacement Module (DSR-1)
- * Hardware: STM32G0B1KBU6, bare-metal, no HAL, no RTOS
+ * Hardware: STM32G0C1KCU6, bare-metal, no HAL, no RTOS
  *
  * Peripherals owned by this file:
  *   ADC1   — 3-channel scan: PA1 (IN1/RV601), PA2 (IN2/RV602), PA3 (IN3/RV603)
@@ -72,7 +72,7 @@ void adc_init(void)
 
     RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 
-    /* DMAMUX channel 0: request source = ADC1 (request ID = 5 on STM32G0B1) */
+    /* DMAMUX channel 0: request source = ADC1 (request ID = 5 on STM32G0B1/G0C1, RM0444 DMAMUX table) */
     DMAMUX1_Channel0->CCR = 5U;   /* ADC1 DMA request */
 
     DMA1_Channel1->CCR = 0;       /* Disable channel before configuring */

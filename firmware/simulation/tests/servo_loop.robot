@@ -8,7 +8,7 @@ Library           OperatingSystem
 
 *** Variables ***
 ${ELF}            ${CURDIR}/../../build/firmware.elf
-${PLATFORM}       ${CURDIR}/../platform/stm32g0b1kbu6.repl
+${PLATFORM}       ${CURDIR}/../platform/stm32g0c1kcu6.repl
 
 # TIM2/TIM3 register addresses
 ${TIM2_SR}        0x40000010
