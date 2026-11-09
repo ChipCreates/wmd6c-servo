@@ -1,0 +1,22 @@
+# Normalise line endings: store LF in the repository, check out LF everywhere.
+# Without this, files edited on Windows show up as modified only because of CRLF.
+* text=auto eol=lf
+
+# KiCad files are text; keep them LF so diffs stay readable.
+*.kicad_sch   text eol=lf
+*.kicad_pcb   text eol=lf
+*.kicad_sym   text eol=lf
+*.kicad_pro   text eol=lf
+*.kicad_prl   text eol=lf
+*-lib-table   text eol=lf
+
+# Binary files: never touch line endings, never diff as text.
+*.pdf   binary
+*.PDF   binary
+*.docx  binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.bin   binary
+*.elf   binary
+*.o     binary
