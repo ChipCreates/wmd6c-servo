@@ -122,7 +122,7 @@ section; verify any uncertain channel against the STM32G0C1 datasheet AF table.
 | 8 | PA1 | `RV601_WIPER` | ADC_IN1 | In | Hi-Z | base speed cal |
 | 9 | PA2 | `RV602_WIPER` | ADC_IN2 | In | Hi-Z | speed tune |
 | 10 | PA3 | `RV603_WIPER` | ADC_IN3 | In | Hi-Z | speed tune range |
-| 11 | PA4 | — | DAC1_OUT1 (unused) | — | Hi-Z | DAC not used |
+| 11 | PA4 | `CC2` | ADC_IN4 | In | Hi-Z | USB-C CC2 voltage sense; external 5.1 k Rd |
 | 12 | PA5 | `MOTOR_EN_MON` | GPIO in | In | Hi-Z | Sony motor-enable monitor |
 | 13 | PA6 | `MOTOR_PWM` | TIM3_CH1 PWM (AF1) | Out | 0% duty (off) | committed motor drive |
 | 14 | PA7 | `SPEED_TUNE_SW` | GPIO in | In | Hi-Z | S601 |
@@ -130,7 +130,7 @@ section; verify any uncertain channel against the STM32G0C1 datasheet AF table.
 | 16 | PB1 | `VBAT_SENSE_EN` | GPIO out | Out | low (off) | sense-divider gate FET (battery) |
 | 17 | PB2 | `BATT_LED1` | GPIO / TIM | Out | Hi-Z/released | D801 fuel-gauge drive; output only when `S801_BATT` is active |
 | 18 | PA8 | `CC1` | UCPD1_CC1 / DBCC1 | I/O | — | USB-C CC (native UCPD) |
-| 19 | PA9 | `CC2` | UCPD1_CC2 | I/O | — | USB-C CC |
+| 19 | PA9 | `CC1` | UCPD1_DBCC1 | In | Hi-Z | tied to PA8 for dead-battery Rd; never drive |
 | 20 | PC6 | `S801_BATT` | GPIO in (pull) | In | Hi-Z | BATT-position enable sense from S801 |
 | 21 | PA10 | — | spare GPIO | — | Hi-Z | free |
 | 22 | PA11 [PA9] | `USB_DM` | USB FS | I/O | — | via USBLC6 ESD |
@@ -394,7 +394,7 @@ If pin budget is tight, prefer fault-status GPIOs and one or two critical ADC se
 
 > **Accepted: STM32G0C1KCU6 / UFQFPN32.** The full 32-pin allocation (§4) fits all
 > servo, USB, UCPD, debug, power-sense, and battery-indicator functions with two spare
-> GPIO (PB9, PA10) plus the unused LSE pair. Native UCPD on PA8/PA9 covers USB-C CC; no
+> GPIO (PB9, PA10) plus the unused LSE pair. Native UCPD1 covers CC1 (PA8, dead-battery via PA9); CC2 is ADC-sensed on PA4; no
 > external PD controller or larger package is required. Variant A's 9 V PD is handled
 > off-MCU by the IP2721 trigger; the battery build runs at 5 V and needs no PD.
 
@@ -407,7 +407,7 @@ All gates are satisfied; the MCU/package is **accepted** for Rev A.
 | Exact part number selected | ✅ STM32G0C1KCU6 |
 | Exact package pinout captured | ✅ UFQFPN32 (§4) |
 | USB FS pins verified | ✅ PA11/PA12 |
-| Native UCPD pins verified | ✅ PA8/PA9 |
+| Native UCPD pins verified | ✅ PA8 = UCPD1_CC1, PA9 = UCPD1_DBCC1 (no UCPD CC2 on UFQFPN32; CC2 → PA4 ADC) |
 | SWD/BOOT access verified | ✅ PA13/PA14 + NRST (PF2) |
 | FG timer input verified | ✅ PA0 / TIM2_CH1 |
 | Motor PWM pin verified | ✅ PA6 / TIM3_CH1 |
@@ -451,7 +451,7 @@ Final table format:
 
 1. Final part? **STM32G0C1KCU6** (UFQFPN32, 256 KB).
 2. USB FS pins exposed? **Yes — PA11/PA12.**
-3. UCPD CC pins suitable? **Yes — PA8/PA9 native UCPD1.**
+3. UCPD CC pins suitable? **CC1 only — PA8 (UCPD1_CC1) with PA9 (DBCC1) tied to it. UCPD1_CC2 is PB15, absent on UFQFPN32; CC2 uses an external Rd and ADC sense on PA4 (revised 2026-11-09).**
 4. N-suffix required? **No — GP variant; VDDIO2 internal to VDD.**
 5. ~~DAC vs USB/UCPD coexist?~~ Resolved: DAC unused; PWM on PA6.
 6. External PD controller? **No.** Variant A uses the IP2721 fixed trigger off-MCU; the battery build runs at 5 V and needs no PD.
@@ -468,7 +468,7 @@ Final table format:
 | Datasheet pinout captured | ✅ §4 |
 | Alternate functions assigned | ✅ §4 |
 | USB-C data pins assigned | ✅ PA11/PA12 |
-| PD strategy reflected in pins | ✅ UCPD PA8/PA9; IP2721 (Variant A) |
+| PD strategy reflected in pins | ✅ 5 V sink: UCPD1 CC1 on PA8/PA9, CC2 ADC on PA4 |
 | Servo-critical pins assigned | ✅ FG PA0, PWM PA6, wipers PA1–3, S601 PA7 |
 | Power-sense/fault pins assigned | ✅ VBAT_SENSE PB0, CHG_STAT/PGOOD PB7/PB8 |
 | Battery-indicator pins assigned | ✅ BATT_LED1–5, S801_BATT, VBAT_SENSE_EN |

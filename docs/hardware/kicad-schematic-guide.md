@@ -61,7 +61,7 @@ Before opening KiCad:
 
 1. `.gitignore` is committed (excludes `*-backups/`, `fp-info-cache`, `*.lock`,
    `*_autosave.*`)
-2. `hardware/datasheets/` contains `stm32g0c1cc.pdf` (DS13560 Rev 6), `mt3608.pdf`,
+2. `hardware/datasheets/` contains `stm32g0c1cc.pdf` (DS13564 Rev 5), `mt3608.pdf`,
    `fb4872.pdf`, and `sony_wm-d6c_tc-d6c_ver-1.1.pdf`
 3. The `DSR-1.kicad_sym` project symbol library has been created and registered
    under Project scope in Preferences → Manage Symbol Libraries
@@ -179,7 +179,7 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 > tied to VDD internally — no separate VDDIO2 pin, no additional decoupling needed.
 > (stm32g0c1cc.pdf Figure 4, GP version confirmed.)
 
-**UFQFPN-32 GP (_KxU) confirmed pin map — DS13560 (stm32g0c1cc.pdf):**
+**UFQFPN-32 GP (_KxU) confirmed pin map — DS13564 (stm32g0c1cc.pdf):**
 
 | Pin | Name | DSR-1 assignment |
 |-----|------|-----------------|
@@ -193,7 +193,7 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 | 8 | PA1 | `RV601_WIPER` / ADC_IN1 |
 | 9 | PA2 | `RV602_WIPER` / ADC_IN2 |
 | 10 | PA3 | `RV603_WIPER` / ADC_IN3 |
-| 11 | PA4 | No-connect (DAC1_OUT1 — not used, see note) |
+| 11 | PA4 | `CC2` sense / ADC_IN4 |
 | 12 | PA5 | `MOTOR_EN_MON` / GPIO |
 | 13 | PA6 | `MOTOR_PWM` / TIM3_CH1 |
 | 14 | PA7 | `SPEED_TUNE_SW` / GPIO |
@@ -201,7 +201,7 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 | 16 | PB1 | `VBAT_SENSE_EN` / GPIO sense-gate (battery) |
 | 17 | PB2 | `BATT_LED1` / GPIO·TIM (battery) |
 | 18 | PA8 | `CC1` / UCPD1_CC1, UCPD1_DBCC1 |
-| 19 | PA9 | `CC2` / UCPD1_CC2 |
+| 19 | PA9 | `CC1` / UCPD1_DBCC1 (tied to PA8) |
 | 20 | PC6 | `S801_BATT` / GPIO in (battery) |
 | 21 | PA10 | No-connect / spare |
 | 22 | PA11 [PA9] | `USB_DM` |
@@ -219,9 +219,10 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 
 > **PB15 does not exist in the GP variant** (_KxU). PB15 is only present in
 > the N variant (_KxUxN). The previous guide entry "PB15 / UCPD1_CC2" was
-> wrong. CC2 → PA9 (pin 19) for UCPD1_CC2.
+> wrong — but so was "CC2 → PA9": PA9 is UCPD1_DBCC1. Revised 2026-11-09: PA9 is
+> tied to CC1, CC2 is ADC-sensed on PA4 (see the Servo Board guide §8–9).
 >
-> **DEBUG_TX moved from PA9 to PB6.** PA9 is required for UCPD1_CC2 and cannot
+> **DEBUG_TX moved from PA9 to PB6.** PA9 is tied to CC1 (UCPD1_DBCC1) and cannot
 > simultaneously serve USART1_TX. PB6 (pin 30) carries USART1_TX and is
 > available.
 >
@@ -231,8 +232,7 @@ VSS and VSSA share one pin. Expose the thermal pad (EP) as described below.
 > **PA4 (DAC1_OUT1) is not used for motor drive.** Motor drive uses TIM3 PWM on PA6
 > through the NPN level-shift stage on the Signal Conditioning zone. Q601 exact
 > part/package and base-voltage range remain pending bench verification on the
-> C11-494-12 SMD board. PA4 may be left unconnected with a no-connect flag or reserved
-> as a spare ADC-capable pin.
+> C11-494-12 SMD board. PA4 is now used as the CC2 ADC sense input.
 
 **Unused pins:** Place a No-Connect flag (`Q`) on every unused GPIO pin.
 

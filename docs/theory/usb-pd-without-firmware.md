@@ -277,7 +277,8 @@ STM32 initiates a controlled motor shutdown before the supply fully collapses.
 ### 4.1 Why the STM32 Has UCPD Hardware at All
 
 The selected STM32G0C1KCU6 exposes UCPD support for the selected USB-C pins.
-UCPD1 connects to PA8 (CC1) and PA9 (CC2) in the accepted pin allocation. This hardware can
+UCPD1 connects to PA8 (CC1) in the accepted pin allocation; on the UFQFPN32 package PA9 is only
+UCPD1_DBCC1 (tied to CC1), and UCPD1_CC2 (PB15) is not bonded out, so CC2 is read by ADC on PA4. This hardware can
 implement the full USB PD protocol stack in firmware, send and receive PD messages,
 negotiate PDOs, implement USB PD 3.0 features, and act as either a PD source or sink.
 
@@ -331,7 +332,7 @@ specification's Rd resistors for sink devices). This is required for the charger
 to recognise that a sink device is connected.
 
 In Variant A, the CC lines are connected to the IP2721 for power negotiation. They
-are also connected to the STM32 UCPD1 pins (PA8, PA9) for monitoring. The IP2721's
+are also connected to the STM32 (CC1: PA8/PA9 UCPD1; CC2: PA4 ADC) for monitoring. The IP2721's
 internal Rd resistors are sufficient — no external CC resistors are needed. The
 STM32 UCPD pins are configured as high-impedance inputs during normal operation,
 presenting negligible load on the CC lines.

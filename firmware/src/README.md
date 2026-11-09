@@ -1,8 +1,7 @@
 # DSR-1 Firmware
 
 Bare-metal C firmware for the WM-D6C DSR-1 Servo Control Board. The project
-hardware target is STM32G0C1KCU6 at 64 MHz; this firmware tree still carries some
-legacy STM32G0B1 build filenames until the firmware migration is completed. No HAL,
+hardware target is STM32G0C1KCU6 (256 KB flash, 144 KB RAM) at 64 MHz. No HAL,
 no RTOS, no dynamic memory allocation.
 
 ---
@@ -18,13 +17,14 @@ no RTOS, no dynamic memory allocation.
 | `usb_cdc.c` / `usb_cdc.h` | USB CDC virtual COM port, command parser, telemetry |
 | `main.c` | Clock init (HSI16 → 64 MHz PLL), peripheral sequencing, main loop |
 
-Build files live in `firmware/build/`:
+Build and startup files:
 
 | File | Responsibility |
 |------|---------------|
-| `Makefile` | `arm-none-eabi-gcc` build, flash/DFU targets |
-| `STM32G0B1KBUx_FLASH.ld` | Legacy prototype linker script — to be replaced for STM32G0C1KCU6 |
-| `startup_stm32g0b1xx.s` | Legacy prototype CMSIS startup — to be replaced for STM32G0C1KCU6 |
+| `build/Makefile` | `arm-none-eabi-gcc` build, flash/DFU targets (`-DSTM32G0C1xx`) |
+| `build/STM32G0C1KCUx_FLASH.ld` | Linker script — 254 KB code region, last 2 KB page reserved for settings |
+| `src/startup_stm32g0c1xx.s` | ST CMSIS startup and vector table for STM32G0C1 |
+| `cmsis/` | Vendored CMSIS core headers and STM32G0 device headers (`stm32g0c1xx.h`) |
 
 ---
 
@@ -43,7 +43,7 @@ sudo apt install gcc-arm-none-eabi
 # Download from https://developer.arm.com/downloads/-/gnu-rm
 ```
 
-**CMSIS headers:** The STM32G0 CMSIS device headers (`stm32g0b1xx.h` etc.) must be on the include path. The Makefile searches three standard locations automatically. If not found, either:
+**CMSIS headers:** The STM32G0 CMSIS device headers (`stm32g0c1xx.h` etc.) are vendored in `firmware/cmsis/` (from ST's `cmsis-device-g0`). The Makefile searches three standard locations automatically, ending with the vendored copy. If not found, either:
 
 - Set `CMSIS_DIR` on the command line (see below), or
 - Copy the headers into `firmware/cmsis/` and the Makefile will find them
@@ -79,7 +79,7 @@ make disasm
 make clean
 ```
 
-The build prints a flash usage summary on completion. At the current firmware size of ~28 KB, there is approximately 98 KB of headroom against the 126 KB firmware budget (the last 2 KB page is reserved for the settings sector).
+The build prints a flash usage summary on completion. At the current firmware size of ~7.5 KB, there is approximately 246 KB of headroom against the 254 KB firmware budget (the last 2 KB page is reserved for the settings sector).
 
 ---
 
@@ -158,7 +158,7 @@ dfu-util -d 0483:df11 -a 0 -s 0x08000000:leave -D firmware.bin
 
 Pre-built `.bin` files for each release are in `firmware/releases/`.
 
-> **Settings are preserved across DFU updates.** The settings sector (last 2 KB page at `0x0801F800`) is not erased by the update process.
+> **Settings are preserved across DFU updates.** The settings sector (last 2 KB page at `0x0803F800`, in flash bank 2) is not erased by the update process.
 
 ---
 

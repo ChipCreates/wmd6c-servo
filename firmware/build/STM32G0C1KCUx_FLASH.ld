@@ -1,20 +1,21 @@
 /*
- * STM32G0B1KBUx_FLASH.ld — DSR-1 Linker Script
+ * STM32G0C1KCUx_FLASH.ld — DSR-1 Linker Script
  *
  * WM-D6C Servo Replacement Module (DSR-1)
- * Target: STM32G0B1KBU6, UFQFPN32 package
+ * Target: STM32G0C1KCU6, UFQFPN32 package
  *
  * Memory map:
  *
- *   FLASH   0x08000000  128 KB total
- *           0x08000000  126 KB — firmware code and read-only data
- *           0x0801F800    2 KB — settings sector (page 63, RESERVED)
+ *   FLASH   0x08000000  256 KB total (dual-bank: 2 × 128 KB, 2 KB pages)
+ *           0x08000000  254 KB — firmware code and read-only data
+ *           0x0803F800    2 KB — settings sector (last page, RESERVED)
  *
  *   RAM     0x20000000  144 KB — stack, BSS, and initialised data
  *
  * Settings sector reservation:
- *   Page 63 (0x0801F800–0x0801FFFF) is reserved for the settings block
- *   written by flash.c. This page lies outside the 126 KB FLASH region
+ *   The last page (0x0803F800–0x0803FFFF; linear page 127, which is bank 2
+ *   page 63 in dual-bank mode) is reserved for the settings block
+ *   written by flash.c. This page lies outside the 254 KB FLASH region
  *   seen by the linker, so the compiler can never place code or read-only
  *   data there. A flash_save() erase of page 63 therefore cannot destroy
  *   any code. The ASSERT below enforces the boundary at link time.
@@ -32,7 +33,7 @@
  * Startup sequence requirements:
  *   .data section must be copied from flash (LMA) to RAM (VMA) by startup.s.
  *   .bss section must be zeroed by startup.s before main() is called.
- *   Both are handled by startup_stm32g0b1xx.s.
+ *   Both are handled by startup_stm32g0c1xx.s.
  */
 
 /* Entry point — reset handler in startup file */
@@ -44,11 +45,11 @@ _Min_Heap_Size  = 0x000;   /* No heap — all memory is statically allocated */
 
 MEMORY
 {
-  /* Firmware code region: 126 KB (128 KB total minus 2 KB settings sector) */
-  FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 126K
+  /* Firmware code region: 254 KB (256 KB total minus 2 KB settings sector) */
+  FLASH (rx)  : ORIGIN = 0x08000000, LENGTH = 254K
 
   /* Settings sector: reserved, NOT available to linker for code placement */
-  /* SETTINGS (r) : ORIGIN = 0x0801F000, LENGTH = 2K  -- intentionally absent */
+  /* SETTINGS (r) : ORIGIN = 0x0803F800, LENGTH = 2K  -- intentionally absent */
 
   /* RAM: full 144 KB available */
   RAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 144K
@@ -134,7 +135,7 @@ SECTIONS
   /* -------------------------------------------------------------------------
    * .data — initialised variables
    * Stored in flash (LMA = load address), copied to RAM (VMA) at startup.
-   * startup_stm32g0b1xx.s copies from _sidata to _sdata.._edata.
+   * startup_stm32g0c1xx.s copies from _sidata to _sdata.._edata.
    * ----------------------------------------------------------------------- */
   _sidata = LOADADDR(.data);   /* Flash address where .data image is stored */
   /* Computed after .data so ASSERT below can check the true flash end */
@@ -151,7 +152,7 @@ SECTIONS
 
   /* -------------------------------------------------------------------------
    * .bss — uninitialised variables (zero-filled at startup)
-   * startup_stm32g0b1xx.s zeroes from _sbss to _ebss before calling main().
+   * startup_stm32g0c1xx.s zeroes from _sbss to _ebss before calling main().
    * ----------------------------------------------------------------------- */
   .bss :
   {
@@ -202,13 +203,13 @@ SECTIONS
    * Settings sector guard
    *
    * This ASSERT verifies at link time that the firmware image does not
-   * overflow into the reserved settings sector at 0x0801F000.
-   * If the firmware grows beyond 126 KB, this check fails with a clear
+   * overflow into the reserved settings sector at 0x0803F800.
+   * If the firmware grows beyond 254 KB, this check fails with a clear
    * error message rather than silently corrupting the settings sector.
    * ----------------------------------------------------------------------- */
   /* '.' here is a RAM address — must check flash end instead.
    * Flash usage ends at the LMA tail of .data (initialised variables stored in flash). */
-  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= 0x0801F800,
-    "ERROR: Firmware image exceeds 126 KB and overlaps the settings sector. \
+  ASSERT(LOADADDR(.data) + SIZEOF(.data) <= 0x0803F800,
+    "ERROR: Firmware image exceeds 254 KB and overlaps the settings sector. \
      Reduce firmware size.")
 }

@@ -67,8 +67,9 @@ The schematic symbol, pin mapping, package, and firmware configuration must all 
 the exact non-`N` UFQFPN32 device. Recheck the exact package pin table before final
 layout, especially:
 
-- PA8 / CC1
-- PA9 / CC2
+- PA8 / CC1 (UCPD1_CC1)
+- PA9 / CC1 (UCPD1_DBCC1, tied to PA8)
+- PA4 / CC2 (ADC_IN4)
 - PA11 / USB_DM
 - PA12 / USB_DP
 - PA13 / SWDIO
@@ -150,7 +151,7 @@ The design uses three 803040 LiPo cells in parallel as one logical 1S3P pack.
 
 | Document | Manufacturer | Status | Link |
 |---|---|---|---|
-| DW01A Single-Cell Li-Ion Protection IC | Fortune Semiconductor | **Baseline topology reference only**; confirm exact manufacturer and orderable part before use | https://www.ic-fortune.com/upload/Download/DW01A-DS-17_EN.pdf |
+| DW01A Single-Cell Li-Ion Protection IC | Fortune Semiconductor | **Baseline topology reference only**; confirm exact manufacturer and orderable part before use. Covered by the DW01x family datasheet, Rev. 1.7 (orderable part DW01A-G) | https://www.ic-fortune.com/upload/Download/DW01x-DS-17_EN_53550.pdf |
 | FS8205A Dual N-Channel MOSFET | Fortune Semiconductor | **Baseline topology reference only**; Rev. 1.7 manufacturer datasheet | https://www.ic-fortune.com/upload/Download/FS8205A-DS-17_EN.pdf |
 
 ### Protection selection rules
@@ -292,7 +293,7 @@ markings, record the actual manufacturer/source used for prototypes.
 
 | Document | Manufacturer | Status | Link |
 |---|---|---|---|
-| MMBT3904 NPN Transistor | onsemi | **Baseline candidate** for the PWM level-shift stage | https://www.onsemi.com/pdf/datasheet/mmbt3904-d.pdf |
+| MMBT3904 NPN Transistor | onsemi | **Baseline candidate** for the PWM level-shift stage | https://www.onsemi.com/download/data-sheet/pdf/mmbt3904lt1-d.pdf |
 | BAT54S Dual Series Schottky Diode | Diodes Incorporated | **Baseline candidate** where a dual rail-clamp package is appropriate | https://www.diodes.com/assets/Datasheets/ds11005.pdf |
 
 These links do not freeze the circuit values.

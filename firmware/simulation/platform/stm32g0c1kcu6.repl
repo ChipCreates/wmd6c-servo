@@ -1,10 +1,12 @@
-// STM32G0B1KBU6 platform definition for Renode
+// STM32G0C1KCU6 platform definition for Renode
 //
 // Derived from Renode upstream platforms/cpus/stm32g0.repl with three
 // corrections for the specific die used on DSR-1:
 //
-//   1. RAM 144 KB   — G0B1 has 144 KB (upstream file has 48 KB for smaller variants)
-//   2. cortex-m0+   — G0B1 is M0+, not M0
+//   0. Flash 256 KB — G0C1KC has 256 KB; firmware reads settings at 0x0803F800
+//
+//   1. RAM 144 KB   — G0C1 has 144 KB (upstream file has 48 KB for smaller variants)
+//   2. cortex-m0+   — G0C1 is M0+, not M0
 //   3. systick 64 MHz — matches DSR-1 clock_init() PLL target (upstream uses 72 MHz)
 //
 // Additionally: DMAMUX1 is tagged at 0x40020800 — the firmware writes to
@@ -21,11 +23,11 @@
 //   PA11 — USB D-   (stubbed — USB CDC not yet ported to G0 USB_DRD)
 //   PA12 — USB D+   (stubbed)
 
-// Main Flash memory (128 KB — covers all G0B1 variants)
+// Main Flash memory (256 KB — STM32G0C1xC; settings page at 0x0803F800)
 flash: Memory.MappedMemory @ sysbus 0x08000000
-    size: 0x20000
+    size: 0x40000
 
-// SRAM: 144 KB for STM32G0B1xx (G0B0/G071/G081 have 36 KB; G0B1/G0C1 have 144 KB)
+// SRAM: 144 KB for STM32G0C1xx (G0B0/G071/G081 have 36 KB; G0B1/G0C1 have 144 KB)
 ram: Memory.MappedMemory @ sysbus 0x20000000
     size: 0x24000
 
@@ -78,7 +80,7 @@ nvicInput29: Miscellaneous.CombinedInput @ none
     numberOfInputs: 4
     -> nvic@29
 
-// Cortex-M0+ (not M0) — G0B1 is M0+
+// Cortex-M0+ (not M0) — G0C1 is M0+
 cpu: CPU.CortexM @ sysbus
     cpuType: "cortex-m0+"
     nvic: nvic

@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * @file    stm32g0b1xx.h
+  * @file    stm32g0c1xx.h
   * @author  MCD Application Team
   * @brief   CMSIS Cortex-M0+ Device Peripheral Access Layer Header File.
   *          This file contains all the peripheral register's definitions, bits
-  *          definitions and memory mapping for stm32g0b1xx devices.
+  *          definitions and memory mapping for stm32g0c1xx devices.
   *
   *          This file contains:
   *           - Data structures and the address mapping for all peripherals
@@ -28,12 +28,12 @@
   * @{
   */
 
-/** @addtogroup stm32g0b1xx
+/** @addtogroup stm32g0c1xx
   * @{
   */
 
-#ifndef STM32G0B1xx_H
-#define STM32G0B1xx_H
+#ifndef STM32G0C1xx_H
+#define STM32G0C1xx_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -61,7 +61,7 @@
   */
 
 /**
- * @brief stm32g0b1xx Interrupt Number Definition, according to the selected device
+ * @brief stm32g0c1xx Interrupt Number Definition, according to the selected device
  *        in @ref Library_configuration_section
  */
 
@@ -106,6 +106,7 @@ typedef enum
   USART2_LPUART2_IRQn         = 28,     /*!< USART2 + LPUART2 Interrupt                                        */
   USART3_4_5_6_LPUART1_IRQn   = 29,     /*!< USART3, USART4, USART5, USART6, LPUART1 globlal Interrupts (combined with EXTI 28) */
   CEC_IRQn                    = 30,     /*!< CEC Interrupt(combined with EXTI 27)                               */
+  AES_RNG_IRQn                = 31,     /*!< AES & RNG Interrupt                                                */
 } IRQn_Type;
 
 /**
@@ -714,6 +715,47 @@ typedef struct
   __IO uint32_t SR;          /*!< WWDG Status register,        Address offset: 0x08 */
 } WWDG_TypeDef;
 
+/**
+  * @brief AES hardware accelerator
+  */
+typedef struct
+{
+  __IO uint32_t CR;          /*!< AES control register,                        Address offset: 0x00 */
+  __IO uint32_t SR;          /*!< AES status register,                         Address offset: 0x04 */
+  __IO uint32_t DINR;        /*!< AES data input register,                     Address offset: 0x08 */
+  __IO uint32_t DOUTR;       /*!< AES data output register,                    Address offset: 0x0C */
+  __IO uint32_t KEYR0;       /*!< AES key register 0,                          Address offset: 0x10 */
+  __IO uint32_t KEYR1;       /*!< AES key register 1,                          Address offset: 0x14 */
+  __IO uint32_t KEYR2;       /*!< AES key register 2,                          Address offset: 0x18 */
+  __IO uint32_t KEYR3;       /*!< AES key register 3,                          Address offset: 0x1C */
+  __IO uint32_t IVR0;        /*!< AES initialization vector register 0,        Address offset: 0x20 */
+  __IO uint32_t IVR1;        /*!< AES initialization vector register 1,        Address offset: 0x24 */
+  __IO uint32_t IVR2;        /*!< AES initialization vector register 2,        Address offset: 0x28 */
+  __IO uint32_t IVR3;        /*!< AES initialization vector register 3,        Address offset: 0x2C */
+  __IO uint32_t KEYR4;       /*!< AES key register 4,                          Address offset: 0x30 */
+  __IO uint32_t KEYR5;       /*!< AES key register 5,                          Address offset: 0x34 */
+  __IO uint32_t KEYR6;       /*!< AES key register 6,                          Address offset: 0x38 */
+  __IO uint32_t KEYR7;       /*!< AES key register 7,                          Address offset: 0x3C */
+  __IO uint32_t SUSP0R;      /*!< AES Suspend register 0,                      Address offset: 0x40 */
+  __IO uint32_t SUSP1R;      /*!< AES Suspend register 1,                      Address offset: 0x44 */
+  __IO uint32_t SUSP2R;      /*!< AES Suspend register 2,                      Address offset: 0x48 */
+  __IO uint32_t SUSP3R;      /*!< AES Suspend register 3,                      Address offset: 0x4C */
+  __IO uint32_t SUSP4R;      /*!< AES Suspend register 4,                      Address offset: 0x50 */
+  __IO uint32_t SUSP5R;      /*!< AES Suspend register 5,                      Address offset: 0x54 */
+  __IO uint32_t SUSP6R;      /*!< AES Suspend register 6,                      Address offset: 0x58 */
+  __IO uint32_t SUSP7R;      /*!< AES Suspend register 7,                      Address offset: 0x5C */
+} AES_TypeDef;
+
+/**
+  * @brief RNG
+  */
+typedef struct
+{
+  __IO uint32_t CR;  /*!< RNG control register, Address offset: 0x00 */
+  __IO uint32_t SR;  /*!< RNG status register,  Address offset: 0x04 */
+  __IO uint32_t DR;  /*!< RNG data register,    Address offset: 0x08 */
+} RNG_TypeDef;
+
 
 /**
   * @brief UCPD
@@ -825,6 +867,8 @@ typedef struct
 #define FLASH_R_BASE          (AHBPERIPH_BASE + 0x00002000UL)
 #define CRC_BASE              (AHBPERIPH_BASE + 0x00003000UL)
 
+#define RNG_BASE              (AHBPERIPH_BASE + 0x00005000UL)
+#define AES_BASE              (AHBPERIPH_BASE + 0x00006000UL)
 
 #define DMA1_Channel1_BASE    (DMA1_BASE + 0x00000008UL)
 #define DMA1_Channel2_BASE    (DMA1_BASE + 0x0000001CUL)
@@ -943,6 +987,9 @@ typedef struct
 #define ADC1_COMMON         ((ADC_Common_TypeDef *) ADC1_COMMON_BASE)
 #define ADC                 (ADC1_COMMON) /* Kept for legacy purpose */
 
+#define AES                 ((AES_TypeDef *) AES_BASE)
+#define AES1                ((AES_TypeDef *) AES_BASE)
+#define RNG                 ((RNG_TypeDef *) RNG_BASE)
 
 #define UCPD1               ((UCPD_TypeDef *) UCPD1_BASE)
 #define UCPD2               ((UCPD_TypeDef *) UCPD2_BASE)
@@ -1888,6 +1935,195 @@ typedef struct
 #define CRC_POL_POL_Pos          (0U)
 #define CRC_POL_POL_Msk          (0xFFFFFFFFUL << CRC_POL_POL_Pos)              /*!< 0xFFFFFFFF */
 #define CRC_POL_POL              CRC_POL_POL_Msk                                /*!< Coefficients of the polynomial */
+
+/******************************************************************************/
+/*                                                                            */
+/*                       Advanced Encryption Standard (AES)                   */
+/*                                                                            */
+/******************************************************************************/
+/*******************  Bit definition for AES_CR register  *********************/
+#define AES_CR_EN_Pos            (0U)
+#define AES_CR_EN_Msk            (0x1UL << AES_CR_EN_Pos)                       /*!< 0x00000001 */
+#define AES_CR_EN                AES_CR_EN_Msk                                  /*!< AES Enable */
+#define AES_CR_DATATYPE_Pos      (1U)
+#define AES_CR_DATATYPE_Msk      (0x3UL << AES_CR_DATATYPE_Pos)                 /*!< 0x00000006 */
+#define AES_CR_DATATYPE          AES_CR_DATATYPE_Msk                            /*!< Data type selection */
+#define AES_CR_DATATYPE_0        (0x1UL << AES_CR_DATATYPE_Pos)                 /*!< 0x00000002 */
+#define AES_CR_DATATYPE_1        (0x2UL << AES_CR_DATATYPE_Pos)                 /*!< 0x00000004 */
+
+#define AES_CR_MODE_Pos          (3U)
+#define AES_CR_MODE_Msk          (0x3UL << AES_CR_MODE_Pos)                     /*!< 0x00000018 */
+#define AES_CR_MODE              AES_CR_MODE_Msk                                /*!< AES Mode Of Operation */
+#define AES_CR_MODE_0            (0x1UL << AES_CR_MODE_Pos)                     /*!< 0x00000008 */
+#define AES_CR_MODE_1            (0x2UL << AES_CR_MODE_Pos)                     /*!< 0x00000010 */
+
+#define AES_CR_CHMOD_Pos         (5U)
+#define AES_CR_CHMOD_Msk         (0x803UL << AES_CR_CHMOD_Pos)                  /*!< 0x00010060 */
+#define AES_CR_CHMOD             AES_CR_CHMOD_Msk                               /*!< AES Chaining Mode */
+#define AES_CR_CHMOD_0           (0x001UL << AES_CR_CHMOD_Pos)                  /*!< 0x00000020 */
+#define AES_CR_CHMOD_1           (0x002UL << AES_CR_CHMOD_Pos)                  /*!< 0x00000040 */
+#define AES_CR_CHMOD_2           (0x800UL << AES_CR_CHMOD_Pos)                  /*!< 0x00010000 */
+
+#define AES_CR_CCFC_Pos          (7U)
+#define AES_CR_CCFC_Msk          (0x1UL << AES_CR_CCFC_Pos)                     /*!< 0x00000080 */
+#define AES_CR_CCFC              AES_CR_CCFC_Msk                                /*!< Computation Complete Flag Clear */
+#define AES_CR_ERRC_Pos          (8U)
+#define AES_CR_ERRC_Msk          (0x1UL << AES_CR_ERRC_Pos)                     /*!< 0x00000100 */
+#define AES_CR_ERRC              AES_CR_ERRC_Msk                                /*!< Error Clear */
+#define AES_CR_CCFIE_Pos         (9U)
+#define AES_CR_CCFIE_Msk         (0x1UL << AES_CR_CCFIE_Pos)                    /*!< 0x00000200 */
+#define AES_CR_CCFIE             AES_CR_CCFIE_Msk                               /*!< Computation Complete Flag Interrupt Enable */
+#define AES_CR_ERRIE_Pos         (10U)
+#define AES_CR_ERRIE_Msk         (0x1UL << AES_CR_ERRIE_Pos)                    /*!< 0x00000400 */
+#define AES_CR_ERRIE             AES_CR_ERRIE_Msk                               /*!< Error Interrupt Enable */
+#define AES_CR_DMAINEN_Pos       (11U)
+#define AES_CR_DMAINEN_Msk       (0x1UL << AES_CR_DMAINEN_Pos)                  /*!< 0x00000800 */
+#define AES_CR_DMAINEN           AES_CR_DMAINEN_Msk                             /*!< Enable data input phase DMA management  */
+#define AES_CR_DMAOUTEN_Pos      (12U)
+#define AES_CR_DMAOUTEN_Msk      (0x1UL << AES_CR_DMAOUTEN_Pos)                 /*!< 0x00001000 */
+#define AES_CR_DMAOUTEN          AES_CR_DMAOUTEN_Msk                            /*!< Enable data output phase DMA management */
+
+#define AES_CR_NPBLB_Pos         (20U)
+#define AES_CR_NPBLB_Msk         (0xFUL << AES_CR_NPBLB_Pos)                    /*!< 0x00F00000 */
+#define AES_CR_NPBLB             AES_CR_NPBLB_Msk                               /*!< Number of padding bytes in last block of payload. */
+#define AES_CR_NPBLB_0           (0x1UL << AES_CR_NPBLB_Pos)                    /*!< 0x00100000 */
+#define AES_CR_NPBLB_1           (0x2UL << AES_CR_NPBLB_Pos)                    /*!< 0x00200000 */
+#define AES_CR_NPBLB_2           (0x4UL << AES_CR_NPBLB_Pos)                    /*!< 0x00400000 */
+#define AES_CR_NPBLB_3           (0x8UL << AES_CR_NPBLB_Pos)                    /*!< 0x00800000 */
+
+#define AES_CR_GCMPH_Pos         (13U)
+#define AES_CR_GCMPH_Msk         (0x3UL << AES_CR_GCMPH_Pos)                    /*!< 0x00006000 */
+#define AES_CR_GCMPH             AES_CR_GCMPH_Msk                               /*!< GCM Phase */
+#define AES_CR_GCMPH_0           (0x1UL << AES_CR_GCMPH_Pos)                    /*!< 0x00002000 */
+#define AES_CR_GCMPH_1           (0x2UL << AES_CR_GCMPH_Pos)                    /*!< 0x00004000 */
+
+#define AES_CR_KEYSIZE_Pos       (18U)
+#define AES_CR_KEYSIZE_Msk       (0x1UL << AES_CR_KEYSIZE_Pos)                  /*!< 0x00040000 */
+#define AES_CR_KEYSIZE           AES_CR_KEYSIZE_Msk                             /*!< Key size selection */
+
+/*******************  Bit definition for AES_SR register  *********************/
+#define AES_SR_CCF_Pos           (0U)
+#define AES_SR_CCF_Msk           (0x1UL << AES_SR_CCF_Pos)                      /*!< 0x00000001 */
+#define AES_SR_CCF               AES_SR_CCF_Msk                                 /*!< Computation Complete Flag */
+#define AES_SR_RDERR_Pos         (1U)
+#define AES_SR_RDERR_Msk         (0x1UL << AES_SR_RDERR_Pos)                    /*!< 0x00000002 */
+#define AES_SR_RDERR             AES_SR_RDERR_Msk                               /*!< Read Error Flag */
+#define AES_SR_WRERR_Pos         (2U)
+#define AES_SR_WRERR_Msk         (0x1UL << AES_SR_WRERR_Pos)                    /*!< 0x00000004 */
+#define AES_SR_WRERR             AES_SR_WRERR_Msk                               /*!< Write Error Flag */
+#define AES_SR_BUSY_Pos          (3U)
+#define AES_SR_BUSY_Msk          (0x1UL << AES_SR_BUSY_Pos)                     /*!< 0x00000008 */
+#define AES_SR_BUSY              AES_SR_BUSY_Msk                                /*!< Busy Flag */
+
+/*******************  Bit definition for AES_DINR register  *******************/
+#define AES_DINR_Pos             (0U)
+#define AES_DINR_Msk             (0xFFFFFFFFUL << AES_DINR_Pos)                 /*!< 0xFFFFFFFF */
+#define AES_DINR                 AES_DINR_Msk                                   /*!< AES Data Input Register */
+
+/*******************  Bit definition for AES_DOUTR register  ******************/
+#define AES_DOUTR_Pos            (0U)
+#define AES_DOUTR_Msk            (0xFFFFFFFFUL << AES_DOUTR_Pos)                /*!< 0xFFFFFFFF */
+#define AES_DOUTR                AES_DOUTR_Msk                                  /*!< AES Data Output Register */
+
+/*******************  Bit definition for AES_KEYR0 register  ******************/
+#define AES_KEYR0_Pos            (0U)
+#define AES_KEYR0_Msk            (0xFFFFFFFFUL << AES_KEYR0_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR0                AES_KEYR0_Msk                                  /*!< AES Key Register 0 */
+
+/*******************  Bit definition for AES_KEYR1 register  ******************/
+#define AES_KEYR1_Pos            (0U)
+#define AES_KEYR1_Msk            (0xFFFFFFFFUL << AES_KEYR1_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR1                AES_KEYR1_Msk                                  /*!< AES Key Register 1 */
+
+/*******************  Bit definition for AES_KEYR2 register  ******************/
+#define AES_KEYR2_Pos            (0U)
+#define AES_KEYR2_Msk            (0xFFFFFFFFUL << AES_KEYR2_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR2                AES_KEYR2_Msk                                  /*!< AES Key Register 2 */
+
+/*******************  Bit definition for AES_KEYR3 register  ******************/
+#define AES_KEYR3_Pos            (0U)
+#define AES_KEYR3_Msk            (0xFFFFFFFFUL << AES_KEYR3_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR3                AES_KEYR3_Msk                                  /*!< AES Key Register 3 */
+
+/*******************  Bit definition for AES_KEYR4 register  ******************/
+#define AES_KEYR4_Pos            (0U)
+#define AES_KEYR4_Msk            (0xFFFFFFFFUL << AES_KEYR4_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR4                AES_KEYR4_Msk                                  /*!< AES Key Register 4 */
+
+/*******************  Bit definition for AES_KEYR5 register  ******************/
+#define AES_KEYR5_Pos            (0U)
+#define AES_KEYR5_Msk            (0xFFFFFFFFUL << AES_KEYR5_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR5                AES_KEYR5_Msk                                  /*!< AES Key Register 5 */
+
+/*******************  Bit definition for AES_KEYR6 register  ******************/
+#define AES_KEYR6_Pos            (0U)
+#define AES_KEYR6_Msk            (0xFFFFFFFFUL << AES_KEYR6_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR6                AES_KEYR6_Msk                                  /*!< AES Key Register 6 */
+
+/*******************  Bit definition for AES_KEYR7 register  ******************/
+#define AES_KEYR7_Pos            (0U)
+#define AES_KEYR7_Msk            (0xFFFFFFFFUL << AES_KEYR7_Pos)                /*!< 0xFFFFFFFF */
+#define AES_KEYR7                AES_KEYR7_Msk                                  /*!< AES Key Register 7 */
+
+/*******************  Bit definition for AES_IVR0 register   ******************/
+#define AES_IVR0_Pos             (0U)
+#define AES_IVR0_Msk             (0xFFFFFFFFUL << AES_IVR0_Pos)                 /*!< 0xFFFFFFFF */
+#define AES_IVR0                 AES_IVR0_Msk                                   /*!< AES Initialization Vector Register 0 */
+
+/*******************  Bit definition for AES_IVR1 register   ******************/
+#define AES_IVR1_Pos             (0U)
+#define AES_IVR1_Msk             (0xFFFFFFFFUL << AES_IVR1_Pos)                 /*!< 0xFFFFFFFF */
+#define AES_IVR1                 AES_IVR1_Msk                                   /*!< AES Initialization Vector Register 1 */
+
+/*******************  Bit definition for AES_IVR2 register   ******************/
+#define AES_IVR2_Pos             (0U)
+#define AES_IVR2_Msk             (0xFFFFFFFFUL << AES_IVR2_Pos)                /*!< 0xFFFFFFFF */
+#define AES_IVR2                 AES_IVR2_Msk                                  /*!< AES Initialization Vector Register 2 */
+
+/*******************  Bit definition for AES_IVR3 register   ******************/
+#define AES_IVR3_Pos             (0U)
+#define AES_IVR3_Msk             (0xFFFFFFFFUL << AES_IVR3_Pos)                /*!< 0xFFFFFFFF */
+#define AES_IVR3                 AES_IVR3_Msk                                  /*!< AES Initialization Vector Register 3 */
+
+/*******************  Bit definition for AES_SUSP0R register  ******************/
+#define AES_SUSP0R_Pos           (0U)
+#define AES_SUSP0R_Msk           (0xFFFFFFFFUL << AES_SUSP0R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP0R               AES_SUSP0R_Msk                                /*!< AES Suspend registers 0 */
+
+/*******************  Bit definition for AES_SUSP1R register  ******************/
+#define AES_SUSP1R_Pos           (0U)
+#define AES_SUSP1R_Msk           (0xFFFFFFFFUL << AES_SUSP1R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP1R               AES_SUSP1R_Msk                                /*!< AES Suspend registers 1 */
+
+/*******************  Bit definition for AES_SUSP2R register  ******************/
+#define AES_SUSP2R_Pos           (0U)
+#define AES_SUSP2R_Msk           (0xFFFFFFFFUL << AES_SUSP2R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP2R               AES_SUSP2R_Msk                                /*!< AES Suspend registers 2 */
+
+/*******************  Bit definition for AES_SUSP3R register  ******************/
+#define AES_SUSP3R_Pos           (0U)
+#define AES_SUSP3R_Msk           (0xFFFFFFFFUL << AES_SUSP3R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP3R               AES_SUSP3R_Msk                                /*!< AES Suspend registers 3 */
+
+/*******************  Bit definition for AES_SUSP4R register  ******************/
+#define AES_SUSP4R_Pos           (0U)
+#define AES_SUSP4R_Msk           (0xFFFFFFFFUL << AES_SUSP4R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP4R               AES_SUSP4R_Msk                                /*!< AES Suspend registers 4 */
+
+/*******************  Bit definition for AES_SUSP5R register  ******************/
+#define AES_SUSP5R_Pos           (0U)
+#define AES_SUSP5R_Msk           (0xFFFFFFFFUL << AES_SUSP5R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP5R               AES_SUSP5R_Msk                                /*!< AES Suspend registers 5 */
+
+/*******************  Bit definition for AES_SUSP6R register  ******************/
+#define AES_SUSP6R_Pos           (0U)
+#define AES_SUSP6R_Msk           (0xFFFFFFFFUL << AES_SUSP6R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP6R               AES_SUSP6R_Msk                                /*!< AES Suspend registers 6 */
+
+/*******************  Bit definition for AES_SUSP7R register  ******************/
+#define AES_SUSP7R_Pos           (0U)
+#define AES_SUSP7R_Msk           (0xFFFFFFFFUL << AES_SUSP7R_Pos)              /*!< 0xFFFFFFFF */
+#define AES_SUSP7R               AES_SUSP7R_Msk                                /*!< AES Suspend registers 7 */
 
 
 /******************************************************************************/
@@ -2983,9 +3219,9 @@ typedef struct
 #define EXTI_RPR2_RPIF34             EXTI_RPR2_RPIF34_Msk                       /*!< Rising Pending Interrupt Flag on line 34 */
 
 /*******************  Bit definition for EXTI_FPR2 register  ******************/
-#define EXTI_FPR2_RPIF34_Pos         (2U)
-#define EXTI_FPR2_RPIF34_Msk         (0x1UL << EXTI_FPR2_RPIF34_Pos)            /*!< 0x00000004 */
-#define EXTI_FPR2_RPIF34             EXTI_FPR2_RPIF34_Msk                       /*!< Rising Pending Interrupt Flag on line 34 */
+#define EXTI_FPR2_FPIF34_Pos         (2U)
+#define EXTI_FPR2_FPIF34_Msk         (0x1UL << EXTI_FPR2_FPIF34_Pos)            /*!< 0x00000004 */
+#define EXTI_FPR2_FPIF34             EXTI_FPR2_FPIF34_Msk                       /*!< Falling Pending Interrupt Flag on line 34 */
 
 /*****************  Bit definition for EXTI_EXTICR1 register  **************/
 #define EXTI_EXTICR1_EXTI0_Pos       (0U)
@@ -3326,6 +3562,11 @@ typedef struct
 #define EXTI_EMR2_EM36_Pos           (4U)
 #define EXTI_EMR2_EM36_Msk           (0x1UL << EXTI_EMR2_EM36_Pos)             /*!< 0x00000010 */
 #define EXTI_EMR2_EM36               EXTI_EMR2_EM36_Msk                        /*!< Event Mask on line 36 */
+
+/* Legacy defines */
+#define EXTI_FPR2_RPIF34_Pos         EXTI_FPR2_FPIF34_Pos
+#define EXTI_FPR2_RPIF34_Msk         EXTI_FPR2_FPIF34_Msk
+#define EXTI_FPR2_RPIF34             EXTI_FPR2_FPIF34
 
 /******************************************************************************/
 /*                                                                            */
@@ -6411,6 +6652,12 @@ typedef struct
 #define RCC_AHBRSTR_CRCRST_Pos           (12U)
 #define RCC_AHBRSTR_CRCRST_Msk           (0x1UL << RCC_AHBRSTR_CRCRST_Pos)     /*!< 0x00001000 */
 #define RCC_AHBRSTR_CRCRST               RCC_AHBRSTR_CRCRST_Msk
+#define RCC_AHBRSTR_AESRST_Pos           (16U)
+#define RCC_AHBRSTR_AESRST_Msk           (0x1UL << RCC_AHBRSTR_AESRST_Pos)     /*!< 0x00010000 */
+#define RCC_AHBRSTR_AESRST               RCC_AHBRSTR_AESRST_Msk
+#define RCC_AHBRSTR_RNGRST_Pos           (18U)
+#define RCC_AHBRSTR_RNGRST_Msk           (0x1UL << RCC_AHBRSTR_RNGRST_Pos)     /*!< 0x00040000 */
+#define RCC_AHBRSTR_RNGRST               RCC_AHBRSTR_RNGRST_Msk
 
 /********************  Bit definition for RCC_APBRSTR1 register  **************/
 #define RCC_APBRSTR1_TIM2RST_Pos         (0U)
@@ -6560,6 +6807,12 @@ typedef struct
 #define RCC_AHBENR_CRCEN_Pos             (12U)
 #define RCC_AHBENR_CRCEN_Msk             (0x1UL << RCC_AHBENR_CRCEN_Pos)        /*!< 0x00001000 */
 #define RCC_AHBENR_CRCEN                 RCC_AHBENR_CRCEN_Msk
+#define RCC_AHBENR_AESEN_Pos             (16U)
+#define RCC_AHBENR_AESEN_Msk             (0x1UL << RCC_AHBENR_AESEN_Pos)        /*!< 0x00010000 */
+#define RCC_AHBENR_AESEN                 RCC_AHBENR_AESEN_Msk
+#define RCC_AHBENR_RNGEN_Pos             (18U)
+#define RCC_AHBENR_RNGEN_Msk             (0x1UL << RCC_AHBENR_RNGEN_Pos)        /*!< 0x00040000 */
+#define RCC_AHBENR_RNGEN                 RCC_AHBENR_RNGEN_Msk
 
 /********************  Bit definition for RCC_APBENR1 register  ***************/
 #define RCC_APBENR1_TIM2EN_Pos           (0U)
@@ -6718,6 +6971,12 @@ typedef struct
 #define RCC_AHBSMENR_CRCSMEN_Pos         (12U)
 #define RCC_AHBSMENR_CRCSMEN_Msk         (0x1UL << RCC_AHBSMENR_CRCSMEN_Pos)    /*!< 0x00001000 */
 #define RCC_AHBSMENR_CRCSMEN             RCC_AHBSMENR_CRCSMEN_Msk
+#define RCC_AHBSMENR_AESSMEN_Pos         (16U)
+#define RCC_AHBSMENR_AESSMEN_Msk         (0x1UL << RCC_AHBSMENR_AESSMEN_Pos)    /*!< 0x00010000 */
+#define RCC_AHBSMENR_AESSMEN             RCC_AHBSMENR_AESSMEN_Msk
+#define RCC_AHBSMENR_RNGSMEN_Pos         (18U)
+#define RCC_AHBSMENR_RNGSMEN_Msk         (0x1UL << RCC_AHBSMENR_RNGSMEN_Pos)    /*!< 0x00040000 */
+#define RCC_AHBSMENR_RNGSMEN             RCC_AHBSMENR_RNGSMEN_Msk
 
 /********************  Bit definition for RCC_APBSMENR1 register  *************/
 #define RCC_APBSMENR1_TIM2SMEN_Pos       (0U)
@@ -6905,6 +7164,17 @@ typedef struct
 #define RCC_CCIPR_TIM15SEL_Msk           (0x1UL << RCC_CCIPR_TIM15SEL_Pos)      /*!< 0x01000000 */
 #define RCC_CCIPR_TIM15SEL               RCC_CCIPR_TIM15SEL_Msk
 
+#define RCC_CCIPR_RNGSEL_Pos             (26U)
+#define RCC_CCIPR_RNGSEL_Msk             (0x3UL << RCC_CCIPR_RNGSEL_Pos)        /*!< 0x0C000000 */
+#define RCC_CCIPR_RNGSEL                 RCC_CCIPR_RNGSEL_Msk
+#define RCC_CCIPR_RNGSEL_0               (0x1UL << RCC_CCIPR_RNGSEL_Pos)        /*!< 0x04000000 */
+#define RCC_CCIPR_RNGSEL_1               (0x2UL << RCC_CCIPR_RNGSEL_Pos)        /*!< 0x08000000 */
+
+#define RCC_CCIPR_RNGDIV_Pos             (28U)
+#define RCC_CCIPR_RNGDIV_Msk             (0x3UL << RCC_CCIPR_RNGDIV_Pos)        /*!< 0x30000000 */
+#define RCC_CCIPR_RNGDIV                 RCC_CCIPR_RNGDIV_Msk
+#define RCC_CCIPR_RNGDIV_0               (0x1UL << RCC_CCIPR_RNGDIV_Pos)        /*!< 0x10000000 */
+#define RCC_CCIPR_RNGDIV_1               (0x2UL << RCC_CCIPR_RNGDIV_Pos)        /*!< 0x20000000 */
 
 #define RCC_CCIPR_ADCSEL_Pos             (30U)
 #define RCC_CCIPR_ADCSEL_Msk             (0x3UL << RCC_CCIPR_ADCSEL_Pos)        /*!< 0xC0000000 */
@@ -7009,6 +7279,39 @@ typedef struct
 #define RCC_CSR_LPWRRSTF_Pos             (31U)
 #define RCC_CSR_LPWRRSTF_Msk             (0x1UL << RCC_CSR_LPWRRSTF_Pos)        /*!< 0x80000000 */
 #define RCC_CSR_LPWRRSTF                 RCC_CSR_LPWRRSTF_Msk
+
+/******************************************************************************/
+/*                                                                            */
+/*                                    RNG                                     */
+/*                                                                            */
+/******************************************************************************/
+/********************  Bits definition for RNG_CR register  *******************/
+#define RNG_CR_RNGEN_Pos    (2U)
+#define RNG_CR_RNGEN_Msk    (0x1UL << RNG_CR_RNGEN_Pos)                         /*!< 0x00000004 */
+#define RNG_CR_RNGEN        RNG_CR_RNGEN_Msk
+#define RNG_CR_IE_Pos       (3U)
+#define RNG_CR_IE_Msk       (0x1UL << RNG_CR_IE_Pos)                            /*!< 0x00000008 */
+#define RNG_CR_IE           RNG_CR_IE_Msk
+#define RNG_CR_CED_Pos      (5U)
+#define RNG_CR_CED_Msk      (0x1UL << RNG_CR_CED_Pos)                           /*!< 0x00000020 */
+#define RNG_CR_CED          RNG_CR_CED_Msk
+
+/********************  Bits definition for RNG_SR register  *******************/
+#define RNG_SR_DRDY_Pos     (0U)
+#define RNG_SR_DRDY_Msk     (0x1UL << RNG_SR_DRDY_Pos)                          /*!< 0x00000001 */
+#define RNG_SR_DRDY         RNG_SR_DRDY_Msk
+#define RNG_SR_CECS_Pos     (1U)
+#define RNG_SR_CECS_Msk     (0x1UL << RNG_SR_CECS_Pos)                          /*!< 0x00000002 */
+#define RNG_SR_CECS         RNG_SR_CECS_Msk
+#define RNG_SR_SECS_Pos     (2U)
+#define RNG_SR_SECS_Msk     (0x1UL << RNG_SR_SECS_Pos)                          /*!< 0x00000004 */
+#define RNG_SR_SECS         RNG_SR_SECS_Msk
+#define RNG_SR_CEIS_Pos     (5U)
+#define RNG_SR_CEIS_Msk     (0x1UL << RNG_SR_CEIS_Pos)                          /*!< 0x00000020 */
+#define RNG_SR_CEIS         RNG_SR_CEIS_Msk
+#define RNG_SR_SEIS_Pos     (6U)
+#define RNG_SR_SEIS_Msk     (0x1UL << RNG_SR_SEIS_Pos)                          /*!< 0x00000040 */
+#define RNG_SR_SEIS         RNG_SR_SEIS_Msk
 
 /******************************************************************************/
 /*                                                                            */
@@ -8332,6 +8635,12 @@ typedef struct
 #define SYSCFG_ITLINE30_SR_CEC_Pos            (0U)
 #define SYSCFG_ITLINE30_SR_CEC_Msk            (0x1UL << SYSCFG_ITLINE30_SR_CEC_Pos) /*!< 0x00000001 */
 #define SYSCFG_ITLINE30_SR_CEC                SYSCFG_ITLINE30_SR_CEC_Msk       /*!< CEC Interrupt-> exti[27] */
+#define SYSCFG_ITLINE31_SR_RNG_Pos            (0U)
+#define SYSCFG_ITLINE31_SR_RNG_Msk            (0x1UL << SYSCFG_ITLINE31_SR_RNG_Pos) /*!< 0x00000001 */
+#define SYSCFG_ITLINE31_SR_RNG                SYSCFG_ITLINE31_SR_RNG_Msk       /*!< RNG Interrupt */
+#define SYSCFG_ITLINE31_SR_AES_Pos            (1U)
+#define SYSCFG_ITLINE31_SR_AES_Msk            (0x1UL << SYSCFG_ITLINE31_SR_AES_Pos) /*!< 0x00000002 */
+#define SYSCFG_ITLINE31_SR_AES                SYSCFG_ITLINE31_SR_AES_Msk       /*!< AES Interrupt */
 
 /******************************************************************************/
 /*                                                                            */
@@ -10754,6 +11063,8 @@ typedef struct
 
 #define IS_ADC_COMMON_INSTANCE(INSTANCE) ((INSTANCE) == ADC1_COMMON)
 
+/******************************* AES Instances ********************************/
+#define IS_AES_ALL_INSTANCE(INSTANCE) ((INSTANCE) == AES)
 
 /****************************** CEC Instances *********************************/
 #define IS_CEC_ALL_INSTANCE(INSTANCE) ((INSTANCE) == CEC)
@@ -10823,6 +11134,8 @@ typedef struct
                                        ((INSTANCE) == I2C2) || \
                                        ((INSTANCE) == I2C3))
 
+/******************************* RNG Instances ********************************/
+#define IS_RNG_ALL_INSTANCE(INSTANCE)  ((INSTANCE) == RNG)
 
 /****************************** RTC Instances *********************************/
 #define IS_RTC_ALL_INSTANCE(INSTANCE)  ((INSTANCE) == RTC)
@@ -11284,7 +11597,7 @@ typedef struct
 }
 #endif /* __cplusplus */
 
-#endif /* STM32G0B1xx_H */
+#endif /* STM32G0C1xx_H */
 
 /**
   * @}

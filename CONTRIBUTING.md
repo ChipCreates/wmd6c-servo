@@ -196,7 +196,7 @@ for modification:
 
 **No HAL.** No STM32Cube HAL, no STM32Cube LL, no vendor-supplied middleware of any
 kind. Peripheral access is direct register writes only. The headers in use are the
-CMSIS device headers (`stm32g0b1xx.h`) which provide register definitions and bit
+CMSIS device headers (`stm32g0c1xx.h`) which provide register definitions and bit
 masks — these are acceptable because they are documentation, not abstraction.
 
 The reason: HAL code is large, opaque, and introduces unpredictable execution time.
@@ -212,8 +212,9 @@ flash consumption, RAM consumption, and scheduling overhead for zero benefit.
 memory is statically allocated. In an embedded real-time system, dynamic allocation
 risks fragmentation and non-deterministic allocation time.
 
-**Minimal flash footprint.** The current firmware occupies approximately 28KB of
-the 128KB available. Contributions that grow the firmware significantly must justify
+**Minimal flash footprint.** The current firmware prototype occupies approximately
+7.5KB of the 254KB code region on the STM32G0C1KCU6 (256KB flash, last 2KB page
+reserved for settings). Contributions that grow the firmware significantly must justify
 the flash cost.
 
 ### What We Do Want

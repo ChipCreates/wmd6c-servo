@@ -62,12 +62,12 @@ worth the manufacturability tradeoff.)
 | PA1 / ADC_IN1 | Base speed trim | ADC_RV601 |
 | PA2 / ADC_IN2 | Speed tune slider | ADC_RV602 |
 | PA3 / ADC_IN3 | Speed range trim | ADC_RV603 |
-| PA4 / DAC1_OUT1 | No-connect / spare; DAC not used for motor drive | NC |
+| PA4 / ADC_IN4 | USB-C CC2 voltage sense (external 5.1 k Rd) | CC2 |
 | PA5 / GPIO | Motor enable input | MOTOR_EN |
 | PA6 / TIM3_CH1 | PWM motor output | MOTOR_PWM |
 | PA7 / GPIO | S601 speed-tune switch | S601_GPIO |
-| PA8 / UCPD1_CC1 | USB-C CC1 (Variant A) | CC1 |
-| PA9 / UCPD1_CC2 | USB-C CC2 (Variant A) | CC2 |
+| PA8 / UCPD1_CC1 | USB-C CC1 (UCPD sink Rd) | CC1 |
+| PA9 / UCPD1_DBCC1 | Tied to CC1 for dead-battery Rd; never driven | CC1 |
 | PA11 / USB_DM | USB D− | USB_DM |
 | PA12 / USB_DP | USB D+ | USB_DP |
 | PA13 / SWDIO | SWD programming | SWDIO |
@@ -129,7 +129,8 @@ base-voltage range, R9 sizing, and PWM-to-speed sign remain pending bench verifi
 on the actual C11-494-12 board.
 
 ### USB-C
-- USB-C receptacle; CC1/CC2 → PA8/PA9 (UCPD1) in Variant A; D+/D− → PA12/PA11 through
+- USB-C receptacle; CC1 → PA8 + PA9 (UCPD1_CC1 + DBCC1, STM32 Rd), CC2 → external 5.1 k Rd + PA4 ADC
+  (UFQFPN32 has no UCPD CC2 pin); D+/D− → PA12/PA11 through
   a USBLC6-2SC6Y ESD array; VBUS bypass.
 
 ### WM-D6C Interface Connector J1 (8-position 1.25 mm JST)

@@ -26,6 +26,14 @@ hardware bring-up.
 > firmware prototype. The current hardware target is STM32G0C1KCU6; use
 > `PROJECT_STATUS.md` and `docs/stm32g0c1-pin-allocation.md` for current design
 > authority.
+>
+> **Resolution status (2026-11-09):** findings 3.1–3.3, 4.1, 5.2 and 5.3 are fixed
+> in source, and the firmware now builds for the STM32G0C1KCU6
+> (`-DSTM32G0C1xx`, `startup_stm32g0c1xx.s`, `STM32G0C1KCUx_FLASH.ld`). The
+> page-62/63 and 126 KB discussion in §4.1 describes the old 128 KB G0B1 layout;
+> on the G0C1 the code region is 254 KB and settings live in the last page at
+> `0x0803F800` (flash bank 2). Finding 4.2 (motor sign) remains open pending bench
+> measurement.
 
 References used:
 

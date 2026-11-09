@@ -230,7 +230,7 @@ Use `STM32G0C1KCU6` in UFQFPN32.
 | 8 | PA1 | `RV601_WIPER` / ADC_IN1 |
 | 9 | PA2 | `RV602_WIPER` / ADC_IN2 |
 | 10 | PA3 | `RV603_WIPER` / ADC_IN3 |
-| 11 | PA4 | Spare / NC |
+| 11 | PA4 | `CC2` sense / ADC_IN4 |
 | 12 | PA5 | `MOTOR_EN_MON` |
 | 13 | PA6 | `MOTOR_PWM` / TIM3_CH1 |
 | 14 | PA7 | `SPEED_TUNE_SW` |
@@ -238,7 +238,7 @@ Use `STM32G0C1KCU6` in UFQFPN32.
 | 16 | PB1 | `VBAT_SENSE_EN` |
 | 17 | PB2 | `BATT_LED1` |
 | 18 | PA8 | `CC1` |
-| 19 | PA9 | `CC2` |
+| 19 | PA9 | `CC1` (UCPD1_DBCC1, tied to PA8) |
 | 20 | PC6 | `S801_BATT` |
 | 21 | PA10 | Spare / NC |
 | 22 | PA11 | `USB_DM` |
@@ -255,6 +255,11 @@ Use `STM32G0C1KCU6` in UFQFPN32.
 | EP | VSS | GND |
 
 The GP K package has combined VDD/VDDA and VSS/VSSA pins and no separate VDDIO2 pin.
+
+> **Revised 2026-11-09 (pins 11 and 19).** PA9 is UCPD1_DBCC1, not a CC2 input, on the UFQFPN32 package (UCPD1_CC2 is PB15, absent here). Per RM0444 §7.3.16, PA9 is tied
+> to CC1 so the STM32 presents the dead-battery Rd on CC1 while unpowered. CC2 has no
+> UCPD pin on this package, so it gets an external Rd and is read by ADC on the former
+> spare PA4.
 
 ### Decoupling
 
@@ -319,14 +324,21 @@ ground reference.
 
 Rev A is a 5 V-only USB-C sink.
 
-The hardware must present valid sink termination before firmware starts. Use one
-datasheet-compliant Rd termination on each CC pin unless the final STM32 UCPD
-implementation provides an explicitly verified equivalent.
+The hardware must present valid sink termination before firmware starts, including
+while the Servo Board is unpowered (deck off, charging over USB).
 
 ```text
-CC1 -> valid Rd / protection -> PA8 as designed
-CC2 -> valid Rd / protection -> PA9 as designed
+CC1 -> PA8 (UCPD1_CC1) and PA9 (UCPD1_DBCC1); no external Rd
+       unpowered: STM32 dead-battery Rd; running: UCPD1 sink Rd (firmware)
+CC2 -> external 5.1 k Rd to GND -> PA4 (ADC_IN4) for current-advertisement sensing
 ```
+
+Do not add an external Rd on CC1: with PA9 tied to CC1 it would sit in parallel with
+the internal dead-battery Rd (~2.55 kΩ, out of spec).
+
+Firmware requirements: configure UCPD1 as a sink on CC1 before clearing the
+dead-battery pull-down (`SYSCFG_CFGR1.UCPD1_STROBE`); never configure PA9 as an output
+or as USART1_TX; read CC2 voltage on PA4 to detect the source's Rp level.
 
 No 9 V PD negotiation is used.
 

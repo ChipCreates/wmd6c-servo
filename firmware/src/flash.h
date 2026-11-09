@@ -17,6 +17,7 @@ typedef enum {
     FLASH_OK          = 0,   /* Operation succeeded                          */
     FLASH_ERR_VERIFY  = 1,   /* Readback after write did not match           */
     FLASH_ERR_INVALID = 2,   /* Stored block failed magic / CRC / range check */
+    FLASH_ERR_BANK_MODE = 3, /* Device not in dual-bank mode; save refused    */
 } FlashResult;
 
 /* -------------------------------------------------------------------------
@@ -41,7 +42,8 @@ FlashResult flash_load(void);
  * The servo loop may miss 4–5 FG edges during the erase cycle (~2ms).
  * It recovers automatically within 1–2 FG periods.
  *
- * Returns FLASH_OK on success, FLASH_ERR_VERIFY if readback fails.
+ * Returns FLASH_OK on success, FLASH_ERR_VERIFY if readback fails,
+ * FLASH_ERR_BANK_MODE if the DUAL_BANK option bit is cleared.
  */
 FlashResult flash_save(void);
 

@@ -2,11 +2,20 @@
  * flash.c — DSR-1 Settings Save / Restore
  *
  * WM-D6C Servo Replacement Module (DSR-1)
- * Hardware: STM32G0B1KBU6, bare-metal, no HAL, no RTOS
+ * Hardware: STM32G0C1KCU6, bare-metal, no HAL, no RTOS
  *
  * Stores PI gain constants (Kp, Ki) and the master target period in the
- * last 2 KB flash page (page 63: 0x0801F800–0x0801FFFF). This page lies
- * outside the linker's code region and is preserved across DFU updates.
+ * last 2 KB flash page (0x0803F800–0x0803FFFF). This page lies outside the
+ * linker's code region and is preserved across DFU updates.
+ *
+ * Flash organisation (STM32G0C1xC, 256 KB, RM0444 §3.3.1):
+ *   The 256 KB device is dual-bank when the DUAL_BANK option bit is set
+ *   (factory default): bank 1 = 0x08000000–0x0801FFFF, bank 2 =
+ *   0x08020000–0x0803FFFF, 64 × 2 KB pages each. Bank 2 pages are selected
+ *   with FLASH_CR.BKER = 1 and numbered from 256 in FLASH_CR.PNB, so the
+ *   settings page is PNB = 256 + 63 = 319. flash_save() refuses to erase if
+ *   DUAL_BANK has been cleared rather than guess the single-bank geometry.
+ *   VERIFY on first bench save: confirm PNB/BKER encoding against RM0444.
  *
  * Layout of the settings block (32 bytes, aligned to 8 bytes for double-word
  * flash writes on STM32G0):
@@ -23,20 +32,20 @@
  * constants are loaded into g_kp_q16, g_ki_q16, and g_target_period.
  * If either fails, compiled-in defaults from config.h are used instead.
  *
- * Flash write procedure (STM32G0B1 RM0444 §3.3):
+ * Flash write procedure (STM32G0C1 RM0444 §3.3):
  *   1. Unlock flash (FLASH->KEYR)
- *   2. Erase the page (FLASH->CR PNBR + STRT, wait for BSY)
+ *   2. Erase the page (FLASH->CR PER + BKER + PNB + STRT, wait for BSY1/BSY2)
  *   3. Write data as 64-bit double-words (FLASH->CR PG, write 2×32-bit)
  *   4. Lock flash (FLASH->CR LOCK)
  *
- * The STM32G0B1 requires double-word (64-bit) writes — two consecutive
+ * The STM32G0C1 requires double-word (64-bit) writes — two consecutive
  * 32-bit words must be written before the internal programming latch fires.
  * Writing a single 32-bit word and not following with a second leaves the
  * latch in a partial state and corrupts the flash cell.
  *
  * CRC-32:
  *   Software CRC-32 (polynomial 0xEDB88320, ISO 3309 / Ethernet).
- *   The STM32G0B1 has a hardware CRC unit but it uses the MPEG-2 polynomial
+ *   The STM32G0C1 has a hardware CRC unit but it uses the MPEG-2 polynomial
  *   by default. Using software CRC here avoids claiming the CRC peripheral
  *   and keeps flash.c self-contained.
  */
@@ -54,14 +63,19 @@
 #define FLASH_KEY1      0x45670123UL
 #define FLASH_KEY2      0xCDEF89ABUL
 
-/* Page size on STM32G0B1: 2 KB */
-#define FLASH_PAGE_SIZE 2048U
+/* Flash geometry on STM32G0C1xC: 256 KB, 2 KB pages, two 128 KB banks */
+#define FLASH_PAGE_SIZE         2048U
+#define FLASH_BASE_ADDR         0x08000000UL
+#define FLASH_BANK_SIZE         (128UL * 1024UL)
+#define FLASH_BANK2_PNB_BASE    256U    /* Bank 2 page n is PNB = 256 + n */
 
-/* Page number of the settings sector.
- * FLASH_SETTINGS_ADDR = 0x0801F000
- * Page = (addr - 0x08000000) / 2048 = 0x1F000 / 0x800 = 62
- * The settings block fits in one page; we erase and rewrite the whole page. */
-#define SETTINGS_PAGE   ((FLASH_SETTINGS_ADDR - 0x08000000UL) / FLASH_PAGE_SIZE)
+/* The settings block fits in one page; we erase and rewrite the whole page.
+ * FLASH_SETTINGS_ADDR = 0x0803F800 → bank 2, page 63 → PNB 319, BKER = 1. */
+_Static_assert((FLASH_SETTINGS_ADDR - FLASH_BASE_ADDR) >= FLASH_BANK_SIZE,
+               "Settings page is expected to live in flash bank 2");
+_Static_assert((FLASH_SETTINGS_ADDR % FLASH_PAGE_SIZE) == 0,
+               "Settings address must be page-aligned");
+#define SETTINGS_BANK2_PAGE  ((FLASH_SETTINGS_ADDR - FLASH_BASE_ADDR - FLASH_BANK_SIZE) / FLASH_PAGE_SIZE)
 
 /* -------------------------------------------------------------------------
  * Settings block layout — must match the description in the file header.
@@ -128,32 +142,33 @@ static void flash_lock(void)
  * ------------------------------------------------------------------------- */
 static void flash_wait_busy(void)
 {
-    while (FLASH->SR & FLASH_SR_BSY1) { }
+    while (FLASH->SR & (FLASH_SR_BSY1 | FLASH_SR_BSY2)) { }
 }
 
 /* -------------------------------------------------------------------------
- * flash_erase_page()
+ * flash_erase_bank2_page()
  *
- * Erases one 2 KB flash page. All bytes become 0xFF after erase.
- * Flash must be unlocked before calling.
- * @page: page number (0–63 for STM32G0B1 128KB device)
+ * Erases one 2 KB page in flash bank 2. All bytes become 0xFF after erase.
+ * Flash must be unlocked and the device must be in dual-bank mode.
+ * @page: page index within bank 2 (0–63 on the 256 KB STM32G0C1xC)
  * ------------------------------------------------------------------------- */
-static void flash_erase_page(uint32_t page)
+static void flash_erase_bank2_page(uint32_t page)
 {
     flash_wait_busy();
 
     /* Clear any previous error flags */
     FLASH->SR = FLASH->SR;
 
-    /* Set page erase mode, set page number, start erase */
+    /* Page erase in bank 2: PER + BKER, PNB = 256 + page, then start */
     FLASH->CR = FLASH_CR_PER
-              | ((page & 0x3FU) << FLASH_CR_PNB_Pos)
+              | FLASH_CR_BKER
+              | (((FLASH_BANK2_PNB_BASE + page) << FLASH_CR_PNB_Pos) & FLASH_CR_PNB_Msk)
               | FLASH_CR_STRT;
 
     flash_wait_busy();
 
-    /* Clear PER bit */
-    FLASH->CR &= ~(FLASH_CR_PER | FLASH_CR_STRT);
+    /* Clear erase-mode bits */
+    FLASH->CR &= ~(FLASH_CR_PER | FLASH_CR_BKER | FLASH_CR_PNB | FLASH_CR_STRT);
 }
 
 /* -------------------------------------------------------------------------
@@ -163,7 +178,7 @@ static void flash_erase_page(uint32_t page)
  * Flash must be unlocked and the target page must be erased (all 0xFF).
  * The target address must be 8-byte aligned.
  *
- * STM32G0B1 requirement: both 32-bit words of a double-word must be
+ * STM32G0C1 requirement: both 32-bit words of a double-word must be
  * written before the programming latch fires. Writing only one word
  * leaves the page in a partially-programmed state.
  *
@@ -202,10 +217,12 @@ static void flash_write_dword(uint32_t addr, uint32_t lo, uint32_t hi)
  * Safe to call from main loop only — not from ISR context.
  *
  * Missed FG edge mitigation (Option 2):
- *   The STM32G0B1 is a single-bank device. The flash controller stalls
- *   instruction fetch during erase (~2ms) and each double-word program
- *   (~85µs). During this window the TIM2 ISR cannot execute, so FG edges
- *   are missed and the integral accumulates stale error.
+ *   The settings page is in bank 2 while the firmware (currently well
+ *   under 128 KB) executes from bank 1, so in dual-bank mode the erase
+ *   (~2ms) and double-word programs (~85µs each) should not stall
+ *   instruction fetch. The freeze below is kept anyway: it costs nothing
+ *   measurable and stays correct if the image ever grows into bank 2, in
+ *   which case fetches from bank 2 stall and FG edges would be missed.
  *
  *   Before erasing, servo_freeze() is called to:
  *     1. Disable the TIM2 capture interrupt (no more ISR executions)
@@ -217,7 +234,8 @@ static void flash_write_dword(uint32_t addr, uint32_t lo, uint32_t hi)
  *   Motor speed change during a ~2ms blackout is negligible — the WM-D6C
  *   flywheel time constant is ~200ms. Speed deviation is unmeasurable.
  *
- * Returns: FLASH_OK on success, FLASH_ERR_VERIFY on readback mismatch.
+ * Returns: FLASH_OK on success, FLASH_ERR_VERIFY on readback mismatch,
+ *          FLASH_ERR_BANK_MODE if the device is not in dual-bank mode.
  * ------------------------------------------------------------------------- */
 FlashResult flash_save(void)
 {
@@ -235,11 +253,16 @@ FlashResult flash_save(void)
     /* CRC covers magic + kp + ki + target (16 bytes = first 4 fields) */
     blk.crc32 = crc32_compute((const uint8_t *)&blk, offsetof(SettingsBlock, crc32));
 
+    /* The bank-2 page addressing below is only valid in dual-bank mode. */
+    if (!(FLASH->OPTR & FLASH_OPTR_DUAL_BANK)) {
+        return FLASH_ERR_BANK_MODE;
+    }
+
     /* Freeze servo: latch DAC, disable TIM2 ISR before flash stall window */
     servo_freeze();
 
     flash_unlock();
-    flash_erase_page(SETTINGS_PAGE);
+    flash_erase_bank2_page(SETTINGS_BANK2_PAGE);
 
     /* Write 32 bytes as 4 double-words (8 bytes each) */
     const uint32_t *src  = (const uint32_t *)&blk;

@@ -22,6 +22,16 @@ module and wants to know whether they need to update.
   target unit
 
 ### Firmware
+- Build retargeted from the superseded STM32G0B1KBU6 to the STM32G0C1KCU6:
+  `-DSTM32G0C1xx`, ST's `stm32g0c1xx.h` and `startup_stm32g0c1xx.s` vendored,
+  linker script renamed to `STM32G0C1KCUx_FLASH.ld` with a 254 KB code region.
+  The settings page moved to the last 2 KB page, `0x0803F800` (flash bank 2);
+  `flash.c` now erases it with BKER/PNB bank-2 addressing and refuses to save if
+  the DUAL_BANK option bit is cleared. The Renode platform is now
+  `stm32g0c1kcu6.repl` with 256 KB flash. No installed modules exist, so nothing
+  to migrate; settings saved by a G0B1 prototype build are not read.
+- Fixed `usb_cdc.c` compile errors (USB clock select via `RCC->CCIPR2.USBSEL`,
+  removed the non-existent `BTABLE` register write, `APPEND` macro pointer)
 - All peripheral initialisation code pending bench verification of hardware
 - FG_TARGET_HZ pending test tape measurement on target unit
 - Initial PI constants (Kp = 0.15, Ki = 0.008) are simulation-derived starting

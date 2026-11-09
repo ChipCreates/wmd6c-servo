@@ -169,7 +169,7 @@ STM32G0C1KCU6 target, that leaves substantial margin in the 256KB flash:
 | String constants and USB descriptors | ~2KB |
 | **Total** | **~27.5KB** |
 
-128KB total flash, 28KB used, **100KB remaining** (78% free).
+256KB total flash (STM32G0C1KCU6), ~28KB estimated, **~226KB remaining** (~89% free).
 
 ### 3.2 What STM32Cube HAL Would Cost
 

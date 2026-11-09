@@ -28,7 +28,7 @@
 # Project name and target device
 # -----------------------------------------------------------------------------
 PROJECT     := firmware
-MCU         := STM32G0B1xx
+MCU         := STM32G0C1xx
 CPU         := cortex-m0plus
 ARCH_FLAGS  := -mcpu=$(CPU) -mthumb
 
@@ -47,10 +47,10 @@ BUILD_DIR    := $(MAKEFILE_DIR)
 OBJ_DIR      := $(BUILD_DIR)obj
 
 # Startup file (assembly) — lives alongside the C sources
-STARTUP      := $(SRC_DIR)/startup_stm32g0b1xx.s
+STARTUP      := $(SRC_DIR)/startup_stm32g0c1xx.s
 
 # Linker script — lives in firmware/build/
-LDSCRIPT     := $(BUILD_DIR)STM32G0B1KBUx_FLASH.ld
+LDSCRIPT     := $(BUILD_DIR)STM32G0C1KCUx_FLASH.ld
 
 # -----------------------------------------------------------------------------
 # OS detection — sets platform-specific shell commands used in targets below.
@@ -105,7 +105,7 @@ ALL_OBJS := $(C_OBJS) $(ASM_OBJS)
 # -----------------------------------------------------------------------------
 # CMSIS device header search path
 #
-# The STM32G0B1 CMSIS headers (stm32g0b1xx.h, system_stm32g0xx.h, core_cm0plus.h)
+# The STM32G0C1 CMSIS headers (stm32g0c1xx.h, system_stm32g0xx.h, core_cm0plus.h)
 # must be on the include path. Three common locations are checked; set CMSIS_DIR
 # to override if your installation is elsewhere.
 #
@@ -171,7 +171,7 @@ DEFINES := \
 # Combined C flags
 CFLAGS := $(ARCH_FLAGS) $(CSTD) $(OPT) $(DBG) $(WFLAGS) $(INCLUDES) $(DEFINES)
 
-# Assembler flags (used for startup_stm32g0b1xx.s)
+# Assembler flags (used for startup_stm32g0c1xx.s)
 ASFLAGS := $(ARCH_FLAGS) -x assembler-with-cpp $(INCLUDES) $(DEFINES)
 
 # -----------------------------------------------------------------------------
@@ -202,15 +202,15 @@ all: $(BUILD_DIR)$(PROJECT).bin $(BUILD_DIR)$(PROJECT).hex
 	@echo "Build complete:"
 	@$(SIZE) $(BUILD_DIR)$(PROJECT).elf
 	@echo ""
-	@echo "Flash usage against 128KB device limit (settings sector reserved):"
+	@echo "Flash usage against 256KB device limit (settings sector reserved):"
 	-@$(PYTHON) -c "\
 import subprocess, re; \
 out = subprocess.check_output(['$(SIZE)', '$(BUILD_DIR)$(PROJECT).elf']).decode(); \
 m = re.search(r'(\d+)\s+(\d+)\s+(\d+)', out.split('\n')[1]); \
 text,data,bss = int(m.group(1)),int(m.group(2)),int(m.group(3)); \
 flash=text+data; ram=data+bss; \
-print(f'  Flash: {flash} / 129024 bytes ({flash*100//129024}%%) (126KB code region, 2KB settings sector reserved at page 63)'); \
-print(f'  RAM:   {ram} / 147456 bytes ({ram*100//147456}%%)')" 2>$(DEVNULL)
+print(f'  Flash: {flash} / 260096 bytes ({flash*100//260096}%) (254KB code region, 2KB settings sector reserved at 0x0803F800)'); \
+print(f'  RAM:   {ram} / 147456 bytes ({ram*100//147456}%)')" 2>$(DEVNULL)
 
 # ELF — main build product, contains debug symbols
 $(BUILD_DIR)$(PROJECT).elf: $(ALL_OBJS) $(LDSCRIPT)

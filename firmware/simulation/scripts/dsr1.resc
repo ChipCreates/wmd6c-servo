@@ -14,7 +14,7 @@ $bin?=@firmware/build/firmware.elf
 $name?="DSR-1"
 
 mach create $name
-machine LoadPlatformDescription @firmware/simulation/platform/stm32g0b1kbu6.repl
+machine LoadPlatformDescription @firmware/simulation/platform/stm32g0c1kcu6.repl
 
 # ADC pot inputs (RV601/PA1, RV602/PA2, RV603/PA3) are not set here.
 # The trim path (adc_get_adjusted_target) has no caller in the current firmware
